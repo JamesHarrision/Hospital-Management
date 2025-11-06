@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:HospitalManager.MVVM.ViewModels"
+             x:Class="HospitalManager.MVVM.Views.DashboardPageView"
+             Title="Dashboard"
+             BackgroundColor="#F4F7FC">
+    <!-- SỬA: Cả hai dòng trên -->
+
+    <ContentPage.BindingContext>
+        <!-- Liên kết với ViewModel trong thư mục MVVM/ViewModels -->
+        <vm:DashboardViewModel />
+    </ContentPage.BindingContext>
+
+    <Grid RowDefinitions="Auto, *">
+
+        <!-- *************** PHẦN 1: HEADER (Thanh điều hướng trên cùng) *************** -->
+        <Grid Grid.Row="0"
+              Padding="20"
+              ColumnDefinitions="*, Auto, Auto, Auto"
+              BackgroundColor="White">
+
+            <!-- Tiêu đề trang Dashboard -->
+            <Label Grid.Column="0"
+                   Text="Tổng quan bệnh viện"
+                   FontSize="24"
+                   FontAttributes="Bold"
+                   TextColor="#1D2E4E"
+                   VerticalOptions="Center" />
+
+            <!-- Ô tìm kiếm (Placeholder) -->
+            <Frame Grid.Column="1"
+                   CornerRadius="8"
+                   Padding="10"
+                   Margin="0, 0, 15, 0"
+                   BackgroundColor="#F4F7FC"
+                   BorderColor="#E0E0E0"
+                   HeightRequest="40"
+                   VerticalOptions="Center">
+                <HorizontalStackLayout Spacing="10">
+                    <Image Source="search.png" WidthRequest="20" HeightRequest="20" />
+                    <Label Text="Tìm kiếm..." TextColor="#9E9E9E" VerticalOptions="Center" />
+                </HorizontalStackLayout>
+            </Frame>
+
+            <!-- Nút Thông báo -->
+            <Image Grid.Column="2"
+                   Source="bell.png"
+                   WidthRequest="24"
+                   HeightRequest="24"
+                   Margin="0, 0, 15, 0" />
+
+            <!-- Avatar người dùng -->
+            <HorizontalStackLayout Grid.Column="3" Spacing="10" VerticalOptions="Center">
+                <Label Text="{Binding UserName}"
+                       TextColor="#1D2E4E"
+                       VerticalOptions="Center" />
+                <Image Source="{Binding UserAvatar}"
+                       WidthRequest="40"
+                       HeightRequest="40"
+                       Aspect="AspectFill">
+                    <Image.Clip>
+                        <EllipseGeometry Center="20, 20" RadiusX="20" RadiusY="20" />
+                    </Image.Clip>
+                </Image>
+            </HorizontalStackLayout>
+        </Grid>
+
+        <!-- *************** PHẦN 2: NỘI DUNG CHÍNH (ScrollView) *************** -->
+        <ScrollView Grid.Row="1" Padding="20">
+            <VerticalStackLayout Spacing="25">
+
+                <!-- Khu vực 2A: SUMMARY CARDS (4 Thẻ tóm tắt) -->
+                <CollectionView ItemsSource="{Binding SummaryCards}">
+                    <CollectionView.ItemsLayout>
+                        <!-- Thích hợp cho màn hình Desktop/Tablet -->
+                        <GridItemsLayout Orientation="Vertical" Span="4" HorizontalItemSpacing="20" VerticalItemSpacing="20" />
+                    </CollectionView.ItemsLayout>
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Frame BackgroundColor="White"
+                                   CornerRadius="12"
+                                   Padding="20"
+                                   HasShadow="True"
+                                   HeightRequest="150"
+                                   BorderColor="#E0E0E0">
+                                <Grid RowDefinitions="Auto, *, Auto">
+
+                                    <!-- Icon và Tiêu đề -->
+                                    <HorizontalStackLayout Grid.Row="0" Spacing="10">
+                                        <Frame BackgroundColor="{Binding CardColor}"
+                                               CornerRadius="8"
+                                               WidthRequest="40"
+                                               HeightRequest="40"
+                                               Padding="8">
+                                            <!-- Sử dụng icon được tô màu trắng -->
+                                            <!--<Image Source="{Binding Icon}" Color="#FFFFFF" />-->
+                                        </Frame>
+                                        <Label Text="{Binding Title}"
+                                               FontSize="16"
+                                               FontAttributes="Bold"
+                                               TextColor="#1D2E4E"
+                                               VerticalOptions="Center" />
+                                    </HorizontalStackLayout>
+
+                                    <!-- Giá trị Chính -->
+                                    <Label Grid.Row="1"
+                                           Text="{Binding Value}"
+                                           FontSize="36"
+                                           FontAttributes="Bold"
+                                           TextColor="#1D2E4E"
+                                           VerticalOptions="Center" />
+
+                                    <!-- Thay đổi -->
+                                    <Label Grid.Row="2"
+                                           Text="{Binding ChangePercentage}"
+                                           FontSize="12"
+                                           TextColor="#757575" />
+                                </Grid>
+                            </Frame>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+                <!-- Khu vực 2B: BIỂU ĐỒ & HOẠT ĐỘNG GẦN ĐÂY -->
+                <Grid ColumnDefinitions="2*, 1*" ColumnSpacing="25">
+
+                    <!-- Cột 1: Biểu đồ (Sử dụng Frame làm Placeholder) -->
+                    <Frame Grid.Column="0"
+                           BackgroundColor="White"
+                           CornerRadius="12"
+                           Padding="20"
+                           HasShadow="True"
+                           HeightRequest="400"
+                           BorderColor="#E0E0E0">
+                        <VerticalStackLayout Spacing="10">
+                            <Label Text="Biểu đồ trạng thái Lịch hẹn"
+                                   FontSize="18"
+                                   FontAttributes="Bold"
+                                   TextColor="#1D2E4E" />
+
+                            <!-- Placeholder cho thư viện biểu đồ thực tế (ví dụ: Microcharts, OxyPlot) -->
+                            <BoxView Color="#E0E0E0"
+                                     HeightRequest="300"
+                                     VerticalOptions="FillAndExpand"
+                                     HorizontalOptions="FillAndExpand" />
+                            <Label Text="Chart Placeholder" HorizontalOptions="Center" TextColor="#9E9E9E" />
+                        </VerticalStackLayout>
+                    </Frame>
+
+                    <!-- Cột 2: Hoạt động Gần đây -->
+                    <Frame Grid.Column="1"
+                           BackgroundColor="White"
+                           CornerRadius="12"
+                           Padding="20"
+                           HasShadow="True"
+                           BorderColor="#E0E0E0">
+                        <VerticalStackLayout Spacing="15">
+                            <Label Text="Hoạt động Gần đây"
+                                   FontSize="18"
+                                   FontAttributes="Bold"
+                                   TextColor="#1D2E4E" />
+
+                            <CollectionView ItemsSource="{Binding RecentActivities}">
+                                <CollectionView.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Padding="0, 10" RowDefinitions="Auto, Auto">
+                                            <!-- Dòng 1: Mô tả và Thời gian -->
+                                            <HorizontalStackLayout Grid.Row="0" Spacing="5">
+                                                <Label Text="•" TextColor="#4BC0C0" FontAttributes="Bold" />
+                                                <Label Text="{Binding Description}" TextColor="#1D2E4E" FontSize="14" HorizontalOptions="FillAndExpand" />
+                                                <Label Text="{Binding Time}" TextColor="#757575" FontSize="12" />
+                                            </HorizontalStackLayout>
+
+                                            <!-- Dòng 2: Tên Bác sĩ -->
+                                            <Label Grid.Row="1"
+                                                   Text="{Binding DoctorName}"
+                                                   TextColor="#9E9E9E"
+                                                   FontSize="12"
+                                                   Margin="15, 0, 0, 0" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </CollectionView.ItemTemplate>
+                            </CollectionView>
+                        </VerticalStackLayout>
+                    </Frame>
+                </Grid>
+
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>

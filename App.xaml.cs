@@ -1,4 +1,6 @@
-﻿namespace HosipitalManager
+﻿using HospitalManager.MVVM.Views;
+
+namespace HosipitalManager
 {
     public partial class App : Application
     {
@@ -6,7 +8,7 @@
         {
             InitializeComponent();
 
-            MainPage = new AppShell();
+            MainPage = new DashboardPageView();
         }
     }
 }
