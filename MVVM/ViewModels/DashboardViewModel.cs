@@ -2,6 +2,10 @@
 using System.Collections.ObjectModel;
 using HospitalManager.MVVM.Models;
 using Microsoft.Maui.Graphics;
+using HospitalManager.MVVM.Models; 
+using System.Collections.ObjectModel;
+using System.Diagnostics;
+using CommunityToolkit.Mvvm.Input;
 
 namespace HospitalManager.MVVM.ViewModels; 
 
@@ -22,6 +26,30 @@ public partial class DashboardViewModel : ObservableObject
     private string userAvatar = "person_placeholder.png"; // Placeholder cho Avatar
 
     public ObservableCollection<Patient> Patients { get; set; }
+
+    [ObservableProperty]
+    private bool isAddPatientPopupVisible = false;
+
+    [ObservableProperty]
+    private string newPatientFullName;
+
+    [ObservableProperty]
+    private DateTime newPatientDateOfBirth = DateTime.Today;
+
+    [ObservableProperty]
+    private string newPatientGender;
+
+    [ObservableProperty]
+    private string newPatientPhoneNumber;
+
+    [ObservableProperty]
+    private string newPatientAddress;
+
+    [ObservableProperty]
+    private string newPatientStatus = "Đang điều trị";
+
+    public List<string> Genders { get; } = new List<string> { "Nam", "Nữ" };
+    public List<string> StatusOptions { get; } = new List<string> { "Đang điều trị", "Đã xuất viện", "Chờ khám" };
 
     public DashboardViewModel()
     {
@@ -117,4 +145,53 @@ public partial class DashboardViewModel : ObservableObject
             Status = "Đã xuất viện"
         });
     }
+
+    [RelayCommand]
+    private void ShowAddPatientPopup()
+    {
+        IsAddPatientPopupVisible = true;
+    }
+
+    [RelayCommand]
+    private void CloseAddPatientPopup()
+    {
+        IsAddPatientPopupVisible = false;
+        NewPatientFullName = string.Empty;
+        NewPatientDateOfBirth = DateTime.Today;
+        NewPatientGender = null;
+        NewPatientPhoneNumber = string.Empty;
+        NewPatientAddress = string.Empty;
+        NewPatientStatus = "Đang điều trị";
+    }
+
+    [RelayCommand]
+    private void SavePatient()
+    {
+        try
+        {
+            // 1. Tạo đối tượng Patient mới từ các thuộc tính
+            var newPatient = new Patient
+            {
+                Id = $"BN{new Random().Next(100, 999)}",
+                FullName = this.NewPatientFullName,
+                DateOfBirth = this.NewPatientDateOfBirth,
+                Gender = this.NewPatientGender,
+                PhoneNumber = this.NewPatientPhoneNumber,
+                Address = this.NewPatientAddress,
+                AdmittedDate = DateTime.Today,
+                Status = this.NewPatientStatus
+            };
+
+            // 2. Thêm vào danh sách
+            Patients.Add(newPatient);
+
+            // 3. Đóng và reset pop-up
+            CloseAddPatientPopup();
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Lỗi khi lưu bệnh nhân mới: {ex.Message}");
+        }
+    }
+
 }

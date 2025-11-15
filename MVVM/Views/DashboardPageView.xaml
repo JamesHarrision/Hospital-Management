@@ -196,10 +196,11 @@
                       RowDefinitions="Auto, *">
                                     <HorizontalStackLayout Grid.Row="0" Margin="0, 0, 0, 15">
                                         <Button Text="+ Thêm Bệnh nhân"
-                                BackgroundColor="#4CAF50"
-                                TextColor="White"
-                                CornerRadius="8"
-                                Padding="15, 10" />
+                                        Command="{Binding ShowAddPatientPopupCommand}"
+                                        BackgroundColor="#4CAF50"
+                                        TextColor="White"
+                                        CornerRadius="8"
+                                        Padding="15, 10" />
                                     </HorizontalStackLayout>
 
                                     <Frame Grid.Row="1"
@@ -241,20 +242,16 @@
                                         <Label Grid.Column="5" TextColor="#6B7280" Text="{Binding Address}" VerticalOptions="Center" LineBreakMode="TailTruncation" />
 
                                         <Frame Grid.Column="6" 
-                               Padding="8, 4" 
-                               CornerRadius="8"
-                               HorizontalOptions="Start"
-                               VerticalOptions="Center"
-                               BorderColor="Transparent">
-                                            <Frame.BackgroundColor>
-                                                <OnPlatform x:TypeArguments="Color">
-                                                    <On Platform="Windows" Value="#E0F2F1" />
-                                                </OnPlatform>
-                                            </Frame.BackgroundColor>
+                                           Padding="8, 4" 
+                                           CornerRadius="8"
+                                           HorizontalOptions="Start"
+                                           VerticalOptions="Center"
+                                           BorderColor="Transparent"
+                                           BackgroundColor="Transparent">
                                             <Label Text="{Binding Status}" 
-                                   TextColor="#00796B" 
-                                   FontSize="12"
-                                   FontAttributes="Bold"/>
+                                               TextColor= "#6B7280"
+                                               FontSize="12"
+                                               FontAttributes="Bold"/>
                                         </Frame>
 
                                         <HorizontalStackLayout Grid.Column="7" Spacing="10" VerticalOptions="Center">
@@ -279,6 +276,55 @@
                 </VerticalStackLayout>
 
             </Grid>
+        </Grid>
+        <Grid Grid.Column="0"
+              Grid.ColumnSpan="2" Grid.RowSpan="2" IsVisible="{Binding IsAddPatientPopupVisible}"
+              BackgroundColor="#80000000">
+            <Border Padding="20"
+                    Margin="0"
+                    BackgroundColor="White"
+                    StrokeThickness="0"
+                    VerticalOptions="Center"
+                    HorizontalOptions="Center"
+                    WidthRequest="600"
+                    StrokeShape="RoundRectangle 12">
+                <VerticalStackLayout Spacing="15">
+                    <Label Text="Thêm Bệnh nhân mới" FontSize="24" FontAttributes="Bold" TextColor="#1D2E4E" HorizontalOptions="Center" />
+
+                    <Grid ColumnDefinitions="Auto, *" RowDefinitions="Auto, Auto, Auto, Auto, Auto, Auto" RowSpacing="10" ColumnSpacing="10">
+
+                        <Label Grid.Row="0" Grid.Column="0" Text="Họ tên:" VerticalOptions="Center" TextColor="#1D2E4E" />
+                        <Entry Grid.Row="0" Grid.Column="1" Text="{Binding NewPatientFullName}" Placeholder="Nguyễn Văn An" TextColor="#1D2E4E" />
+
+                        <Label Grid.Row="1" Grid.Column="0" Text="Ngày sinh:" VerticalOptions="Center" TextColor="#1D2E4E" />
+                        <DatePicker Grid.Row="1" Grid.Column="1" Date="{Binding NewPatientDateOfBirth}" TextColor="#1D2E4E" />
+
+                        <Label Grid.Row="2" Grid.Column="0" Text="Giới tính:" VerticalOptions="Center" TextColor="#1D2E4E" />
+                        <Picker Grid.Row="2" Grid.Column="1" ItemsSource="{Binding Genders}" SelectedItem="{Binding NewPatientGender}" TextColor="#1D2E4E" />
+
+                        <Label Grid.Row="3" Grid.Column="0" Text="SĐT:" VerticalOptions="Center" TextColor="#1D2E4E" />
+                        <Entry Grid.Row="3" Grid.Column="1" Text="{Binding NewPatientPhoneNumber}" Placeholder="0901234567" Keyboard="Telephone" TextColor="#1D2E4E" />
+
+                        <Label Grid.Row="4" Grid.Column="0" Text="Địa chỉ:" VerticalOptions="Center" TextColor="#1D2E4E"/>
+                        <Entry Grid.Row="4" Grid.Column="1" Text="{Binding NewPatientAddress}" Placeholder="123 Đường ABC..." TextColor="#1D2E4E" />
+
+                        <Label Grid.Row="5" Grid.Column="0" Text="Trạng thái:" VerticalOptions="Center" TextColor="#1D2E4E" />
+                        <Picker Grid.Row="5" Grid.Column="1" ItemsSource="{Binding StatusOptions}" SelectedItem="{Binding NewPatientStatus}" TextColor="#1D2E4E" />
+                    </Grid>
+
+                    <HorizontalStackLayout Spacing="10" HorizontalOptions="End" Margin="0, 20, 0, 0">
+                        <Button Text="Hủy"
+                                Command="{Binding CloseAddPatientPopupCommand}"
+                                BackgroundColor="#E0E0E0"
+                                TextColor="#333333" />
+                        <Button Text="Lưu"
+                                Command="{Binding SavePatientCommand}"
+                                BackgroundColor="#4CAF50"
+                                TextColor="White" />
+                    </HorizontalStackLayout>
+
+                </VerticalStackLayout>
+            </Border>
         </Grid>
     </Grid>
 </ContentPage>

@@ -1,10 +1,9 @@
 ﻿namespace HospitalManager.MVVM.Views;
+using HospitalManager.MVVM.Models;
+using System.Collections.ObjectModel;
 
 public partial class DashboardPageView : ContentPage
 {
-    // Biến theo dõi trạng thái của Side-menu
-    private bool isMenuVisible = true;
-
     public DashboardPageView()
     {
         InitializeComponent();
