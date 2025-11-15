@@ -3,7 +3,7 @@ using System.Collections.ObjectModel;
 using HospitalManager.MVVM.Models;
 using Microsoft.Maui.Graphics;
 
-namespace HospitalManager.MVVM.ViewModels; // SỬA: HospitalManagement -> HospitalManager
+namespace HospitalManager.MVVM.ViewModels; 
 
 public partial class DashboardViewModel : ObservableObject
 {
@@ -20,6 +20,8 @@ public partial class DashboardViewModel : ObservableObject
 
     [ObservableProperty]
     private string userAvatar = "person_placeholder.png"; // Placeholder cho Avatar
+
+    public ObservableCollection<Patient> Patients { get; set; }
 
     public DashboardViewModel()
     {
@@ -74,5 +76,45 @@ public partial class DashboardViewModel : ObservableObject
                 DoctorName = "Dr. Williams"
             }
         };
+
+        Patients = new ObservableCollection<Patient>();
+        LoadSamplePatients();
+    }
+
+    private void LoadSamplePatients()
+    {
+        Patients.Add(new Patient
+        {
+            Id = "BN001",
+            FullName = "Nguyễn Văn An",
+            DateOfBirth = new DateTime(1990, 5, 15),
+            Gender = "Nam",
+            PhoneNumber = "0901234567",
+            Address = "123 Đường ABC, Quận 1, TP.HCM",
+            AdmittedDate = DateTime.Today.AddDays(-5),
+            Status = "Đang điều trị"
+        });
+        Patients.Add(new Patient
+        {
+            Id = "BN002",
+            FullName = "Trần Thị Bình",
+            DateOfBirth = new DateTime(1985, 10, 2),
+            Gender = "Nữ",
+            PhoneNumber = "0987654321",
+            Address = "456 Đường XYZ, Quận 3, TP.HCM",
+            AdmittedDate = DateTime.Today.AddDays(-2),
+            Status = "Đang điều trị"
+        });
+        Patients.Add(new Patient
+        {
+            Id = "BN003",
+            FullName = "Lê Văn Cường",
+            DateOfBirth = new DateTime(2001, 1, 30),
+            Gender = "Nam",
+            PhoneNumber = "0123456789",
+            Address = "789 Đường DEF, Quận 10, TP.HCM",
+            AdmittedDate = DateTime.Today.AddDays(-10),
+            Status = "Đã xuất viện"
+        });
     }
 }
