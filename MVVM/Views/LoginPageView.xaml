@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="HosipitalManager.MVVM.Views.LoginPageView"
+             Title="LoginPageView"
+             BackgroundColor="{StaticResource ColorBackground}">
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!--Form Login-->
+        <VerticalStackLayout Grid.Column="0"
+                             Padding="80,0"
+                             VerticalOptions="Center"
+                             Spacing="20">
+            <!-- LOGIN Title-->
+            <Label Text="LOGIN"
+                   FontSize="48"
+                   FontAttributes="Bold"
+                   TextColor="{StaticResource ColorTextPrimary}"
+                   HorizontalOptions="Center"
+                   Margin="0,0,0,10"/>
+            
+            <!--DESCRIPTION-->
+            <Label Text="Đăng nhập để quản lý phòng khám của bạn"
+                   FontSize="14"
+                   TextColor="#808080"
+                   HorizontalOptions="Center"
+                   Margin="0,0,0,30"/>
+            <!--Username Input-->
+            <Border StrokeThickness="0"
+                    BackgroundColor="#F5F5F8"
+                    Padding="15,12"
+                    Margin="0,10,0,0">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="12"/>
+                </Border.StrokeShape>
+
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                    <Image Grid.Column="0"
+                           WidthRequest="20"
+                           HeightRequest="20"
+                           VerticalOptions="Center">
+                        <Image.Source>
+                            <FontImageSource 
+                                            FontFamily="FontAwesomeSolid"
+                                           Glyph="&#xF007;"
+                                           Color="{StaticResource ColorTextPrimary}"
+                                           Size="20"/>
+                        </Image.Source>
+                    </Image>
+
+                    <Entry Grid.Column="1"
+                           Placeholder="Username"
+                           BackgroundColor="Transparent"
+                           TextColor="{StaticResource ColorTextPrimary}"
+                           PlaceholderColor="#999999"
+                           VerticalOptions="Center"/>
+                </Grid>
+            </Border>
+            
+            <!--Password Input-->
+            <Border StrokeThickness="0"
+                    BackgroundColor="#F5F5F8"
+                    Padding="15,12"
+                    Margin="0,10,0,0">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="12"/>
+                </Border.StrokeShape>
+
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                    <Image Grid.Column="0"
+                           WidthRequest="20"
+                           HeightRequest="20"
+                           VerticalOptions="Center">
+                        <Image.Source>
+                            <FontImageSource FontFamily="FontAwesomeSolid"
+                                           Glyph="&#xf023;"
+                                           Color="{StaticResource ColorTextPrimary}"
+                                           Size="20"/>
+                        </Image.Source>
+                    </Image>
+
+                    <Entry Grid.Column="1"
+                           Placeholder="Password"
+                           IsPassword="True"
+                           BackgroundColor="Transparent"
+                           TextColor="{StaticResource ColorTextPrimary}"
+                           PlaceholderColor="#999999"
+                           VerticalOptions="Center"/>
+                </Grid>
+            </Border>
+            
+            <!--Login Button -->
+            <Button Text="Đăng nhập"
+                    BackgroundColor="{StaticResource ColorPrimary}"
+                    TextColor="{StaticResource ColorTextOnPrimary}"
+                    FontSize="16"
+                    FontAttributes="Bold"
+                    CornerRadius="25"
+                    HeightRequest="50"
+                    Margin="0,20,0,0"
+                    HorizontalOptions="Center"
+                    WidthRequest="200"/>
+        </VerticalStackLayout>
+        <!--End Form Login-->
+        
+        <!--Gradient Và Hình ảnh-->
+        <Grid Grid.Column="1">
+            <!-- Gradient Background -->
+            <BoxView Background="{StaticResource GradientPrimary}"/>
+
+            <!-- Decorative Circle với Icon -->
+            <Border WidthRequest="110"
+                    HeightRequest="110"
+                    BackgroundColor="{StaticResource ColorBackground}"
+                    HorizontalOptions="Center"
+                    VerticalOptions="Center"
+                    Margin="-100,0,0,280">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="55"/>
+                </Border.StrokeShape>
+                <Border.Shadow>
+                    <Shadow Brush="Black"
+                            Offset="0,8"
+                            Radius="25"
+                            Opacity="0.15"/>
+                </Border.Shadow>
+
+                <!-- Icon Medical -->
+                <Image WidthRequest="55" HeightRequest="55">
+                    <Image.Source>
+                        <FontImageSource FontFamily="FontAwesomeSolid"
+                                       Glyph="&#xf0e7;"
+                                       Color="#FFD700"
+                                       Size="55"/>
+                    </Image.Source>
+                </Image>
+            </Border>
+
+            <!-- Rounded Rectangle Frame cho hình ảnh -->
+            <Border WidthRequest="480"
+                    HeightRequest="580"
+                    Stroke="#C5C9FF"
+                    StrokeThickness="3"
+                    BackgroundColor="Transparent"
+                    HorizontalOptions="Center"
+                    VerticalOptions="Center"
+                    Margin="0,20,0,0">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="35"/>
+                </Border.StrokeShape>
+
+                <!-- Hình ảnh người dùng -->
+                <Image Source="medical_login.jpg"
+                       Aspect="AspectFill">
+                    <Image.Clip>
+                        <RoundRectangleGeometry CornerRadius="35"
+                                                Rect="0,0,700,580"/>
+                    </Image.Clip>
+                </Image>
+            </Border>
+
+        </Grid>
+
+    </Grid>
+    
+</ContentPage>
