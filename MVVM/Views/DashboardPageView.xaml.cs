@@ -90,11 +90,6 @@ public partial class DashboardPageView : ContentPage
         PrescriptionsContentView.IsVisible = false;
         AppointmentsContentView.IsVisible = false;
 
-
-        // 3. Hiển thị view tương ứng, cập nhật tiêu đề VÀ đổi màu tab được chọn
-        // (Chúng ta dùng màu #F4F7FC - màu nền của trang - để làm màu 'active')
-        Color activeColor = Color.FromHex("#C6E2FF");
-
         switch (tabName)
         {
             case "Dashboard":
@@ -110,12 +105,12 @@ public partial class DashboardPageView : ContentPage
             case "Prescriptions":
                 PrescriptionsContentView.IsVisible = true;
                 PageTitleLabel.Text = "Quản lý Đơn thuốc";
-                PrescriptionsTab.BackgroundColor = activeColor; // Đặt màu active
+                Console.WriteLine("Switched to Prescriptions tab");
                 break;
             case "Appointments":
                 AppointmentsContentView.IsVisible = true;
                 PageTitleLabel.Text = "Quản lý Lịch hẹn";
-                
+                Console.WriteLine("Hello World");
                 break;
         }
     }
