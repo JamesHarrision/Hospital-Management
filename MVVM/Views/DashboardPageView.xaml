@@ -2,6 +2,7 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:HospitalManager.MVVM.ViewModels"
+             xmlns:views="clr-namespace:HosipitalManager.MVVM.Views"
              x:Class="HospitalManager.MVVM.Views.DashboardPageView"
              Title="Dashboard"
              BackgroundColor="#F4F7FC">
@@ -24,31 +25,38 @@
                 StrokeThickness="1"
                 Padding="10">
 
-            <VerticalStackLayout Spacing="10" Margin="5, 10, 5, 5">
+            <VerticalStackLayout Spacing="10" Margin="5, 10, 5, 5"
+                                 Background="{StaticResource GradientPrimary}">
 
                 <Border x:Name="DashboardTab"
             Padding="10" 
-            Margin="5,0"
+            Margin="5,15,0,0"
             StrokeThickness="0"
-            BackgroundColor="#FFFFFF">
+            >
                     <Border.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnTabClicked" CommandParameter="Dashboard" />
+                        
+                        <!--Hover-->
+                        <PointerGestureRecognizer PointerEntered="OnTabPointerEntered"
+                                  PointerExited="OnTabPointerExited" />
                     </Border.GestureRecognizers>
                     <HorizontalStackLayout Spacing="10">
-                        <Label Text="Tổng quan" TextColor="#1D2E4E" VerticalOptions="Center" />
+                        <Label Text="Tổng quan" TextColor="White" VerticalOptions="Center" />
                     </HorizontalStackLayout>
                 </Border>
 
                 <Border x:Name="PatientsTab"
             Padding="10" 
             Margin="5,0"
-            StrokeThickness="0"
-            BackgroundColor="#FFFFFF">
+            StrokeThickness="0"           
+            >
                     <Border.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnTabClicked" CommandParameter="Patients" />
+                        <PointerGestureRecognizer PointerEntered="OnTabPointerEntered"
+                                                    PointerExited="OnTabPointerExited" />
                     </Border.GestureRecognizers>
                     <HorizontalStackLayout Spacing="10">
-                        <Label Text="Bệnh nhân" TextColor="#1D2E4E" VerticalOptions="Center" />
+                        <Label Text="Bệnh nhân" TextColor="White" VerticalOptions="Center" />
                     </HorizontalStackLayout>
                 </Border>
 
@@ -56,12 +64,14 @@
             Padding="10" 
             Margin="5,0"
             StrokeThickness="0"
-            BackgroundColor="#FFFFFF">
+            >
                     <Border.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnTabClicked" CommandParameter="Doctors" />
+                        <PointerGestureRecognizer PointerEntered="OnTabPointerEntered"
+                                                    PointerExited="OnTabPointerExited" />
                     </Border.GestureRecognizers>
                     <HorizontalStackLayout Spacing="10">
-                        <Label Text="Bác sĩ" TextColor="#1D2E4E" VerticalOptions="Center" />
+                        <Label Text="Bác sĩ" TextColor="White" VerticalOptions="Center" />
                     </HorizontalStackLayout>
                 </Border>
 
@@ -69,12 +79,14 @@
             Padding="10" 
             Margin="5,0"
             StrokeThickness="0"
-            BackgroundColor="#FFFFFF">
+            >
                     <Border.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnTabClicked" CommandParameter="Appointments" />
+                        <PointerGestureRecognizer PointerEntered="OnTabPointerEntered"
+                                                    PointerExited="OnTabPointerExited" />
                     </Border.GestureRecognizers>
                     <HorizontalStackLayout Spacing="10">
-                        <Label Text="Lịch hẹn" TextColor="#1D2E4E" VerticalOptions="Center" />
+                        <Label Text="Lịch hẹn" TextColor="White" VerticalOptions="Center" />
                     </HorizontalStackLayout>
                 </Border>
 
@@ -271,8 +283,7 @@
                 </VerticalStackLayout>
 
                 <VerticalStackLayout x:Name="AppointmentsContentView" IsVisible="False">
-                    <Label Text="Trang Quản lý Lịch hẹn" FontSize="24" FontAttributes="Bold" TextColor="#1D2E4E" />
-                    <Label Text="Nội dung quản lý lịch hẹn sẽ ở đây..." />
+                    <views:AppointmentPageView/>
                 </VerticalStackLayout>
 
             </Grid>
