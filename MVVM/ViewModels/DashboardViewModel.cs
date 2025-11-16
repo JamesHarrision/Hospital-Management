@@ -193,5 +193,4 @@ public partial class DashboardViewModel : ObservableObject
             Debug.WriteLine($"Lỗi khi lưu bệnh nhân mới: {ex.Message}");
         }
     }
-
 }
