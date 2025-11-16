@@ -37,13 +37,13 @@ public partial class DashboardPageView : ContentPage
         // 1. Ẩn tất cả các view nội dung
         DashboardContentView.IsVisible = false;
         PatientsContentView.IsVisible = false;
-        DoctorsContentView.IsVisible = false;
+        PrescriptionsContentView.IsVisible = false;
         AppointmentsContentView.IsVisible = false;
 
         // 2. Reset màu nền của TẤT CẢ các tab về màu mặc định (màu trắng)
         DashboardTab.BackgroundColor = Colors.White;
         PatientsTab.BackgroundColor = Colors.White;
-        DoctorsTab.BackgroundColor = Colors.White;
+        PrescriptionsTab.BackgroundColor = Colors.White;
         AppointmentsTab.BackgroundColor = Colors.White;
 
         // 3. Hiển thị view tương ứng, cập nhật tiêu đề VÀ đổi màu tab được chọn
@@ -62,10 +62,10 @@ public partial class DashboardPageView : ContentPage
                 PageTitleLabel.Text = "Quản lý Bệnh nhân";
                 PatientsTab.BackgroundColor = activeColor; // Đặt màu active
                 break;
-            case "Doctors":
-                DoctorsContentView.IsVisible = true;
-                PageTitleLabel.Text = "Quản lý Bác sĩ";
-                DoctorsTab.BackgroundColor = activeColor; // Đặt màu active
+            case "Prescriptions":
+                PrescriptionsContentView.IsVisible = true;
+                PageTitleLabel.Text = "Quản lý Đơn thuốc";
+                PrescriptionsTab.BackgroundColor = activeColor; // Đặt màu active
                 break;
             case "Appointments":
                 AppointmentsContentView.IsVisible = true;

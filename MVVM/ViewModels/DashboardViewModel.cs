@@ -1,11 +1,11 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
-using System.Collections.ObjectModel;
+using CommunityToolkit.Mvvm.Input;
+using HosipitalManager.MVVM.Models;
 using HospitalManager.MVVM.Models;
 using Microsoft.Maui.Graphics;
-using HospitalManager.MVVM.Models; 
 using System.Collections.ObjectModel;
 using System.Diagnostics;
-using CommunityToolkit.Mvvm.Input;
+using System.Windows.Input;
 
 namespace HospitalManager.MVVM.ViewModels; 
 
@@ -48,9 +48,25 @@ public partial class DashboardViewModel : ObservableObject
     [ObservableProperty]
     private string newPatientStatus = "Đang điều trị";
 
+    // Danh sách đơn thuốc để binding với CollectionView
+    [ObservableProperty] // (Dùng [ObservableProperty] nếu bạn có MVVM Toolkit)
+    private ObservableCollection<Prescription> prescriptions;
+
+    // Thuộc tính kiểm soát việc hiển thị popup "Thêm Đơn Thuốc"
+    [ObservableProperty]
+    private bool isAddPrescriptionPopupVisible;
+
+    // (Thêm các thuộc tính cho form thêm đơn thuốc)
+    [ObservableProperty]
+    private string newPrescriptionPatientName;
+    [ObservableProperty]
+    private string newPrescriptionDoctorName;
+
     public List<string> Genders { get; } = new List<string> { "Nam", "Nữ" };
     public List<string> StatusOptions { get; } = new List<string> { "Đang điều trị", "Đã xuất viện", "Chờ khám" };
 
+
+    
     public DashboardViewModel()
     {
         // Khởi tạo dữ liệu giả lập (Mock Data)
@@ -105,8 +121,31 @@ public partial class DashboardViewModel : ObservableObject
             }
         };
 
+
+        Prescriptions = new ObservableCollection<Prescription>();
         Patients = new ObservableCollection<Patient>();
+        LoadPrescriptions();
         LoadSamplePatients();
+    }
+
+    private void LoadPrescriptions()
+    {
+        Prescriptions.Add(new Prescription
+        {
+            Id = "DT001",
+            PatientName = "Nguyễn Văn An",
+            DoctorName = "BS. Trần Thị B",
+            DatePrescribed = new DateTime(2025, 11, 15),
+            Status = "Đã cấp"
+        });
+        Prescriptions.Add(new Prescription
+        {
+            Id = "DT002",
+            PatientName = "Lê Thị Cẩm",
+            DoctorName = "BS. Nguyễn Văn X",
+            DatePrescribed = new DateTime(2025, 11, 16),
+            Status = "Chưa cấp"
+        });
     }
 
     private void LoadSamplePatients()
@@ -193,4 +232,38 @@ public partial class DashboardViewModel : ObservableObject
             Debug.WriteLine($"Lỗi khi lưu bệnh nhân mới: {ex.Message}");
         }
     }
+
+    [RelayCommand]
+    private void ShowAddPrescriptionPopup()
+    {
+        IsAddPrescriptionPopupVisible = true;
+    }
+
+    [RelayCommand]
+    private void CloseAddPrescriptionPopup()
+    {
+        IsAddPrescriptionPopupVisible = false;
+
+        // SỬA LỖI: Thêm reset trường cho popup đơn thuốc
+        NewPrescriptionPatientName = string.Empty;
+        NewPrescriptionDoctorName = string.Empty;
+    }
+
+    [RelayCommand]
+    private void SavePrescription()
+    {
+        var newPrescription = new Prescription
+        {
+            // SỬA LỖI: Dùng _random static, không hardcode "DT003"
+            Id = $"DT{new Random().Next(100, 999)}",
+            PatientName = NewPrescriptionPatientName,
+            DoctorName = NewPrescriptionDoctorName,
+            DatePrescribed = DateTime.Now,
+            Status = "Chưa cấp"
+        };
+        Prescriptions.Add(newPrescription);
+
+        CloseAddPrescriptionPopup();
+    }
+
 }
