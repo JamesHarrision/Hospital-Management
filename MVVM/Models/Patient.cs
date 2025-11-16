@@ -1,18 +1,40 @@
 ﻿// Nằm trong file: /MVVM/Models/Patient.cs
+using CommunityToolkit.Mvvm.ComponentModel;
+using System;
+
 namespace HospitalManager.MVVM.Models
 {
-    public class Patient
+    // 1. Thêm 'partial' và kế thừa 'ObservableObject'
+    public partial class Patient : ObservableObject
     {
-        public string Id { get; set; } // Mã bệnh nhân
-        public string FullName { get; set; } // Tên đầy đủ
-        public DateTime DateOfBirth { get; set; } // Ngày sinh
-        public string Gender { get; set; } // Giới tính (Nam/Nữ)
-        public string PhoneNumber { get; set; } // Số điện thoại
-        public string Address { get; set; } // Địa chỉ
-        public DateTime AdmittedDate { get; set; } // Ngày nhập viện
-        public string Status { get; set; } // Tình trạng (Đang điều trị, Đã xuất viện...)
+        // 2. Chuyển tất cả properties sang [ObservableProperty]
+        // (Đây là cách MVVM Toolkit tự động tạo code INotifyPropertyChanged)
+        [ObservableProperty]
+        private string id;
 
-        // Thuộc tính tính toán (computed property) để hiển thị tuổi
-        public int Age => DateTime.Today.Year - DateOfBirth.Year - (DateTime.Today.DayOfYear < DateOfBirth.DayOfYear ? 1 : 0);
+        [ObservableProperty]
+        private string fullName;
+
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(Age))] // 3. Thông báo cho 'Age' cập nhật khi 'DateOfBirth' thay đổi
+        private DateTime dateOfBirth;
+
+        [ObservableProperty]
+        private string gender;
+
+        [ObservableProperty]
+        private string phoneNumber;
+
+        [ObservableProperty]
+        private string address;
+
+        [ObservableProperty]
+        private DateTime admittedDate;
+
+        [ObservableProperty]
+        private string status;
+
+        // 4. Property 'Age' vẫn là read-only
+        public int Age => DateOfBirth == default ? 0 : DateTime.Today.Year - DateOfBirth.Year - (DateTime.Today.DayOfYear < DateOfBirth.DayOfYear ? 1 : 0);
     }
 }

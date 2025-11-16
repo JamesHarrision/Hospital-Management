@@ -255,8 +255,16 @@
                                         </Frame>
 
                                         <HorizontalStackLayout Grid.Column="7" Spacing="10" VerticalOptions="Center">
-                                            <ImageButton Source="edit.png" WidthRequest="18" HeightRequest="18" />
-                                            <ImageButton Source="delete.png" WidthRequest="18" HeightRequest="18" />
+                                            <ImageButton Source="edit.png" 
+                                                 WidthRequest="18" 
+                                                 HeightRequest="18"
+                                                 Command="{Binding Source={RelativeSource AncestorType={x:Type vm:DashboardViewModel}}, Path=ShowEditPatientPopupCommand}"
+                                                 CommandParameter="{Binding .}"/>
+                                            <ImageButton Source="delete.png" 
+                                                 WidthRequest="18" 
+                                                 HeightRequest="18"
+                                                 Command="{Binding Source={RelativeSource AncestorType={x:Type vm:DashboardViewModel}}, Path=DeletePatientCommand}"
+                                                 CommandParameter="{Binding .}" />
                                         </HorizontalStackLayout>
                                     </Grid>
                                 </DataTemplate>
@@ -289,7 +297,7 @@
                     WidthRequest="600"
                     StrokeShape="RoundRectangle 12">
                 <VerticalStackLayout Spacing="15">
-                    <Label Text="Thêm Bệnh nhân mới" FontSize="24" FontAttributes="Bold" TextColor="#1D2E4E" HorizontalOptions="Center" />
+                    <Label Text="{Binding PopupTitle}" FontSize="24" FontAttributes="Bold" TextColor="#1D2E4E" HorizontalOptions="Center" />
 
                     <Grid ColumnDefinitions="Auto, *" RowDefinitions="Auto, Auto, Auto, Auto, Auto, Auto" RowSpacing="10" ColumnSpacing="10">
 

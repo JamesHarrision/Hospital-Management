@@ -1,4 +1,4 @@
-﻿using HosipitalManager.MVVM.Views;
+﻿using HospitalManager.MVVM.Views;
 
 namespace HosipitalManager
 {
@@ -8,7 +8,7 @@ namespace HosipitalManager
         {
             InitializeComponent();
 
-            MainPage = new LoginPageView();
+            MainPage = new DashboardPageView();
         }
     }
 }

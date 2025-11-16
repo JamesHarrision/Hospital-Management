@@ -20,7 +20,7 @@ public partial class DashboardViewModel : ObservableObject
     private ObservableCollection<RecentActivity> recentActivities;
 
     [ObservableProperty]
-    private string userName = "Dr. Jane Doe"; // Tên người dùng hiển thị
+    private string userName = "Dr. Khang"; // Tên người dùng hiển thị
 
     [ObservableProperty]
     private string userAvatar = "person_placeholder.png"; // Placeholder cho Avatar
@@ -50,6 +50,12 @@ public partial class DashboardViewModel : ObservableObject
 
     public List<string> Genders { get; } = new List<string> { "Nam", "Nữ" };
     public List<string> StatusOptions { get; } = new List<string> { "Đang điều trị", "Đã xuất viện", "Chờ khám" };
+
+    [ObservableProperty]
+    private string popupTitle = "Thêm Bệnh nhân mới"; // Tiêu đề động cho pop-up
+
+    private bool isEditing = false; // Cờ để biết đang Thêm hay Sửa
+    private Patient patientToEdit; // Lưu bệnh nhân đang được sửa
 
     public DashboardViewModel()
     {
@@ -149,19 +155,54 @@ public partial class DashboardViewModel : ObservableObject
     [RelayCommand]
     private void ShowAddPatientPopup()
     {
+        isEditing = false; // Đặt chế độ là "Thêm mới"
+        PopupTitle = "Thêm Bệnh nhân mới"; // Đặt tiêu đề
+
+        // Xóa form trước khi mở
+        ClearPopupForm();
         IsAddPatientPopupVisible = true;
+    }
+
+    [RelayCommand]
+    private void ShowEditPatientPopup(Patient patient)
+    {
+        if (patient == null) return;
+
+        isEditing = true; // Đặt chế độ là "Sửa"
+        PopupTitle = $"Sửa thông tin: {patient.FullName}"; // Đặt tiêu đề
+        patientToEdit = patient; // Lưu bệnh nhân đang sửa
+
+        // Nạp (load) dữ liệu của bệnh nhân vào form
+        NewPatientFullName = patient.FullName;
+        NewPatientDateOfBirth = patient.DateOfBirth;
+        NewPatientGender = patient.Gender;
+        NewPatientPhoneNumber = patient.PhoneNumber;
+        NewPatientAddress = patient.Address;
+        NewPatientStatus = patient.Status;
+
+        IsAddPatientPopupVisible = true; // Mở pop-up
     }
 
     [RelayCommand]
     private void CloseAddPatientPopup()
     {
         IsAddPatientPopupVisible = false;
+        ClearPopupForm();
+    }
+
+    private void ClearPopupForm()
+    {
+        // Xóa dữ liệu đã nhập trong form
         NewPatientFullName = string.Empty;
         NewPatientDateOfBirth = DateTime.Today;
         NewPatientGender = null;
         NewPatientPhoneNumber = string.Empty;
         NewPatientAddress = string.Empty;
         NewPatientStatus = "Đang điều trị";
+
+        // Reset trạng thái
+        isEditing = false;
+        patientToEdit = null;
     }
 
     [RelayCommand]
@@ -169,28 +210,63 @@ public partial class DashboardViewModel : ObservableObject
     {
         try
         {
-            // 1. Tạo đối tượng Patient mới từ các thuộc tính
-            var newPatient = new Patient
+            if (isEditing) // Trường hợp SỬA
             {
-                Id = $"BN{new Random().Next(100, 999)}",
-                FullName = this.NewPatientFullName,
-                DateOfBirth = this.NewPatientDateOfBirth,
-                Gender = this.NewPatientGender,
-                PhoneNumber = this.NewPatientPhoneNumber,
-                Address = this.NewPatientAddress,
-                AdmittedDate = DateTime.Today,
-                Status = this.NewPatientStatus
-            };
+                // Cập nhật trực tiếp properties của 'patientToEdit'
+                // Vì 'Patient' là ObservableObject, UI sẽ tự động cập nhật!
+                patientToEdit.FullName = NewPatientFullName;
+                patientToEdit.DateOfBirth = NewPatientDateOfBirth;
+                patientToEdit.Gender = NewPatientGender;
+                patientToEdit.PhoneNumber = NewPatientPhoneNumber;
+                patientToEdit.Address = NewPatientAddress;
+                patientToEdit.Status = NewPatientStatus;
 
-            // 2. Thêm vào danh sách
-            Patients.Add(newPatient);
+                Debug.WriteLine($"Đã cập nhật: {patientToEdit.FullName}");
+            }
+            else // Trường hợp THÊM MỚI (logic cũ)
+            {
+                var newPatient = new Patient
+                {
+                    Id = $"BN{new Random().Next(100, 999)}",
+                    FullName = NewPatientFullName,
+                    DateOfBirth = NewPatientDateOfBirth,
+                    Gender = NewPatientGender,
+                    PhoneNumber = NewPatientPhoneNumber,
+                    Address = NewPatientAddress,
+                    AdmittedDate = DateTime.Today,
+                    Status = NewPatientStatus
+                };
+                Patients.Add(newPatient);
+                Debug.WriteLine($"Đã thêm mới: {newPatient.FullName}");
+            }
 
-            // 3. Đóng và reset pop-up
+            // Đóng và reset pop-up
             CloseAddPatientPopup();
         }
         catch (Exception ex)
         {
             Debug.WriteLine($"Lỗi khi lưu bệnh nhân mới: {ex.Message}");
+        }
+    }
+
+    [RelayCommand]
+    private async Task DeletePatient(Patient patientToDelete)
+    {
+        if (patientToDelete == null) return;
+
+        // HỎI XÁC NHẬN (Quan trọng!)
+        // Cần một cách để lấy trang hiện tại, chúng ta sẽ dùng Shell.Current.DisplayAlert
+        bool confirmed = await Application.Current.MainPage.DisplayAlert(
+            "Xác nhận xóa",
+            $"Bạn có chắc chắn muốn xóa bệnh nhân '{patientToDelete.FullName}'?",
+            "Xóa",
+            "Hủy");
+
+        if (confirmed)
+        {
+            // Xóa bệnh nhân khỏi danh sách
+            // ObservableCollection sẽ tự động cập nhật UI
+            Patients.Remove(patientToDelete);
         }
     }
 }
