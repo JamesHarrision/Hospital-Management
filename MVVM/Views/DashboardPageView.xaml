@@ -59,8 +59,8 @@
                         <Label Text="Bệnh nhân" TextColor="White" VerticalOptions="Center" />
                     </HorizontalStackLayout>
                 </Border>
-
-                <Border x:Name="DoctorsTab"
+                <!--Nội dung cần sửa chữa-->
+                <Border x:Name="PrescriptionsTab"
             Padding="10" 
             Margin="5,0"
             StrokeThickness="0"
@@ -71,7 +71,7 @@
                                                     PointerExited="OnTabPointerExited" />
                     </Border.GestureRecognizers>
                     <HorizontalStackLayout Spacing="10">
-                        <Label Text="Bác sĩ" TextColor="White" VerticalOptions="Center" />
+                        <Label Text="Đơn thuốc" TextColor="White" VerticalOptions="Center" />
                     </HorizontalStackLayout>
                 </Border>
 
@@ -284,12 +284,58 @@
                         </CollectionView>
                     </Frame>
                 </Grid>
+<!-- nội dung cần chỉnh sửa-->
+                <Grid x:Name="PrescriptionsContentView" IsVisible="False" RowDefinitions ="Auto, *">
+                    <HorizontalStackLayout Grid.Row="0" Margin="0, 0, 0, 15">
+                        <Button Text=" +  Thêm đơn thuốc"
+                                Command="{Binding ShowAddPrescriptionPopupCommand}" BackgroundColor="#007BFF" TextColor="White"
+                                CornerRadius="8"
+                                Padding="15, 20" />
+                    </HorizontalStackLayout>
 
-                <VerticalStackLayout x:Name="DoctorsContentView" IsVisible="False">
-                    <Label Text="Trang Quản lý Bác sĩ" FontSize="24" FontAttributes="Bold" TextColor="#1D2E4E" />
-                    <Label Text="Nội dung quản lý bác sĩ sẽ ở đây..." />
-                </VerticalStackLayout>
+                    <Frame Grid.Row="1"
+                           Padding="0"
+                           CornerRadius="12"
+                           BackgroundColor="White"
+                           BorderColor="#E0E0E0"
+                           HasShadow="True"
+                           VerticalOptions="FillAndExpand">
 
+                        <CollectionView ItemsSource="{Binding Prescriptions}">
+                            <CollectionView.Header>
+                                <Grid Padding="15, 10" BackgroundColor="#F9FAFB" ColumnDefinitions="1*, 1.5*, 1.5*, 1.5*, 1*, 1*">
+                                    <Label Grid.Column="0" Text="MÃ ĐƠN" FontAttributes="Bold" TextColor="#6B7280" />
+                                    <Label Grid.Column="1" Text="BỆNH NHÂN" FontAttributes="Bold" TextColor="#6B7280" />
+                                    <Label Grid.Column="2" Text="BÁC SĨ KÊ" FontAttributes="Bold" TextColor="#6B7280" />
+                                    <Label Grid.Column="3" Text="NGÀY KÊ" FontAttributes="Bold" TextColor="#6B7280" />
+                                    <Label Grid.Column="4" Text="TRẠNG THÁI" FontAttributes="Bold" TextColor="#6B7280" />
+                                    <Label Grid.Column="5" Text="HÀNH ĐỘNG" FontAttributes="Bold" TextColor="#6B7280" />
+                                </Grid>
+                            </CollectionView.Header>
+
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Padding="15, 10" ColumnDefinitions="1*, 1.5*, 1.5*, 1.5*, 1*, 1*">
+                                        <Border Grid.ColumnSpan="6" Stroke="#E0E0E0" StrokeThickness="1" VerticalOptions="Start" Margin="-15, -10, -15, 0"/>
+
+                                        <Label Grid.Column="0" TextColor="#6B7280" Text="{Binding Id}" VerticalOptions="Center" />
+                                        <Label Grid.Column="1" TextColor="#6B7280" Text="{Binding PatientName}" FontAttributes="Bold" VerticalOptions="Center" />
+                                        <Label Grid.Column="2" TextColor="#6B7280" Text="{Binding DoctorName}" VerticalOptions="Center" />
+                                        <Label Grid.Column="3" TextColor="#6B7280" Text="{Binding DatePrescribed, StringFormat='{0:dd/MM/yyyy}'}" VerticalOptions="Center" />
+                                        <Label Grid.Column="4" TextColor="#6B7280" Text="{Binding Status}" VerticalOptions="Center" />
+
+                                        <HorizontalStackLayout Grid.Column="5" Spacing="10" VerticalOptions="Center">
+                                            <ImageButton Source="view.png" WidthRequest="18" HeightRequest="18" />
+                                            <ImageButton Source="edit.png" WidthRequest="18" HeightRequest="18" />
+                                            <ImageButton Source="delete.png" WidthRequest="18" HeightRequest="18" />
+                                        </HorizontalStackLayout>
+                                    </Grid>
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                        </CollectionView>
+                    </Frame>
+                </Grid>
+<!--kết thúc Nội dung cần chỉnh sửa tiếp theo-->
                 <VerticalStackLayout x:Name="AppointmentsContentView" IsVisible="False">
                     <views:AppointmentPageView/>
                 </VerticalStackLayout>
@@ -341,6 +387,62 @@
                                 BackgroundColor="#4CAF50"
                                 TextColor="White" />
                     </HorizontalStackLayout>
+
+                </VerticalStackLayout>
+            </Border>
+        </Grid>
+        <Grid 
+            Grid.Column="0"
+            Grid.ColumnSpan="2" Grid.RowSpan="2" 
+            x:Name="AddPrescriptionPopup"
+            IsVisible="{Binding IsAddPrescriptionPopupVisible}"
+            BackgroundColor="#80000000" 
+            ZIndex="99"
+            Padding="25">
+
+            <Border
+                VerticalOptions="Center"
+                HorizontalOptions="Center"
+                BackgroundColor="White"
+                StrokeThickness="0"
+                WidthRequest="350">
+
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="10" />
+                </Border.StrokeShape>
+
+                <VerticalStackLayout Spacing="15" Padding="20">
+
+                    <Label 
+                Text="Thêm Đơn Thuốc Mới"
+                FontSize="20"
+                FontAttributes="Bold"
+                HorizontalOptions="Center" />
+
+                    <Label Text="Tên Bệnh Nhân:" />
+                    <Entry 
+                Text="{Binding NewPrescriptionPatientName}"
+                Placeholder="Nhập tên bệnh nhân" />
+
+                    <Label Text="Tên Bác Sĩ Kê Đơn:" />
+                    <Entry 
+                Text="{Binding NewPrescriptionDoctorName}"
+                Placeholder="Nhập tên bác sĩ" />
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10" Margin="0,10,0,0">
+
+                        <Button 
+                    Grid.Column="0"
+                    Text="Hủy"
+                    Command="{Binding CloseAddPrescriptionPopupCommand}"
+                    BackgroundColor="LightGray"
+                    TextColor="Black" />
+
+                        <Button 
+                    Grid.Column="1"
+                    Text="Lưu"
+                    Command="{Binding SavePrescriptionCommand}" />
+                    </Grid>
 
                 </VerticalStackLayout>
             </Border>

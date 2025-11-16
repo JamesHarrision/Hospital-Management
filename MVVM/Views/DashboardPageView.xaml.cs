@@ -87,7 +87,7 @@ public partial class DashboardPageView : ContentPage
         // 1. Ẩn tất cả các view nội dung
         DashboardContentView.IsVisible = false;
         PatientsContentView.IsVisible = false;
-        DoctorsContentView.IsVisible = false;
+        PrescriptionsContentView.IsVisible = false;
         AppointmentsContentView.IsVisible = false;
 
 
@@ -107,10 +107,10 @@ public partial class DashboardPageView : ContentPage
                 PageTitleLabel.Text = "Quản lý Bệnh nhân";
                 
                 break;
-            case "Doctors":
-                DoctorsContentView.IsVisible = true;
-                PageTitleLabel.Text = "Quản lý Bác sĩ";
-                
+            case "Prescriptions":
+                PrescriptionsContentView.IsVisible = true;
+                PageTitleLabel.Text = "Quản lý Đơn thuốc";
+                PrescriptionsTab.BackgroundColor = activeColor; // Đặt màu active
                 break;
             case "Appointments":
                 AppointmentsContentView.IsVisible = true;
