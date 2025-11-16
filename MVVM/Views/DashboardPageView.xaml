@@ -258,7 +258,7 @@
                                 TextColor="#333333" />
                         <Button Text="Lưu"
                                 Command="{Binding SavePatientCommand}"
-                                BackgroundColor="#4CAF50"
+                                BackgroundColor="{StaticResource ColorPrimary}"
                                 TextColor="White" />
                     </HorizontalStackLayout>
 
@@ -296,12 +296,14 @@
 
                     <Label Text="Tên Bệnh Nhân:" TextColor="Black" />
                     <Entry 
+                        TextColor="Black"
                         Text="{Binding NewPrescriptionPatientName}"
                         Placeholder="Nguyễn Văn A . . . " PlaceholderColor="LightGrey"
                         BackgroundColor="Transparent"/>
 
                     <Label Text="Tên Bác Sĩ Kê Đơn:" TextColor="Black" />
-                    <Entry 
+                    <Entry  
+                        TextColor="Black"
                         Text="{Binding NewPrescriptionDoctorName}"
                         Placeholder="Dr. Khang . . ." PlaceholderColor="LightGrey" 
                         BackgroundColor="Transparent"/>
@@ -313,13 +315,14 @@
                     Grid.Column="0"
                     Text="Hủy"
                     Command="{Binding CloseAddPrescriptionPopupCommand}"
-                    BackgroundColor="{StaticResource ColorSecondary}"
-                    TextColor="White" />
+                    BackgroundColor="#E0E0E0"
+                    TextColor="#333333" /> 
 
                         <Button 
                     Grid.Column="1"
                     Text="Lưu"
                     TextColor="White"
+                    BackgroundColor="{StaticResource ColorPrimary}"
                     Command="{Binding SavePrescriptionCommand}" />
                     </Grid>
 

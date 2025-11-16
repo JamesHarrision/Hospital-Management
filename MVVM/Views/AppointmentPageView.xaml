@@ -274,7 +274,7 @@
                         <!-- Action Buttons -->
                         <VerticalStackLayout Grid.Column="2" Spacing="8" VerticalOptions="Center">
                             <Button Text="Chi tiết"
-                                    BackgroundColor="#5B9FFF"
+                                    BackgroundColor="{StaticResource ColorSecondary}}"
                                     TextColor="White"
                                     CornerRadius="8"
                                     Padding="15,8"
@@ -385,7 +385,7 @@
                         <!-- Action Buttons -->
                         <VerticalStackLayout Grid.Column="2" Spacing="8" VerticalOptions="Center">
                             <Button Text="Chi tiết"
-                                    BackgroundColor="#5B9FFF"
+                                    BackgroundColor="{StaticResource ColorSecondary}}"
                                     TextColor="White"
                                     CornerRadius="8"
                                     Padding="15,8"

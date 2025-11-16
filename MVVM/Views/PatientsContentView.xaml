@@ -68,8 +68,8 @@
 
                             <HorizontalStackLayout Grid.Column="7" Spacing="10" VerticalOptions="Center">
                                 <ImageButton Source="edit.png" 
-                                 WidthRequest="18" 
-                                 HeightRequest="18"
+                                 WidthRequest="30" 
+                                 HeightRequest="30"
                                  Command="{Binding Source={RelativeSource AncestorType={x:Type views:DashboardPageView}}, Path=BindingContext.ShowEditPatientPopupCommand}"
                                  CommandParameter="{Binding .}"/>
                                 <ImageButton Source="delete.png" 
