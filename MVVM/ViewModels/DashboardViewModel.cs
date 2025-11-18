@@ -1,82 +1,45 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
 using HosipitalManager.MVVM.Models;
 using HospitalManager.MVVM.Models;
 using Microsoft.Maui.Graphics;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
-using System.Windows.Input;
 
-namespace HospitalManager.MVVM.ViewModels; 
+namespace HospitalManager.MVVM.ViewModels;
 
 public partial class DashboardViewModel : ObservableObject
 {
-    // Dữ liệu giả lập cho các thẻ tóm tắt, sử dụng lớp SummaryCard từ Models
+    // Dữ liệu thống kê
     [ObservableProperty]
     private ObservableCollection<SummaryCard> summaryCards;
 
-    // Dữ liệu giả lập cho danh sách hoạt động, sử dụng lớp RecentActivity từ Models
+    // Hoạt động gần đây (Có thể giữ hoặc bỏ nếu đã dùng Queue)
     [ObservableProperty]
     private ObservableCollection<RecentActivity> recentActivities;
 
     [ObservableProperty]
-    private string userName = "Dr. Khang"; // Tên người dùng hiển thị
+    private string userName = "Dr. Khang";
 
     [ObservableProperty]
-    private string userAvatar = "person_placeholder.png"; // Placeholder cho Avatar
-
-    public ObservableCollection<Patient> Patients { get; set; }
-
-    [ObservableProperty]
-    private ObservableCollection<Patient> waitingQueue;
-
-    [ObservableProperty]
-    private bool isAddPatientPopupVisible = false;
-
-    [ObservableProperty]
-    private string newPatientFullName;
-
-    [ObservableProperty]
-    private DateTime newPatientDateOfBirth = DateTime.Today;
-
-    [ObservableProperty]
-    private string newPatientGender;
-
-    [ObservableProperty]
-    private string newPatientPhoneNumber;
-
-    [ObservableProperty]
-    private string newPatientAddress;
-
-    [ObservableProperty]
-    private string newPatientStatus = "Đang điều trị";
-
-    // Danh sách đơn thuốc để binding với CollectionView
-    [ObservableProperty] // (Dùng [ObservableProperty] nếu bạn có MVVM Toolkit)
-    private ObservableCollection<Prescription> prescriptions;
-
-    // Thuộc tính kiểm soát việc hiển thị popup "Thêm Đơn Thuốc"
-    [ObservableProperty]
-    private bool isAddPrescriptionPopupVisible;
-
-    // (Thêm các thuộc tính cho form thêm đơn thuốc)
-    [ObservableProperty]
-    private string newPrescriptionPatientName;
-    [ObservableProperty]
-    private string newPrescriptionDoctorName;
-
-    public List<string> Genders { get; } = new List<string> { "Nam", "Nữ" };
-    public List<string> StatusOptions { get; } = new List<string> { "Đang điều trị", "Hoàn thành điều trị"};
-
-    [ObservableProperty]
-    private string popupTitle = "Thêm Bệnh nhân mới"; // Tiêu đề động cho pop-up
-
-    private bool isEditing = false; // Cờ để biết đang Thêm hay Sửa
-    private Patient patientToEdit; // Lưu bệnh nhân đang được sửa
+    private string userAvatar = "person_placeholder.png";
 
     public DashboardViewModel()
     {
-        // Khởi tạo dữ liệu giả lập (Mock Data)
+        // 1. Khởi tạo các danh sách
+        SummaryCards = new ObservableCollection<SummaryCard>();
+        RecentActivities = new ObservableCollection<RecentActivity>();
+
+        Patients = new ObservableCollection<Patient>();      // Database
+        WaitingQueue = new ObservableCollection<Patient>();  // Hàng đợi RỖNG
+        Prescriptions = new ObservableCollection<Prescription>();
+
+        // 2. Nạp dữ liệu (Từ các file partial khác)
+        LoadSummaryCards();
+        LoadPrescriptions();
+        LoadSamplePatients(); // Load database mẫu
+    }
+
+    private void LoadSummaryCards()
+    {
         SummaryCards = new ObservableCollection<SummaryCard>
         {
             new SummaryCard {
@@ -108,320 +71,5 @@ public partial class DashboardViewModel : ObservableObject
                 CardColor = Color.FromArgb("#FF9F40") // Màu cam
             }
         };
-
-        RecentActivities = new ObservableCollection<RecentActivity>
-        {
-            new RecentActivity {
-                Description = "Đã lên lịch hẹn cho bệnh nhân Nguyễn Văn A",
-                Time = "10 phút trước",
-                DoctorName = "Dr. Smith"
-            },
-            new RecentActivity {
-                Description = "Cập nhật hồ sơ bệnh án cho bệnh nhân Lê Thị B",
-                Time = "30 phút trước",
-                DoctorName = "Dr. Johnson"
-            },
-            new RecentActivity {
-                Description = "Đã xác nhận nhập viện khẩn cấp",
-                Time = "1 giờ trước",
-                DoctorName = "Dr. Williams"
-            }
-        };
-
-        Prescriptions = new ObservableCollection<Prescription>();
-
-        Patients = new ObservableCollection<Patient>(); // Database
-        WaitingQueue = new ObservableCollection<Patient>(); // Hàng đợi RỖNG ban đầu
-
-        LoadPrescriptions();
-        LoadSamplePatients();
     }
-
-    private void LoadPrescriptions()
-    {
-        Prescriptions.Add(new Prescription
-        {
-            Id = "DT001",
-            PatientName = "Nguyễn Văn An",
-            DoctorName = "BS. Trần Thị B",
-            DatePrescribed = new DateTime(2025, 11, 15),
-            Status = "Đã cấp"
-        });
-        Prescriptions.Add(new Prescription
-        {
-            Id = "DT002",
-            PatientName = "Lê Thị Cẩm",
-            DoctorName = "BS. Nguyễn Văn X",
-            DatePrescribed = new DateTime(2025, 11, 16),
-            Status = "Chưa cấp"
-        });
-    }
-
-    private void LoadSamplePatients()
-    {
-        Patients.Add(new Patient
-        {
-            Id = "BN001",
-            FullName = "Nguyễn Văn An",
-            DateOfBirth = new DateTime(1990, 5, 15),
-            Gender = "Nam",
-            PhoneNumber = "0901234567",
-            Address = "123 Đường ABC, Quận 1, TP.HCM",
-            AdmittedDate = DateTime.Today.AddDays(-5),
-            Status = "Đang điều trị"
-        });
-        Patients.Add(new Patient
-        {
-            Id = "BN002",
-            FullName = "Trần Thị Bình",
-            DateOfBirth = new DateTime(1985, 10, 2),
-            Gender = "Nữ",
-            PhoneNumber = "0987654321",
-            Address = "456 Đường XYZ, Quận 3, TP.HCM",
-            AdmittedDate = DateTime.Today.AddDays(-2),
-            Status = "Đang điều trị"
-        });
-        Patients.Add(new Patient
-        {
-            Id = "BN003",
-            FullName = "Lê Văn Cường",
-            DateOfBirth = new DateTime(2001, 1, 30),
-            Gender = "Nam",
-            PhoneNumber = "0123456789",
-            Address = "789 Đường DEF, Quận 10, TP.HCM",
-            AdmittedDate = DateTime.Today.AddDays(-10),
-            Status = "Đã xuất viện"
-        });
-    }
-
-    [RelayCommand]
-    private void ShowAddPatientPopup()
-    {
-        isEditing = false; // Đặt chế độ là "Thêm mới"
-        PopupTitle = "Thêm Bệnh nhân mới"; // Đặt tiêu đề
-
-        // Xóa form trước khi mở
-        ClearPopupForm();
-        IsAddPatientPopupVisible = true;
-    }
-
-    [RelayCommand]
-    private void ShowEditPatientPopup(Patient patient)
-    {
-        if (patient == null) return;
-
-        isEditing = true; // Đặt chế độ là "Sửa"
-        PopupTitle = $"Sửa thông tin: {patient.FullName}"; // Đặt tiêu đề
-        patientToEdit = patient; // Lưu bệnh nhân đang sửa
-
-        // Nạp (load) dữ liệu của bệnh nhân vào form
-        NewPatientFullName = patient.FullName;
-        NewPatientDateOfBirth = patient.DateOfBirth;
-        NewPatientGender = patient.Gender;
-        NewPatientPhoneNumber = patient.PhoneNumber;
-        NewPatientAddress = patient.Address;
-        NewPatientStatus = patient.Status;
-
-        IsAddPatientPopupVisible = true; // Mở pop-up
-    }
-
-    [RelayCommand]
-    private void CloseAddPatientPopup()
-    {
-        IsAddPatientPopupVisible = false;
-        ClearPopupForm();
-    }
-
-    private void ClearPopupForm()
-    {
-        // Xóa dữ liệu đã nhập trong form
-        NewPatientFullName = string.Empty;
-        NewPatientDateOfBirth = DateTime.Today;
-        NewPatientGender = null;
-        NewPatientPhoneNumber = string.Empty;
-        NewPatientAddress = string.Empty;
-        NewPatientStatus = "Đang điều trị";
-
-        // Reset trạng thái
-        isEditing = false;
-        patientToEdit = null;
-
-        NewPatientSeverity = "Bình thường";
-        NewPatientSymptoms = string.Empty;
-    }
-
-
-
-    [RelayCommand]
-    private void SavePatient()
-    {
-        try
-        {
-            string severityCode = GetSeverityCode(NewPatientSeverity);
-
-            if (isEditing && patientToEdit != null)
-            {
-                // TRƯỜNG HỢP SỬA
-                patientToEdit.FullName = NewPatientFullName;
-                patientToEdit.DateOfBirth = NewPatientDateOfBirth;
-                patientToEdit.Gender = NewPatientGender;
-                patientToEdit.PhoneNumber = NewPatientPhoneNumber;
-                patientToEdit.Address = NewPatientAddress;
-                patientToEdit.Status = NewPatientStatus;
-
-                // Cập nhật thông tin y tế
-                patientToEdit.Severity = severityCode;
-                patientToEdit.Symptoms = NewPatientSymptoms;
-            }
-            else
-            {
-                // TRƯỜNG HỢP TIẾP NHẬN MỚI
-                var newPatient = new Patient
-                {
-                    Id = $"BN{new Random().Next(1000, 9999)}",
-                    FullName = NewPatientFullName,
-                    DateOfBirth = NewPatientDateOfBirth,
-                    Gender = NewPatientGender,
-                    PhoneNumber = NewPatientPhoneNumber,
-                    Address = NewPatientAddress,
-                    AdmittedDate = DateTime.Now,
-                    
-                    // Dữ liệu quan trọng cho thuật toán
-                    Severity = severityCode,
-                    Symptoms = NewPatientSymptoms,
-                    Status = "Đang điều trị", // Mặc định là chờ khám
-                    QueueOrder = Patients.Count + 1 // Gán số thứ tự
-                };
-                WaitingQueue.Add(newPatient);
-            }
-
-            // QUAN TRỌNG: Gọi hàm sắp xếp ngay lập tức!
-            SortPatientQueue();
-            CloseAddPatientPopup();
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"Lỗi: {ex.Message}");
-        }
-    }
-
-    [RelayCommand]
-    private async Task DeletePatient(Patient patientToDelete)
-    {
-        if (patientToDelete == null) return;
-
-        // HỎI XÁC NHẬN (Quan trọng!)
-        // Cần một cách để lấy trang hiện tại, chúng ta sẽ dùng Shell.Current.DisplayAlert
-        bool confirmed = await Application.Current.MainPage.DisplayAlert(
-            "Xác nhận xóa",
-            $"Bạn có chắc chắn muốn xóa bệnh nhân '{patientToDelete.FullName}'?",
-            "Xóa",
-            "Hủy");
-
-        if (confirmed)
-        {
-            // Xóa bệnh nhân khỏi danh sách
-            // ObservableCollection sẽ tự động cập nhật UI
-            Patients.Remove(patientToDelete);
-        }
-    }
-
-
-    [RelayCommand]
-    private void ShowAddPrescriptionPopup()
-    {
-        IsAddPrescriptionPopupVisible = true;
-    }
-
-    [RelayCommand]
-    private void CloseAddPrescriptionPopup()
-    {
-        IsAddPrescriptionPopupVisible = false;
-
-        // SỬA LỖI: Thêm reset trường cho popup đơn thuốc
-        NewPrescriptionPatientName = string.Empty;
-        NewPrescriptionDoctorName = string.Empty;
-    }
-
-    [RelayCommand]
-    private void SavePrescription()
-    {
-        var newPrescription = new Prescription
-        {
-            // SỬA LỖI: Dùng _random static, không hardcode "DT003"
-            Id = $"DT{new Random().Next(100, 999)}",
-            PatientName = NewPrescriptionPatientName,
-            DoctorName = NewPrescriptionDoctorName,
-            DatePrescribed = DateTime.Now,
-            Status = "Chưa cấp"
-        };
-        Prescriptions.Add(newPrescription);
-
-        CloseAddPrescriptionPopup();
-    }
-
-    // Danh sách lựa chọn cho ComboBox (Picker)
-    public List<string> SeverityOptions { get; } = new List<string>
-    {
-        "Bình thường", "Gấp", "Khẩn cấp", "Cấp cứu"
-    };
-
-    // Biến lưu lựa chọn từ giao diện
-    [ObservableProperty]
-    private string newPatientSeverity = "Bình thường";
-
-    [ObservableProperty]
-    private string newPatientSymptoms;
-
-    private string GetSeverityCode(string displayName)
-    {
-        return displayName switch
-        {
-            "Cấp cứu" => "critical",
-            "Khẩn cấp" => "emergency",
-            "Gấp" => "urgent",
-            _ => "normal"
-        };
-    }
-
-    private double CalculatePriority(Patient patient)
-    {
-        double score = 0;
-
-        // 1. Điểm theo mức độ nghiêm trọng
-        if (patient.Severity == "critical") score += 1000;
-        else if (patient.Severity == "emergency") score += 500;
-        else if (patient.Severity == "urgent") score += 200;
-
-        // 2. Điểm ưu tiên theo độ tuổi (Trẻ em & Người già ưu tiên hơn)
-        if (patient.Age < 12) score += 100;
-        if (patient.Age > 65) score += 100;
-
-        // 3. Trừ điểm nhẹ theo thứ tự đến (để đảm bảo công bằng cho người chờ lâu)
-        score -= patient.QueueOrder * 0.1;
-
-        return score;
-    }
-
-    // Hàm sắp xếp lại hàng đợi
-    public void SortPatientQueue()
-    {
-        // Tính điểm lại cho toàn bộ danh sách
-        foreach (var p in WaitingQueue)
-        {
-            p.PriorityScore = CalculatePriority(p);
-        }
-
-        // Sắp xếp: Điểm cao nhất lên đầu
-        var sortedList = WaitingQueue.OrderByDescending(p => p.PriorityScore).ToList();
-
-        // Cập nhật lại giao diện
-        WaitingQueue.Clear();
-        foreach (var p in sortedList)
-        {
-            WaitingQueue.Add(p);
-        }
-    }
-
-
 }

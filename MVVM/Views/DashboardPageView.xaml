@@ -35,8 +35,6 @@
             >
                     <Border.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnTabClicked" CommandParameter="Dashboard" />
-                        
-                        <!--Hover-->
                         <PointerGestureRecognizer PointerEntered="OnTabPointerEntered"
                                   PointerExited="OnTabPointerExited" />
                     </Border.GestureRecognizers>
@@ -59,7 +57,6 @@
                         <Label Text="Bệnh nhân" TextColor="White" VerticalOptions="Center" />
                     </HorizontalStackLayout>
                 </Border>
-                <!--Nội dung cần sửa chữa-->
                 <Border x:Name="PrescriptionsTab"
                     Padding="10" 
                     Margin="5,0"
@@ -140,10 +137,8 @@
             </Grid>
 
             <Grid Grid.Row="1" Padding="20">
-
                 <ScrollView x:Name="DashboardContentView" IsVisible="True">
                     <VerticalStackLayout Spacing="25">
-
                         <CollectionView ItemsSource="{Binding SummaryCards}">
                             <CollectionView.ItemsLayout>
                                 <GridItemsLayout Orientation="Vertical" Span="4" HorizontalItemSpacing="20" VerticalItemSpacing="20" />
@@ -165,76 +160,7 @@
                             </CollectionView.ItemTemplate>
                         </CollectionView>
 
-                        <Grid ColumnDefinitions="2*, 1*" ColumnSpacing="25">
-                            <Frame Grid.Column="0" BackgroundColor="White" CornerRadius="12" Padding="20" HasShadow="True" HeightRequest="400" BorderColor="#E0E0E0">
-                                <VerticalStackLayout Spacing="10">
-                                    <Label Text="Biểu đồ trạng thái Lịch hẹn" FontSize="18" FontAttributes="Bold" TextColor="#1D2E4E" />
-                                    <BoxView Color="#E0E0E0" HeightRequest="300" VerticalOptions="FillAndExpand" HorizontalOptions="FillAndExpand" />
-                                    <Label Text="Chart Placeholder" HorizontalOptions="Center" TextColor="#9E9E9E" />
-                                </VerticalStackLayout>
-                            </Frame>
-
-                            <Frame Grid.Column="1" BackgroundColor="White" CornerRadius="12" Padding="20" HasShadow="True" BorderColor="#E0E0E0">
-                                <VerticalStackLayout Spacing="15">
-                                    <Grid ColumnDefinitions="*, Auto">
-                                        <Label Text="Hàng đợi chờ khám (Triage)" FontSize="18" FontAttributes="Bold" TextColor="#1D2E4E" VerticalOptions="Center"/>
-                                        <Button Grid.Column="1" Text="+ Tiếp nhận" 
-                                            Command="{Binding ShowAddPatientPopupCommand}"
-                                            BackgroundColor="{StaticResource ColorPrimary}" TextColor="White" 
-                                            HeightRequest="35" Padding="15,0" CornerRadius="8" FontSize="12"/>
-                                    </Grid>
-
-                                    <CollectionView ItemsSource="{Binding WaitingQueue}" EmptyView="Hiện chưa có bệnh nhân nào trong hàng đợi.">
-                                        <CollectionView.ItemsLayout>
-                                            <LinearItemsLayout Orientation="Vertical" ItemSpacing="10"/>
-                                        </CollectionView.ItemsLayout>
-
-                                        <CollectionView.ItemTemplate>
-                                            <DataTemplate>
-                                                <Border StrokeShape="RoundRectangle 10" StrokeThickness="1" Padding="10">
-                                                    <Border.Style>
-                                                        <Style TargetType="Border">
-                                                            <Setter Property="BackgroundColor" Value="White"/>
-                                                            <Setter Property="Stroke" Value="#E5E7EB"/>
-                                                            <Style.Triggers>
-                                                                <DataTrigger TargetType="Border" Binding="{Binding Severity}" Value="critical">
-                                                                    <Setter Property="BackgroundColor" Value="#FEF2F2"/>
-                                                                    <Setter Property="Stroke" Value="#EF4444"/>
-                                                                </DataTrigger>
-                                                                <DataTrigger TargetType="Border" Binding="{Binding Severity}" Value="emergency">
-                                                                    <Setter Property="BackgroundColor" Value="#FFF7ED"/>
-                                                                    <Setter Property="Stroke" Value="#F97316"/>
-                                                                </DataTrigger>
-                                                                <DataTrigger TargetType="Border" Binding="{Binding Severity}" Value="urgent">
-                                                                    <Setter Property="BackgroundColor" Value="#FEFCE8"/>
-                                                                    <Setter Property="Stroke" Value="#EAB308"/>
-                                                                </DataTrigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                    </Border.Style>
-
-                                                    <Grid ColumnDefinitions="Auto, *, Auto" ColumnSpacing="15">
-                                                        <Border WidthRequest="40" HeightRequest="40" StrokeShape="RoundRectangle 20" BackgroundColor="Transparent" StrokeThickness="0" VerticalOptions="Center">
-                                                            <Label Text="{Binding PriorityScore, StringFormat='{0:F0}'}" 
-                                                                TextColor="#1D2E4E" FontAttributes="Bold" HorizontalOptions="Center" VerticalOptions="Center"/>
-                                                        </Border>
-
-                                                        <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="2">
-                                                            <Label Text="{Binding FullName}" FontAttributes="Bold" FontSize="14" TextColor="#1F2937"/>
-                                                            <Label Text="{Binding Symptoms}" FontSize="12" TextColor="#6B7280" LineBreakMode="TailTruncation"/>
-                                                        </VerticalStackLayout>
-
-                                                        <Button Grid.Column="2" Text="Gọi" FontSize="12" HeightRequest="30" Padding="10,0" CornerRadius="5" BackgroundColor="#1D2E4E" TextColor="White"/>
-                                                    </Grid>
-                                                </Border>
-                                            </DataTemplate>
-                                        </CollectionView.ItemTemplate>
-                                    </CollectionView>
-                                </VerticalStackLayout>
-                            </Frame>
-                            
-                        </Grid>
-
+                        <views:DashboardContentView/>
                     </VerticalStackLayout>
                 </ScrollView>
 
@@ -252,6 +178,7 @@
 
             </Grid>
         </Grid>
+        
         <Grid Grid.Column="0"
               Grid.ColumnSpan="2" Grid.RowSpan="2" IsVisible="{Binding IsAddPatientPopupVisible}"
               BackgroundColor="#80000000">
@@ -284,7 +211,13 @@
                         <Entry Grid.Row="4" Grid.Column="1" Text="{Binding NewPatientAddress}" Placeholder="123 Đường ABC..." TextColor="#1D2E4E" />
 
                         <Label Grid.Row="5" Grid.Column="0" Text="Trạng thái:" VerticalOptions="Center" TextColor="#1D2E4E" />
-                        <Picker Grid.Row="5" Grid.Column="1" ItemsSource="{Binding StatusOptions}" SelectedItem="{Binding NewPatientStatus}" TextColor="#1D2E4E" />
+
+                        <Border Grid.Row="5" Grid.Column="1" Stroke="#D1D5DB" StrokeShape="RoundRectangle 8" Padding="0" HeightRequest="45">
+                            <Picker ItemsSource="{Binding StatusOptions}" 
+                                SelectedItem="{Binding NewPatientStatus}" 
+                                TextColor="#1D2E4E"
+                                IsEnabled="{Binding IsStatusEnabled}" />
+                        </Border>
 
                         <Label Grid.Row="6" Grid.Column="0" Text="Mức độ:" VerticalOptions="Center" TextColor="#1D2E4E" />
                         <Picker Grid.Row="6" Grid.Column="1" 
