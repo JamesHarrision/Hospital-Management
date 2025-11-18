@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="HosipitalManager.MVVM.Views.PrescriptionDetailPopupView">
+
+    <!-- CHỈ LÀ NỘI DUNG POPUP, KHÔNG OVERLAY, KHÔNG IsVisible -->
+    <Frame BackgroundColor="White"
+           CornerRadius="16"
+           Padding="20"
+           WidthRequest="600"
+           HasShadow="True"
+           HorizontalOptions="Center"
+           VerticalOptions="Center">
+
+        <ScrollView>
+            <VerticalStackLayout Spacing="12">
+
+                <!-- Header popup -->
+                <Grid ColumnDefinitions="*,Auto"
+                      VerticalOptions="Center">
+                    <Label Text="Chi tiết đơn thuốc"
+                           FontSize="20"
+                           FontAttributes="Bold"
+                           TextColor="{StaticResource ColorPrimary}" />
+
+                    <ImageButton Source="close.png"
+                                 WidthRequest="20"
+                                 HeightRequest="20"
+                                 BackgroundColor="Transparent"
+                                 Command="{Binding ClosePrescriptionDetailCommand}"
+                                 HorizontalOptions="End" />
+                </Grid>
+
+                <BoxView HeightRequest="1"
+                         BackgroundColor="#E5E7EB"
+                         Margin="0,5" />
+
+                <!-- Thông tin chung -->
+                <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto"
+                      ColumnDefinitions="Auto,*"
+                      ColumnSpacing="10"
+                      RowSpacing="6">
+
+                    <Label Text="Mã đơn:"
+                           TextColor="#6B7280"
+                           Grid.Row="0"
+                           Grid.Column="0" />
+                    <Label Text="{Binding SelectedPrescription.Id}"
+                           TextColor="#111827"
+                           FontAttributes="Bold"
+                           Grid.Row="0"
+                           Grid.Column="1" />
+
+                    <Label Text="Bệnh nhân:"
+                           TextColor="#6B7280"
+                           Grid.Row="1"
+                           Grid.Column="0" />
+                    <Label Text="{Binding SelectedPrescription.PatientName}"
+                           TextColor="#111827"
+                           FontAttributes="Bold"
+                           Grid.Row="1"
+                           Grid.Column="1" />
+
+                    <Label Text="Bác sĩ kê:"
+                           TextColor="#6B7280"
+                           Grid.Row="2"
+                           Grid.Column="0" />
+                    <Label Text="{Binding SelectedPrescription.DoctorName}"
+                           TextColor="#111827"
+                           Grid.Row="2"
+                           Grid.Column="1" />
+
+                    <Label Text="Ngày kê:"
+                           TextColor="#6B7280"
+                           Grid.Row="3"
+                           Grid.Column="0" />
+                    <Label Text="{Binding SelectedPrescription.DatePrescribed, StringFormat='{0:dd/MM/yyyy}'}"
+                           TextColor="#111827"
+                           Grid.Row="3"
+                           Grid.Column="1" />
+
+                    <Label Text="Trạng thái:"
+                           TextColor="#6B7280"
+                           Grid.Row="4"
+                           Grid.Column="0" />
+                    <Label Text="{Binding SelectedPrescription.Status}"
+                           TextColor="{StaticResource ColorSecondary}"
+                           FontAttributes="Bold"
+                           Grid.Row="4"
+                           Grid.Column="1" />
+                </Grid>
+
+                <BoxView HeightRequest="1"
+                         BackgroundColor="#E5E7EB"
+                         Margin="0,10" />
+
+                <!-- Tiêu đề danh sách thuốc -->
+                <Label Text="Danh sách thuốc"
+                       FontAttributes="Bold"
+                       TextColor="#374151" />
+
+                <!-- Bảng thuốc -->
+                <CollectionView ItemsSource="{Binding SelectedPrescription.Medications}"
+                                HeightRequest="220">
+                    <CollectionView.Header>
+                        <Grid Padding="8,4"
+                              BackgroundColor="#F9FAFB"
+                              ColumnDefinitions="2*,*,*,*,*">
+                            <Label Grid.Column="0" Text="TÊN THUỐC" FontAttributes="Bold" TextColor="#6B7280" />
+                            <Label Grid.Column="1" Text="LIỀU"      FontAttributes="Bold" TextColor="#6B7280" />
+                            <Label Grid.Column="2" Text="CÁCH DÙNG" FontAttributes="Bold" TextColor="#6B7280" />
+                            <Label Grid.Column="3" Text="SỐ NGÀY"   FontAttributes="Bold" TextColor="#6B7280" />
+                            <Label Grid.Column="4" Text="SL"        FontAttributes="Bold" TextColor="#6B7280" />
+                        </Grid>
+                    </CollectionView.Header>
+
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Padding="8,6"
+                                  ColumnDefinitions="2*,*,*,*,*">
+                                <Label Grid.Column="0"
+                                       Text="{Binding MedicineName}"
+                                       TextColor="#111827" />
+                                <Label Grid.Column="1"
+                                       Text="{Binding Dosage}"
+                                       TextColor="#4B5563" />
+                                <Label Grid.Column="2"
+                                       Text="{Binding Usage}"
+                                       TextColor="#4B5563" />
+                                <Label Grid.Column="3"
+                                       Text="{Binding Days}"
+                                       TextColor="#4B5563" />
+                                <Label Grid.Column="4"
+                                       Text="{Binding Quantity}"
+                                       TextColor="#4B5563" />
+                            </Grid>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+                <!-- Nút đóng -->
+                <HorizontalStackLayout HorizontalOptions="End">
+                    <Button Text="Đóng"
+                            Command="{Binding ClosePrescriptionDetailCommand}"
+                            BackgroundColor="{StaticResource ColorPrimary}"
+                            TextColor="White"
+                            CornerRadius="10"
+                            Padding="20,8" />
+                </HorizontalStackLayout>
+
+            </VerticalStackLayout>
+        </ScrollView>
+    </Frame>
+</ContentView>

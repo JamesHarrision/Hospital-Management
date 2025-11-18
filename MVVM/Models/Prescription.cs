@@ -17,6 +17,6 @@ namespace HosipitalManager.MVVM.Models
         public string Status { get; set; } // Trạng thái (vd: "Đã cấp", "Chưa cấp")
 
         // Một đơn thuốc có nhiều loại thuốc
-        public List<MedicationItem> Medications { get; set; }
+        public List<MedicationItem> Medications { get; set; } = new List<MedicationItem>();
     }
 }
