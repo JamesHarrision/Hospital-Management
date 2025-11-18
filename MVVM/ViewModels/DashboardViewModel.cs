@@ -28,6 +28,9 @@ public partial class DashboardViewModel : ObservableObject
     public ObservableCollection<Patient> Patients { get; set; }
 
     [ObservableProperty]
+    private ObservableCollection<Patient> waitingQueue;
+
+    [ObservableProperty]
     private bool isAddPatientPopupVisible = false;
 
     [ObservableProperty]
@@ -63,7 +66,7 @@ public partial class DashboardViewModel : ObservableObject
     private string newPrescriptionDoctorName;
 
     public List<string> Genders { get; } = new List<string> { "Nam", "Nữ" };
-    public List<string> StatusOptions { get; } = new List<string> { "Đang điều trị", "Đã xuất viện", "Chờ khám" };
+    public List<string> StatusOptions { get; } = new List<string> { "Đang điều trị", "Hoàn thành điều trị"};
 
     [ObservableProperty]
     private string popupTitle = "Thêm Bệnh nhân mới"; // Tiêu đề động cho pop-up
@@ -125,9 +128,11 @@ public partial class DashboardViewModel : ObservableObject
             }
         };
 
-
         Prescriptions = new ObservableCollection<Prescription>();
-        Patients = new ObservableCollection<Patient>();
+
+        Patients = new ObservableCollection<Patient>(); // Database
+        WaitingQueue = new ObservableCollection<Patient>(); // Hàng đợi RỖNG ban đầu
+
         LoadPrescriptions();
         LoadSamplePatients();
     }
@@ -240,17 +245,23 @@ public partial class DashboardViewModel : ObservableObject
         // Reset trạng thái
         isEditing = false;
         patientToEdit = null;
+
+        NewPatientSeverity = "Bình thường";
+        NewPatientSymptoms = string.Empty;
     }
+
+
 
     [RelayCommand]
     private void SavePatient()
     {
         try
         {
-            if (isEditing) // Trường hợp SỬA
+            string severityCode = GetSeverityCode(NewPatientSeverity);
+
+            if (isEditing && patientToEdit != null)
             {
-                // Cập nhật trực tiếp properties của 'patientToEdit'
-                // Vì 'Patient' là ObservableObject, UI sẽ tự động cập nhật!
+                // TRƯỜNG HỢP SỬA
                 patientToEdit.FullName = NewPatientFullName;
                 patientToEdit.DateOfBirth = NewPatientDateOfBirth;
                 patientToEdit.Gender = NewPatientGender;
@@ -258,31 +269,39 @@ public partial class DashboardViewModel : ObservableObject
                 patientToEdit.Address = NewPatientAddress;
                 patientToEdit.Status = NewPatientStatus;
 
-                Debug.WriteLine($"Đã cập nhật: {patientToEdit.FullName}");
+                // Cập nhật thông tin y tế
+                patientToEdit.Severity = severityCode;
+                patientToEdit.Symptoms = NewPatientSymptoms;
             }
-            else // Trường hợp THÊM MỚI (logic cũ)
+            else
             {
+                // TRƯỜNG HỢP TIẾP NHẬN MỚI
                 var newPatient = new Patient
                 {
-                    Id = $"BN{new Random().Next(100, 999)}",
+                    Id = $"BN{new Random().Next(1000, 9999)}",
                     FullName = NewPatientFullName,
                     DateOfBirth = NewPatientDateOfBirth,
                     Gender = NewPatientGender,
                     PhoneNumber = NewPatientPhoneNumber,
                     Address = NewPatientAddress,
-                    AdmittedDate = DateTime.Today,
-                    Status = NewPatientStatus
+                    AdmittedDate = DateTime.Now,
+                    
+                    // Dữ liệu quan trọng cho thuật toán
+                    Severity = severityCode,
+                    Symptoms = NewPatientSymptoms,
+                    Status = "Đang điều trị", // Mặc định là chờ khám
+                    QueueOrder = Patients.Count + 1 // Gán số thứ tự
                 };
-                Patients.Add(newPatient);
-                Debug.WriteLine($"Đã thêm mới: {newPatient.FullName}");
+                WaitingQueue.Add(newPatient);
             }
 
-            // Đóng và reset pop-up
+            // QUAN TRỌNG: Gọi hàm sắp xếp ngay lập tức!
+            SortPatientQueue();
             CloseAddPatientPopup();
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"Lỗi khi lưu bệnh nhân mới: {ex.Message}");
+            Debug.WriteLine($"Lỗi: {ex.Message}");
         }
     }
 
@@ -340,5 +359,69 @@ public partial class DashboardViewModel : ObservableObject
 
         CloseAddPrescriptionPopup();
     }
+
+    // Danh sách lựa chọn cho ComboBox (Picker)
+    public List<string> SeverityOptions { get; } = new List<string>
+    {
+        "Bình thường", "Gấp", "Khẩn cấp", "Cấp cứu"
+    };
+
+    // Biến lưu lựa chọn từ giao diện
+    [ObservableProperty]
+    private string newPatientSeverity = "Bình thường";
+
+    [ObservableProperty]
+    private string newPatientSymptoms;
+
+    private string GetSeverityCode(string displayName)
+    {
+        return displayName switch
+        {
+            "Cấp cứu" => "critical",
+            "Khẩn cấp" => "emergency",
+            "Gấp" => "urgent",
+            _ => "normal"
+        };
+    }
+
+    private double CalculatePriority(Patient patient)
+    {
+        double score = 0;
+
+        // 1. Điểm theo mức độ nghiêm trọng
+        if (patient.Severity == "critical") score += 1000;
+        else if (patient.Severity == "emergency") score += 500;
+        else if (patient.Severity == "urgent") score += 200;
+
+        // 2. Điểm ưu tiên theo độ tuổi (Trẻ em & Người già ưu tiên hơn)
+        if (patient.Age < 12) score += 100;
+        if (patient.Age > 65) score += 100;
+
+        // 3. Trừ điểm nhẹ theo thứ tự đến (để đảm bảo công bằng cho người chờ lâu)
+        score -= patient.QueueOrder * 0.1;
+
+        return score;
+    }
+
+    // Hàm sắp xếp lại hàng đợi
+    public void SortPatientQueue()
+    {
+        // Tính điểm lại cho toàn bộ danh sách
+        foreach (var p in WaitingQueue)
+        {
+            p.PriorityScore = CalculatePriority(p);
+        }
+
+        // Sắp xếp: Điểm cao nhất lên đầu
+        var sortedList = WaitingQueue.OrderByDescending(p => p.PriorityScore).ToList();
+
+        // Cập nhật lại giao diện
+        WaitingQueue.Clear();
+        foreach (var p in sortedList)
+        {
+            WaitingQueue.Add(p);
+        }
+    }
+
 
 }

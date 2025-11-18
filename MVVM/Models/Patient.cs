@@ -34,6 +34,22 @@ namespace HospitalManager.MVVM.Models
         [ObservableProperty]
         private string status;
 
+        /// <summary>
+        /// Xác định mức độ nghiêm trọng của bệnh nhân
+        /// </summary>
+        [ObservableProperty]
+        private string severity; // Values: normal, urgent, emergency, critical
+
+        [ObservableProperty]
+        private string symptoms;
+
+        [ObservableProperty]
+        private double priorityScore; // Điểm để sắp xếp
+
+        [ObservableProperty]
+        private int queueOrder;
+
+
         // 4. Property 'Age' vẫn là read-only
         public int Age => DateOfBirth == default ? 0 : DateTime.Today.Year - DateOfBirth.Year - (DateTime.Today.DayOfYear < DateOfBirth.DayOfYear ? 1 : 0);
     }
