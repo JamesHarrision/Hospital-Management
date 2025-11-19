@@ -1,4 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
+using LiveChartsCore.SkiaSharpView;
+using LiveChartsCore.SkiaSharpView.Maui;
+using SkiaSharp.Views.Maui.Controls.Hosting;
 
 namespace HosipitalManager
 {
@@ -9,6 +12,8 @@ namespace HosipitalManager
             var builder = MauiApp.CreateBuilder();
             builder
                 .UseMauiApp<App>()
+                .UseLiveCharts()
+                .UseSkiaSharp()
                 .ConfigureFonts(fonts =>
                 {
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");

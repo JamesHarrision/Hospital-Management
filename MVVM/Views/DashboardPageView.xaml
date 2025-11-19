@@ -29,10 +29,9 @@
                                  Background="{StaticResource GradientPrimary}">
 
                 <Border x:Name="DashboardTab"
-            Padding="10" 
-            Margin="5,15,0,0"
-            StrokeThickness="0"
-            >
+                        Padding="10" 
+                        Margin="5,15,0,0"
+                        StrokeThickness="0">
                     <Border.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnTabClicked" CommandParameter="Dashboard" />
                         <PointerGestureRecognizer PointerEntered="OnTabPointerEntered"
@@ -44,10 +43,9 @@
                 </Border>
 
                 <Border x:Name="PatientsTab"
-            Padding="10" 
-            Margin="5,0"
-            StrokeThickness="0"           
-            >
+                        Padding="10" 
+                        Margin="5,0"
+                        StrokeThickness="0">
                     <Border.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnTabClicked" CommandParameter="Patients" />
                         <PointerGestureRecognizer PointerEntered="OnTabPointerEntered"
@@ -57,6 +55,7 @@
                         <Label Text="Bệnh nhân" TextColor="White" VerticalOptions="Center" />
                     </HorizontalStackLayout>
                 </Border>
+                
                 <Border x:Name="PrescriptionsTab"
                     Padding="10" 
                     Margin="5,0"
@@ -72,10 +71,9 @@
                 </Border>
 
                 <Border x:Name="AppointmentsTab"
-            Padding="10" 
-            Margin="5,0"
-            StrokeThickness="0"
-            >
+                        Padding="10" 
+                        Margin="5,0"
+                        StrokeThickness="0">
                     <Border.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnTabClicked" CommandParameter="Appointments" />
                         <PointerGestureRecognizer PointerEntered="OnTabPointerEntered"
@@ -85,7 +83,20 @@
                         <Label Text="Lịch hẹn" TextColor="White" VerticalOptions="Center" />
                     </HorizontalStackLayout>
                 </Border>
-
+<!-- Doanh thu và binding cua no-->
+                <Border x:Name="RevenueTab"
+                          Padding="10" 
+                          Margin="5,0"
+                          StrokeThickness="0">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnTabClicked" CommandParameter="Revenue" />
+                        <PointerGestureRecognizer PointerEntered="OnTabPointerEntered"
+                    PointerExited="OnTabPointerExited" />
+                    </Border.GestureRecognizers>
+                    <HorizontalStackLayout Spacing="10">
+                        <Label Text="Doanh thu" TextColor="White" VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+                </Border>
             </VerticalStackLayout>
         </Border>
 
@@ -175,6 +186,10 @@
 
                 <VerticalStackLayout x:Name="AppointmentsContentView" IsVisible="False">
                     <views:AppointmentPageView/>
+                </VerticalStackLayout>
+
+                <VerticalStackLayout x:Name="RevenueContentView" IsVisible="False">
+                    <views:RevenueContentView/>
                 </VerticalStackLayout>
 
             </Grid>
