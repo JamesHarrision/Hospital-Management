@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:vm="clr-namespace:HospitalManager.MVVM.ViewModels"
+             xmlns:vm="clr-namespace:HosipitalManager.MVVM.ViewModels"
              xmlns:views="clr-namespace:HosipitalManager.MVVM.Views"
-             x:Class="HospitalManager.MVVM.Views.DashboardPageView"
+             x:Class="HosipitalManager.MVVM.Views.DashboardPageView"
              Title="Dashboard"
              BackgroundColor="#F4F7FC">
 
@@ -197,25 +197,33 @@
                     <Grid ColumnDefinitions="Auto, *" RowDefinitions="Auto, Auto, Auto, Auto, Auto, Auto, Auto, Auto" RowSpacing="10" ColumnSpacing="10">
 
                         <Label Grid.Row="0" Grid.Column="0" Text="Họ tên:" VerticalOptions="Center" TextColor="#1D2E4E" />
-                        <Entry Grid.Row="0" Grid.Column="1" Text="{Binding NewPatientFullName}" Placeholder="Nguyễn Văn An" TextColor="#1D2E4E" />
+                        
+                        <!-- Họ tên -->
+                        <Entry Grid.Row="0" Grid.Column="1"
+                               Text="{Binding EditingPatient.FullName}"
+                               Placeholder="Nguyễn Văn An"
+                               TextColor="#1D2E4E" />
 
+                        <!-- Ngày sinh -->
                         <Label Grid.Row="1" Grid.Column="0" Text="Ngày sinh:" VerticalOptions="Center" TextColor="#1D2E4E" />
-                        <DatePicker Grid.Row="1" Grid.Column="1" Date="{Binding NewPatientDateOfBirth}" TextColor="#1D2E4E" />
+                        <DatePicker Grid.Row="1" Grid.Column="1"
+                                    Date="{Binding EditingPatient.DateOfBirth}" TextColor="#1D2E4E" />
 
+                        <!-- GIỚI TÍNH -->
                         <Label Grid.Row="2" Grid.Column="0" Text="Giới tính:" VerticalOptions="Center" TextColor="#1D2E4E" />
-                        <Picker Grid.Row="2" Grid.Column="1" ItemsSource="{Binding Genders}" SelectedItem="{Binding NewPatientGender}" TextColor="#1D2E4E" />
+                        <Picker Grid.Row="2" Grid.Column="1" ItemsSource="{Binding Genders}" SelectedItem="{Binding EditingPatient.Gender}" TextColor="#1D2E4E" />
 
                         <Label Grid.Row="3" Grid.Column="0" Text="SĐT:" VerticalOptions="Center" TextColor="#1D2E4E" />
-                        <Entry Grid.Row="3" Grid.Column="1" Text="{Binding NewPatientPhoneNumber}" Placeholder="0901234567" Keyboard="Telephone" TextColor="#1D2E4E" />
+                        <Entry Grid.Row="3" Grid.Column="1" Text="{Binding EditingPatient.PhoneNumber}" Placeholder="0901234567" Keyboard="Telephone" TextColor="#1D2E4E" />
 
                         <Label Grid.Row="4" Grid.Column="0" Text="Địa chỉ:" VerticalOptions="Center" TextColor="#1D2E4E"/>
-                        <Entry Grid.Row="4" Grid.Column="1" Text="{Binding NewPatientAddress}" Placeholder="123 Đường ABC..." TextColor="#1D2E4E" />
+                        <Entry Grid.Row="4" Grid.Column="1" Text="{Binding EditingPatient.Address}" Placeholder="123 Đường ABC..." TextColor="#1D2E4E" />
 
                         <Label Grid.Row="5" Grid.Column="0" Text="Trạng thái:" VerticalOptions="Center" TextColor="#1D2E4E" />
 
                         <Border Grid.Row="5" Grid.Column="1" Stroke="#D1D5DB" StrokeShape="RoundRectangle 8" Padding="0" HeightRequest="45">
                             <Picker ItemsSource="{Binding StatusOptions}" 
-                                SelectedItem="{Binding NewPatientStatus}" 
+                                SelectedItem="{Binding EditingPatient.Status}" 
                                 TextColor="#1D2E4E"
                                 IsEnabled="{Binding IsStatusEnabled}" />
                         </Border>
@@ -223,12 +231,12 @@
                         <Label Grid.Row="6" Grid.Column="0" Text="Mức độ:" VerticalOptions="Center" TextColor="#1D2E4E" />
                         <Picker Grid.Row="6" Grid.Column="1" 
                             ItemsSource="{Binding SeverityOptions}" 
-                            SelectedItem="{Binding NewPatientSeverity}"
+                            SelectedItem="{Binding EditingPatient.Severity}"
                             TextColor="#1D2E4E" />
 
                         <Label Grid.Row="7" Grid.Column="0" Text="Triệu chứng:" VerticalOptions="Start" TextColor="#1D2E4E" Margin="0,10,0,0"/>
                         <Editor Grid.Row="7" Grid.Column="1" 
-                            Text="{Binding NewPatientSymptoms}" 
+                            Text="{Binding EditingPatient.Symptoms}" 
                             Placeholder="Nhập triệu chứng (ví dụ: Đau ngực, khó thở...)"
                             HeightRequest="60"
                             TextColor="#1D2E4E"
@@ -318,10 +326,8 @@
             Grid.ColumnSpan="2"
             Grid.RowSpan="2"
             BackgroundColor="#80000000"
-
             BindingContext="{Binding Source={x:Reference PrescriptionsContentInner},
-                                    Path=BindingContext}"
-
+                                        Path=BindingContext}"
             IsVisible="{Binding IsPrescriptionDetailVisible}">
             <views:PrescriptionDetailPopupView
         BindingContext="{Binding}" />

@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="HosipitalManager.MVVM.Views.PatientsContentView"
-             xmlns:views="clr-namespace:HospitalManager.MVVM.Views">
+             x:Class="HosipitalManager.MVVM.Views.PatientsContentView">
    
     <Grid
       RowDefinitions="Auto, *">
+        
+        <!-- Nút thêm bệnh nhân -->
         <HorizontalStackLayout Grid.Row="0" Margin="0, 0, 0, 15">
             <Button Text="+ Thêm Bệnh nhân"
                         Command="{Binding ShowAddPatientPopupCommand}"
@@ -15,6 +16,7 @@
                         Padding="15, 10" />
         </HorizontalStackLayout>
 
+        <!-- Bảng bệnh nhân -->
         <Frame Grid.Row="1"
            Padding="0"
            CornerRadius="12"
@@ -28,7 +30,7 @@
                     <Grid Padding="15, 10" BackgroundColor="#F9FAFB" ColumnDefinitions="0.8*, 1.5*, 0.5*, 0.5*, 1.2*, 2*, 1*, 1*">
                         <Label Grid.Column="0" Text="MÃ BN" FontAttributes="Bold" TextColor="#6B7280" />
                         <Label Grid.Column="1" Text="HỌ TÊN" FontAttributes="Bold" TextColor="#6B7280" />
-                        <Label Grid.Column="2" Text="GIỚI" FontAttributes="Bold" TextColor="#6B7280" />
+                        <Label Grid.Column="2" Text="GIỚI TÍNH" FontAttributes="Bold" TextColor="#6B7280" />
                         <Label Grid.Column="3" Text="TUỔI" FontAttributes="Bold" TextColor="#6B7280" />
                         <Label Grid.Column="4" Text="SĐT" FontAttributes="Bold" TextColor="#6B7280" />
                         <Label Grid.Column="5" Text="ĐỊA CHỈ" FontAttributes="Bold" TextColor="#6B7280" />
@@ -37,6 +39,7 @@
                     </Grid>
                 </CollectionView.Header>
 
+                <!-- Dòng dữ liệu -->
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
                         <Grid Padding="15, 10" ColumnDefinitions="0.8*, 1.5*, 0.5*, 0.5*, 1.2*, 2*, 1*, 1*">
@@ -66,16 +69,24 @@
                                FontAttributes="Bold"/>
                             </Frame>
 
-                            <HorizontalStackLayout Grid.Column="7" Spacing="10" VerticalOptions="Center">
+                            <!-- Hành động -->
+                            <HorizontalStackLayout Grid.Column="7"
+                                                   Spacing="10"
+                                                   VerticalOptions="Center">
+                                <!-- Nút sửa -->
                                 <ImageButton Source="edit.png" 
                                  WidthRequest="30" 
                                  HeightRequest="30"
-                                 Command="{Binding Source={RelativeSource AncestorType={x:Type views:DashboardPageView}}, Path=BindingContext.ShowEditPatientPopupCommand}"
+                                 Command="{Binding BindingContext.ShowEditPatientPopupCommand,
+                                                               Source={RelativeSource AncestorType={x:Type ContentView}}}"
                                  CommandParameter="{Binding .}"/>
+
+                                <!-- Nút xóa -->
                                 <ImageButton Source="delete.png" 
                                  WidthRequest="18" 
                                  HeightRequest="18"
-                                 Command="{Binding Source={RelativeSource AncestorType={x:Type views:DashboardPageView}}, Path=BindingContext.DeletePatientCommand}"
+                                 Command="{Binding BindingContext.DeletePatientCommand,
+                                                               Source={RelativeSource AncestorType={x:Type ContentView}}}"
                                  CommandParameter="{Binding .}" />
                             </HorizontalStackLayout>
                         </Grid>

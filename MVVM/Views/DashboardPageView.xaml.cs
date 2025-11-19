@@ -1,5 +1,6 @@
-﻿namespace HospitalManager.MVVM.Views;
-using HospitalManager.MVVM.Models;
+﻿namespace HosipitalManager.MVVM.Views;
+using HosipitalManager.MVVM.Models;
+using HosipitalManager.MVVM.ViewModels;
 using System.Collections.ObjectModel;
 
 public partial class DashboardPageView : ContentPage
@@ -18,8 +19,7 @@ public partial class DashboardPageView : ContentPage
     public DashboardPageView()
     {
         InitializeComponent();
-        BindingContext = new HospitalManager.MVVM.ViewModels.DashboardViewModel();
-
+        BindingContext = new DashboardViewModel();
     }
 
     /// <summary>
@@ -113,5 +113,14 @@ public partial class DashboardPageView : ContentPage
                 Console.WriteLine("Hello World");
                 break;
         }
+    }
+    protected override async void OnAppearing()
+    {
+        base.OnAppearing();
+
+        if(BindingContext is DashboardViewModel vm)
+        {
+            await vm.LoadPatientsFromDbAsync();
+        }    
     }
 }

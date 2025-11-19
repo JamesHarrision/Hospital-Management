@@ -19,7 +19,7 @@
                 <Grid ColumnDefinitions="*,Auto"
                       VerticalOptions="Center">
                     <Label Text="Chi tiết đơn thuốc"
-                           FontSize="20"
+                           FontSize="35"
                            FontAttributes="Bold"
                            TextColor="{StaticResource ColorPrimary}" />
 

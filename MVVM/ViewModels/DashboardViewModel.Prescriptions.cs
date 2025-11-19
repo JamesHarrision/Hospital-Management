@@ -1,10 +1,9 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using HosipitalManager.MVVM.Models;
-using HospitalManager.MVVM.Models;
 using System.Collections.ObjectModel;
 
-namespace HospitalManager.MVVM.ViewModels;
+namespace HosipitalManager.MVVM.ViewModels;
 
 public partial class DashboardViewModel
 {
@@ -31,32 +30,32 @@ public partial class DashboardViewModel
         });
     }
 
-    [RelayCommand]
-    private void ShowAddPrescriptionPopup()
-    {
-        IsAddPrescriptionPopupVisible = true;
-    }
+    //[RelayCommand]
+    //private void ShowAddPrescriptionPopup()
+    //{
+    //    IsAddPrescriptionPopupVisible = true;
+    //}
 
-    [RelayCommand]
-    private void CloseAddPrescriptionPopup()
-    {
-        IsAddPrescriptionPopupVisible = false;
-        NewPrescriptionPatientName = string.Empty;
-        NewPrescriptionDoctorName = string.Empty;
-    }
+    //[RelayCommand]
+    //private void CloseAddPrescriptionPopup()
+    //{
+    //    IsAddPrescriptionPopupVisible = false;
+    //    NewPrescriptionPatientName = string.Empty;
+    //    NewPrescriptionDoctorName = string.Empty;
+    //}
 
-    [RelayCommand]
-    private void SavePrescription()
-    {
-        var newPrescription = new Prescription
-        {
-            Id = $"DT{new Random().Next(100, 999)}",
-            PatientName = NewPrescriptionPatientName,
-            DoctorName = NewPrescriptionDoctorName,
-            DatePrescribed = DateTime.Now,
-            Status = "Chưa cấp"
-        };
-        Prescriptions.Add(newPrescription);
-        CloseAddPrescriptionPopup();
-    }
+    //[RelayCommand]
+    //private void SavePrescription()
+    //{
+    //    var newPrescription = new Prescription
+    //    {
+    //        Id = $"DT{new Random().Next(100, 999)}",
+    //        PatientName = NewPrescriptionPatientName,
+    //        DoctorName = NewPrescriptionDoctorName,
+    //        DatePrescribed = DateTime.Now,
+    //        Status = "Chưa cấp"
+    //    };
+    //    Prescriptions.Add(newPrescription);
+    //    CloseAddPrescriptionPopup();
+    //}
 }

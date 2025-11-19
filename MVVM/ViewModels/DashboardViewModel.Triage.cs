@@ -1,13 +1,14 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using HospitalManager.MVVM.Models;
+using HosipitalManager.MVVM.Models;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Threading.Tasks;
 
-namespace HospitalManager.MVVM.ViewModels;
+namespace HosipitalManager.MVVM.ViewModels;
 
 // File này chỉ lo việc Xếp hàng và Tiếp nhận
-public partial class DashboardViewModel
+public partial class DashboardViewModel : ObservableObject
 {
     [ObservableProperty]
     private ObservableCollection<Patient> waitingQueue; // Hàng đợi
@@ -17,24 +18,6 @@ public partial class DashboardViewModel
 
     [ObservableProperty]
     private string popupTitle = "Tiếp nhận bệnh nhân mới";
-
-    // Các trường nhập liệu
-    [ObservableProperty]
-    private string newPatientFullName;
-    [ObservableProperty]
-    private DateTime newPatientDateOfBirth = DateTime.Today;
-    [ObservableProperty]
-    private string newPatientGender;
-    [ObservableProperty]
-    private string newPatientPhoneNumber;
-    [ObservableProperty]
-    private string newPatientAddress;
-    [ObservableProperty]
-    private string newPatientStatus = "Chờ khám";
-    [ObservableProperty]
-    private string newPatientSeverity = "Bình thường";
-    [ObservableProperty]
-    private string newPatientSymptoms;
 
     // Biến kiểm soát UI
     [ObservableProperty]
@@ -86,16 +69,19 @@ public partial class DashboardViewModel
     // --- COMMANDS ---
 
     [RelayCommand]
-    private void ShowAddPatientPopup()
+    private async Task ShowAddPatientPopup()
     {
         isEditing = false;
         PopupTitle = "Tiếp nhận bệnh nhân mới";
         ClearPopupForm();
 
-        // Logic khóa form
-        NewPatientStatus = "Chờ khám";
-        IsStatusEnabled = false;
-
+        EditingPatient = new Patient()
+        {
+            Id = await _patientRepository.GetNextPatientIDAsync(),
+            Status = "Chờ khám",
+            AdmittedDate = DateTime.Now
+        };
+        isStatusEnabled = false;
         IsAddPatientPopupVisible = true;
     }
 
@@ -107,50 +93,56 @@ public partial class DashboardViewModel
     }
 
     [RelayCommand]
-    private void SavePatient()
+    private async Task SavePatient()
     {
         try
         {
-            string severityCode = GetSeverityCode(NewPatientSeverity);
-
-            if (isEditing && patientToEdit != null)
+            if (EditingPatient == null || string.IsNullOrWhiteSpace(EditingPatient.FullName))
             {
-                // Logic Sửa (Admin dùng)
-                patientToEdit.FullName = NewPatientFullName;
-                patientToEdit.DateOfBirth = NewPatientDateOfBirth;
-                patientToEdit.Gender = NewPatientGender;
-                patientToEdit.PhoneNumber = NewPatientPhoneNumber;
-                patientToEdit.Address = NewPatientAddress;
-                patientToEdit.Status = NewPatientStatus;
-                patientToEdit.Severity = severityCode;
-                patientToEdit.Symptoms = NewPatientSymptoms;
+                await Application.Current.MainPage.DisplayAlert("Lỗi", "Vui lòng nhập họ tên bệnh nhân.", "OK");
+                return;
+            }
+
+            EditingPatient.Severity = GetSeverityCode(EditingPatient.Severity ?? "Bình thường");
+            // Kiểm tra bệnh nhân đã có trong danh sách?
+            var existing = Patients.FirstOrDefault(p => p.Id == EditingPatient.Id);
+
+            if (existing == null)
+            {
+                // Bệnh nhân mới
+                EditingPatient.QueueOrder = WaitingQueue.Count + 1;
+                EditingPatient.PriorityScore = CalculatePriority(EditingPatient);
+
+                await _patientRepository.AddAsync(EditingPatient);
+                Patients.Add(EditingPatient);
+                WaitingQueue.Add(EditingPatient);
             }
             else
             {
-                // Logic Thêm Mới (Tiếp nhận)
-                var newPatient = new Patient
-                {
-                    Id = $"BN{new Random().Next(1000, 9999)}",
-                    FullName = NewPatientFullName,
-                    DateOfBirth = NewPatientDateOfBirth,
-                    Gender = NewPatientGender,
-                    PhoneNumber = NewPatientPhoneNumber,
-                    Address = NewPatientAddress,
-                    AdmittedDate = DateTime.Now,
-                    Status = "Chờ khám", // Fix cứng
-                    Severity = severityCode,
-                    Symptoms = NewPatientSymptoms,
-                    QueueOrder = WaitingQueue.Count + 1
-                };
-                WaitingQueue.Add(newPatient);
+                // ============= Cập nhật vào DB =============
+                await _patientRepository.UpdateAsync(EditingPatient);
+
+                // Cập nhật vào ObservableCollection (UI sẽ tự refresh)
+                existing.FullName = EditingPatient.FullName;
+                existing.DateOfBirth = EditingPatient.DateOfBirth;
+                existing.Gender = EditingPatient.Gender;
+                existing.PhoneNumber = EditingPatient.PhoneNumber;
+                existing.Address = EditingPatient.Address;
+                existing.AdmittedDate = EditingPatient.AdmittedDate;
+                existing.Status = EditingPatient.Status;
+                existing.Severity = EditingPatient.Severity;
+                existing.Symptoms = EditingPatient.Symptoms;
+                existing.PriorityScore = EditingPatient.PriorityScore;
+                existing.QueueOrder = EditingPatient.QueueOrder;
             }
 
-            SortPatientQueue();
-            CloseAddPatientPopup();
+            // Đóng popup (nếu bạn muốn)
+            IsAddPatientPopupVisible = false;
+            ClearPopupForm();
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"Lỗi: {ex.Message}");
+            await Application.Current.MainPage.DisplayAlert("Lỗi", ex.Message, "OK");
         }
     }
 
@@ -168,21 +160,15 @@ public partial class DashboardViewModel
         if (isConfirmed)
         {
             patient.Status = "Đang điều trị";
-            Patients.Add(patient); // Chuyển sang Database
+            await _patientRepository.UpdateAsync(patient);
             WaitingQueue.Remove(patient); // Xóa khỏi hàng đợi
         }
+        
     }
 
     private void ClearPopupForm()
     {
-        NewPatientFullName = string.Empty;
-        NewPatientDateOfBirth = DateTime.Today;
-        NewPatientGender = null;
-        NewPatientPhoneNumber = string.Empty;
-        NewPatientAddress = string.Empty;
-        NewPatientStatus = "Chờ khám";
-        NewPatientSeverity = "Bình thường";
-        NewPatientSymptoms = string.Empty;
+        EditingPatient = null;
         isEditing = false;
         patientToEdit = null;
     }

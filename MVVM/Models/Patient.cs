@@ -2,7 +2,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using System;
 
-namespace HospitalManager.MVVM.Models
+namespace HosipitalManager.MVVM.Models
 {
     // 1. Thêm 'partial' và kế thừa 'ObservableObject'
     public partial class Patient : ObservableObject

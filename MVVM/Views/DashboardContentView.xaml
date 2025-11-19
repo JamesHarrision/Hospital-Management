@@ -2,7 +2,7 @@
 <ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="HosipitalManager.MVVM.Views.DashboardContentView"
-             xmlns:vm="clr-namespace:HospitalManager.MVVM.ViewModels"
+             xmlns:vm="clr-namespace:HosipitalManager.MVVM.ViewModels"
             xmlns:views="clr-namespace:HosipitalManager.MVVM.Views">
     
     

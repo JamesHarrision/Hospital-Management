@@ -1,5 +1,4 @@
 ﻿using HosipitalManager.MVVM.Views;
-using HospitalManager.MVVM.Views;
 
 namespace HosipitalManager
 {

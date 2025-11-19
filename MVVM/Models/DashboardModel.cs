@@ -1,7 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.Maui.Graphics;
 
-namespace HospitalManager.MVVM.Models; 
+namespace HosipitalManager.MVVM.Models; 
 
 // Lớp dữ liệu cho các thẻ tóm tắt trên Dashboard
 public partial class SummaryCard : ObservableObject
