@@ -3,6 +3,7 @@ using HosipitalManager.MVVM.Models;
 using HospitalManager.MVVM.Models;
 using Microsoft.Maui.Graphics;
 using System.Collections.ObjectModel;
+using System.Linq;
 
 namespace HospitalManager.MVVM.ViewModels;
 
@@ -36,6 +37,11 @@ public partial class DashboardViewModel : ObservableObject
         LoadSummaryCards();
         LoadPrescriptions();
         LoadSamplePatients(); // Load database mẫu
+
+        foreach (var p in Patients.Where(p => p.Status == "Chờ khám"))
+        {
+            WaitingQueue.Add(p);
+        }
     }
 
     private void LoadSummaryCards()

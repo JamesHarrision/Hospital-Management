@@ -24,7 +24,6 @@ public partial class DashboardViewModel
             Status = "Đang điều trị",
             Severity = "normal"
         });
-        // ... thêm các mẫu khác nếu muốn
     }
 
     [RelayCommand]

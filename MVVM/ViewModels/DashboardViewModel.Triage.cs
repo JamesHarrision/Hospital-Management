@@ -3,6 +3,8 @@ using CommunityToolkit.Mvvm.Input;
 using HospitalManager.MVVM.Models;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using Microsoft.Maui.ApplicationModel;
+using HosipitalManager.MVVM.Services;
 
 namespace HospitalManager.MVVM.ViewModels;
 
@@ -160,19 +162,35 @@ public partial class DashboardViewModel
         if (patient == null) return;
 
         bool isConfirmed = await Application.Current.MainPage.DisplayAlert(
-            "Xác nhận",
+            "Xác nhận khám",
             $"Mời bệnh nhân {patient.FullName} vào khám ngay?",
-            "Gọi khám",
+            "Gọi ngay",
             "Hủy");
 
         if (isConfirmed)
         {
+            // 1. Xử lý hàng đợi (như cũ)
             patient.Status = "Đang điều trị";
-            Patients.Add(patient); // Chuyển sang Database
-            WaitingQueue.Remove(patient); // Xóa khỏi hàng đợi
+            Patients.Add(patient);
+            WaitingQueue.Remove(patient);
+
+            // 2. --- TẠO SERVICE KẾT NỐI ---
+            // Truyền danh sách Prescriptions của Dashboard vào Service
+            var presService = new PrescriptionService(Prescriptions);
+
+            // 3. Khởi tạo VM Khám bệnh và đưa Service vào
+            // (Đảm bảo ExaminationViewModel đã có constructor nhận Service nhé!)
+            var examVM = new ExaminationViewModel(patient, presService);
+
+            // 4. Chuyển trang
+            var examPage = new HosipitalManager.MVVM.Views.ExaminationPageView(examVM);
+
+            MainThread.BeginInvokeOnMainThread(async () =>
+            {
+                await Shell.Current.Navigation.PushModalAsync(examPage);
+            });
         }
     }
-
     private void ClearPopupForm()
     {
         NewPatientFullName = string.Empty;

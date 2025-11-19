@@ -9,7 +9,7 @@ namespace HosipitalManager
         {
             InitializeComponent();
 
-            MainPage = new DashboardPageView();
+            MainPage = new AppShell();
         }
     }
 }

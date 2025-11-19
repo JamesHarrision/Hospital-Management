@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:HospitalManager.MVVM.ViewModels"
+             x:Class="HosipitalManager.MVVM.Views.ExaminationPageView"
+             Title="Phiếu Khám Bệnh"
+             BackgroundColor="#F3F4F6">
+
+    <Grid RowDefinitions="Auto, *" Padding="20" RowSpacing="20">
+
+        <Frame Grid.Row="0" BackgroundColor="White" CornerRadius="15" HasShadow="True" BorderColor="#E5E7EB" Padding="15">
+            <Grid ColumnDefinitions="Auto, *" ColumnSpacing="20">
+                <Border StrokeShape="RoundRectangle 30" WidthRequest="60" HeightRequest="60" StrokeThickness="0" BackgroundColor="#E0E7FF">
+                    <Image Source="person.png" Aspect="AspectFill" HorizontalOptions="Center" VerticalOptions="Center"/>
+                </Border>
+
+                <VerticalStackLayout Grid.Column="1" Spacing="5" VerticalOptions="Center">
+                    <Label Text="{Binding Patient.FullName}" FontSize="20" FontAttributes="Bold" TextColor="#1D2E4E"/>
+
+                    <HorizontalStackLayout Spacing="15">
+                        <Label Text="{Binding Patient.Age, StringFormat='Tuổi: {0}'}" TextColor="#6B7280" FontSize="13"/>
+                        <Label Text="|" TextColor="#E5E7EB"/>
+                        <Label Text="{Binding Patient.Gender}" TextColor="#6B7280" FontSize="13"/>
+                        <Label Text="|" TextColor="#E5E7EB"/>
+                        <Label Text="{Binding Patient.PhoneNumber}" TextColor="#6B7280" FontSize="13"/>
+                    </HorizontalStackLayout>
+
+                    <Frame BackgroundColor="#FEF2F2" Padding="10,5" CornerRadius="5" BorderColor="Transparent" HorizontalOptions="Start" Margin="0,5,0,0">
+                        <Label Text="{Binding Patient.Symptoms, StringFormat='Triệu chứng: {0}'}" 
+                               TextColor="#DC2626" FontSize="13"/>
+                    </Frame>
+                </VerticalStackLayout>
+            </Grid>
+        </Frame>
+
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Spacing="20" Padding="0,0,0,20">
+
+                <Border Stroke="#E5E7EB" StrokeShape="RoundRectangle 10" BackgroundColor="White" Padding="15">
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="Chẩn đoán y khoa" FontAttributes="Bold" TextColor="#374151"/>
+                        <Editor Text="{Binding Diagnosis}" 
+                                Placeholder="Nhập kết luận chẩn đoán..." 
+                                HeightRequest="100" 
+                                TextColor="#1F2937"
+                                BackgroundColor="#F9FAFB"/>
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border Stroke="#E5E7EB" StrokeShape="RoundRectangle 10" BackgroundColor="White" Padding="15">
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="Lời dặn của bác sĩ" FontAttributes="Bold" TextColor="#374151"/>
+                        <Editor Text="{Binding DoctorNotes}" 
+                                Placeholder="Ghi chú về chế độ ăn uống, tái khám..." 
+                                HeightRequest="80"
+                                TextColor="#1F2937"
+                                BackgroundColor="#F9FAFB"/>
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border Stroke="#E5E7EB" StrokeShape="RoundRectangle 10" BackgroundColor="White" Padding="15">
+                    <VerticalStackLayout Spacing="15">
+                        <Label Text="Kê Đơn Thuốc" FontAttributes="Bold" TextColor="#374151" FontSize="16"/>
+
+                        <Frame BackgroundColor="#F9FAFB" Padding="15" CornerRadius="8" BorderColor="#E0E7FF">
+                            <VerticalStackLayout Spacing="10">
+                                <Grid ColumnDefinitions="2*, 1*, 1*, 1*" ColumnSpacing="10">
+                                    <Label Grid.Column="0" Text="Tên Thuốc" TextColor="#6B7280" FontSize="11"/>
+                                    <Label Grid.Column="1" Text="Liều dùng" TextColor="#6B7280" FontSize="11"/>
+                                    <Label Grid.Column="2" Text="Số lượng" TextColor="#6B7280" FontSize="11"/>
+                                    <Label Grid.Column="3" Text="HDSD" TextColor="#6B7280" FontSize="11"/>
+                                </Grid>
+
+                                <Grid ColumnDefinitions="2*, 1*, 1*, 1*, Auto" ColumnSpacing="10">
+                                    <Entry Grid.Column="0" Placeholder="Paracetamol 500mg" Text="{Binding NewMedicationName}" TextColor="Black" />
+                                    <Entry Grid.Column="1" Placeholder="1 viên" Text="{Binding NewDosage}"  TextColor="Black" />
+                                    <Entry Grid.Column="2" Placeholder="10 viên" Text="{Binding NewQuantity}"  TextColor="Black" />
+                                    <Entry Grid.Column="3" Placeholder="Sáng/Chiều" Text="{Binding NewInstructions}"  TextColor="Black" />
+
+                                    <Button Grid.Column="4" Text="+" 
+                            Command="{Binding AddMedicationCommand}"
+                            WidthRequest="40" HeightRequest="40"
+                            BackgroundColor="{StaticResource ColorPrimary}" TextColor="White" CornerRadius="8"/>
+                                </Grid>
+                            </VerticalStackLayout>
+                        </Frame>
+
+                        <CollectionView ItemsSource="{Binding Medications}">
+                            <CollectionView.Header>
+                                <Grid Padding="10, 5" BackgroundColor="#E5E7EB" ColumnDefinitions="2*, 1*, 1*, 1*, Auto">
+                                    <Label Grid.Column="0" Text="THUỐC" FontAttributes="Bold" TextColor="#4B5563" FontSize="12"/>
+                                    <Label Grid.Column="1" Text="LIỀU" FontAttributes="Bold" TextColor="#4B5563" FontSize="12"/>
+                                    <Label Grid.Column="2" Text="SL" FontAttributes="Bold" TextColor="#4B5563" FontSize="12"/>
+                                    <Label Grid.Column="3" Text="HDSD" FontAttributes="Bold" TextColor="#4B5563" FontSize="12"/>
+                                    <BoxView Grid.Column="4" Color="Transparent"/>
+                                </Grid>
+                            </CollectionView.Header>
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Padding="10, 8" ColumnDefinitions="2*, 1*, 1*, 1*, Auto" BackgroundColor="White">
+                                        <Label Grid.Column="0" Text="{Binding MedicationName}" TextColor="#1F2937"/>
+                                        <Label Grid.Column="1" Text="{Binding Dosage}" TextColor="#4B5563"/>
+                                        <Label Grid.Column="2" Text="{Binding Quantity}" TextColor="#4B5563"/>
+                                        <Label Grid.Column="3" Text="{Binding Instructions}" TextColor="#4B5563"/>
+
+                                        <ImageButton Grid.Column="4" Source="delete.png" WidthRequest="15" HeightRequest="15"
+                                     Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ExaminationViewModel}}, Path=RemoveMedicationCommand}"
+                                     CommandParameter="{Binding .}"/>
+                                        <BoxView Grid.ColumnSpan="5" HeightRequest="1" Color="#E5E7EB" VerticalOptions="End"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                        </CollectionView>
+
+                    </VerticalStackLayout>
+                </Border>
+
+                <Grid ColumnDefinitions="*, *" ColumnSpacing="15" Margin="0,10,0,0">
+                    <Button Grid.Column="0" Text="Quay lại" 
+                            Command="{Binding CancelCommand}"
+                            BackgroundColor="#E5E7EB" TextColor="#374151" CornerRadius="8"/>
+
+                    <Button Grid.Column="1" Text="Hoàn tất khám" 
+                            Command="{Binding FinishExaminationCommand}"
+                            BackgroundColor="#4F46E5" TextColor="White" FontAttributes="Bold" CornerRadius="8"/>
+                </Grid>
+                
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>
