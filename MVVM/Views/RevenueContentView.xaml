@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:lvc="clr-namespace:LiveChartsCore.SkiaSharpView.Maui;assembly=LiveChartsCore.SkiaSharpView.Maui"
+             x:Class="HosipitalManager.MVVM.Views.RevenueContentView"
+             xmlns:vm="clr-namespace:HosipitalManager.MVVM.ViewModels"
+             BackgroundColor="#F4F7FC">
+    <ContentView.BindingContext>
+        <vm:RevenueViewModel/>
+    </ContentView.BindingContext>
+
+    <ScrollView>
+        <VerticalStackLayout Spacing="20" Padding="0,0,0,20">
+
+            <Label Text="Báo Cáo Doanh Thu &amp; KPI" 
+                   FontSize="20" FontAttributes="Bold" 
+                   TextColor="#1D2E4E" Margin="5,0,0,0"/>
+
+            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="15">
+                <Border Grid.Column="0" BackgroundColor="White" StrokeShape="RoundRectangle 12" Padding="15" StrokeThickness="0">
+                    <Border.Shadow>
+                        <Shadow Brush="Black" Offset="2,2" Opacity="0.1" Radius="5"/>
+                    </Border.Shadow>
+                    <VerticalStackLayout Spacing="5">
+                        <Label Text="THÁNG CAO NHẤT" FontSize="11" TextColor="#757575" FontAttributes="Bold"/>
+                        <Label Text="{Binding BestRevenueMonth}" FontSize="14" TextColor="#1D2E4E"/>
+                        <Label Text="{Binding BestRevenueAmount}" FontSize="18" TextColor="#27ae60" FontAttributes="Bold"/>
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border Grid.Column="1" BackgroundColor="White" StrokeShape="RoundRectangle 12" Padding="15" StrokeThickness="0">
+                    <Border.Shadow>
+                        <Shadow Brush="Black" Offset="2,2" Opacity="0.1" Radius="5"/>
+                    </Border.Shadow>
+                    <VerticalStackLayout Spacing="5">
+                        <Label Text="ĐÔNG KHÁCH NHẤT" FontSize="11" TextColor="#757575" FontAttributes="Bold"/>
+                        <Label Text="{Binding BusiestMonth}" FontSize="14" TextColor="#1D2E4E"/>
+                        <Label Text="{Binding BusiestPatientCount}" FontSize="18" TextColor="#e17055" FontAttributes="Bold"/>
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border Grid.Column="2" BackgroundColor="White" StrokeShape="RoundRectangle 12" Padding="15" StrokeThickness="0">
+                    <Border.Shadow>
+                        <Shadow Brush="Black" Offset="2,2" Opacity="0.1" Radius="5"/>
+                    </Border.Shadow>
+                    <VerticalStackLayout Spacing="5">
+                        <Label Text="TOP BÁC SĨ (KPI)" FontSize="11" TextColor="#757575" FontAttributes="Bold"/>
+                        <Label Text="{Binding TopDoctorName}" FontSize="16" TextColor="#1D2E4E" FontAttributes="Bold"/>
+                        <Label Text="{Binding TopDoctorRevenue}" FontSize="12" TextColor="#6c5ce7"/>
+                    </VerticalStackLayout>
+                </Border>
+            </Grid>
+
+            <Border BackgroundColor="White" StrokeShape="RoundRectangle 12" Padding="20" StrokeThickness="0">
+                <Border.Shadow>
+                    <Shadow Brush="Black" Offset="2,2" Opacity="0.1" Radius="5"/>
+                </Border.Shadow>
+                <VerticalStackLayout Spacing="15">
+                    <Label Text="Biểu đồ Doanh thu theo Tháng" FontSize="16" FontAttributes="Bold" TextColor="#1D2E4E"/>
+                    <lvc:CartesianChart 
+                        Series="{Binding RevenueSeries}" 
+                        XAxes="{Binding XAxes}" 
+                        YAxes="{Binding YAxes}"
+                        HeightRequest="300" 
+                        Margin="0,10,0,0">
+                    </lvc:CartesianChart>
+                </VerticalStackLayout>
+            </Border>
+
+            <Border BackgroundColor="White" StrokeShape="RoundRectangle 12" Padding="20" StrokeThickness="0" VerticalOptions="Fill">
+                <Border.Shadow>
+                    <Shadow Brush="Black" Offset="2,2" Opacity="0.1" Radius="5"/>
+                </Border.Shadow>
+
+                <VerticalStackLayout Spacing="15">
+                    <Label Text="Chi tiết Doanh thu theo Tháng" FontSize="16" FontAttributes="Bold" TextColor="#1D2E4E"/>
+
+                    <Grid ColumnDefinitions="1.5*, 3*, 1.5*" Padding="0,0,0,5">
+                        <Label Text="Thời gian" TextColor="#757575" FontSize="12" FontAttributes="Bold"/>
+                        <Label Text="Biểu đồ doanh thu" TextColor="#757575" FontSize="12" FontAttributes="Bold" Grid.Column="1"/>
+                        <Label Text="Số tiền" TextColor="#757575" FontSize="12" FontAttributes="Bold" Grid.Column="2" HorizontalOptions="Center"/>
+                    </Grid>
+                    <BoxView HeightRequest="1" Color="#E0E0E0" />
+
+                    <CollectionView ItemsSource="{Binding YearlyStats}" HeightRequest="300">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <Grid ColumnDefinitions="1.5*, 3*, 1.5*" Padding="0,12">
+
+                                    <VerticalStackLayout Grid.Column="0" VerticalOptions="Center">
+                                        <Label Text="{Binding MonthName}" TextColor="#1D2E4E" FontAttributes="Bold"/>
+                                        <Label Text="{Binding PatientCount, StringFormat='{0} bệnh nhân'}" TextColor="#757575" FontSize="11"/>
+                                    </VerticalStackLayout>
+
+                                    <ProgressBar Grid.Column="1" 
+                                                 Progress="{Binding PercentageBar}" 
+                                                 ProgressColor="#6C5CE7"
+                                                 ScaleY="2" 
+                                                 VerticalOptions="Center" 
+                                                 Margin="0,0,20,0"/>
+
+                                    <Label Grid.Column="2" Text="{Binding Amount, StringFormat='{0:N0}'}" 
+                                           TextColor="#1D2E4E" FontAttributes="Bold" 
+                                           VerticalOptions="Center" HorizontalOptions="Center"/>
+                                </Grid>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </VerticalStackLayout>
+            </Border>
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentView>

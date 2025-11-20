@@ -89,6 +89,7 @@ public partial class DashboardPageView : ContentPage
         PatientsContentView.IsVisible = false;
         PrescriptionsContentView.IsVisible = false;
         AppointmentsContentView.IsVisible = false;
+        RevenueContentView.IsVisible = false;
 
         switch (tabName)
         {
@@ -111,6 +112,10 @@ public partial class DashboardPageView : ContentPage
                 AppointmentsContentView.IsVisible = true;
                 PageTitleLabel.Text = "Quản lý Lịch hẹn";
                 Console.WriteLine("Hello World");
+                break;
+            case "Revenue":
+                RevenueContentView.IsVisible= true;
+                PageTitleLabel.Text = "Quản lý doanh thu";
                 break;
         }
     }
