@@ -23,6 +23,14 @@ public partial class DashboardViewModel : ObservableObject
     [ObservableProperty]
     private string userAvatar = "person_placeholder.png";
 
+    //DANH MỤC THUỐC CÓ SẴN (Giả lập kho thuốc của bệnh viện)
+    [ObservableProperty]
+    private ObservableCollection<MedicineProduct> availableMedicines;
+
+    // Thuốc đang được chọn trong Dropdown (Picker)
+    [ObservableProperty]
+    private MedicineProduct selectedMedicineProduct;
+
     public DashboardViewModel()
     {
         // 1. Khởi tạo các danh sách
@@ -33,15 +41,29 @@ public partial class DashboardViewModel : ObservableObject
         WaitingQueue = new ObservableCollection<Patient>();  // Hàng đợi RỖNG
         Prescriptions = new ObservableCollection<Prescription>();
 
+        
+
         // 2. Nạp dữ liệu (Từ các file partial khác)
         LoadSummaryCards();
         LoadPrescriptions();
         LoadSamplePatients(); // Load database mẫu
+        LoadMedicineCatalog();
 
         foreach (var p in Patients.Where(p => p.Status == "Chờ khám"))
         {
             WaitingQueue.Add(p);
         }
+    }
+
+    private void LoadMedicineCatalog()
+    {
+        AvailableMedicines = new ObservableCollection<MedicineProduct>
+        {
+            new MedicineProduct { Name = "Paracetamol 500mg", Unit = "Viên", UnitPrice = 1000 },
+            new MedicineProduct { Name = "Panadol Extra", Unit = "Viên", UnitPrice = 1500 },
+            new MedicineProduct { Name = "Vitamin C", Unit = "Vỉ", UnitPrice = 15000 },
+            new MedicineProduct { Name = "Kháng sinh Augmentin", Unit = "Viên", UnitPrice = 25000 },
+        };
     }
 
     private void LoadSummaryCards()

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Windows.Media.Core;
 
 namespace HosipitalManager.MVVM.Models
 {
@@ -28,5 +29,7 @@ namespace HosipitalManager.MVVM.Models
 
         // Một đơn thuốc có nhiều loại thuốc
         public List<MedicationItem> Medications { get; set; } = new List<MedicationItem>();
+
+        public decimal TotalAmount => Medications?.Sum(m => m.Price) ?? 0;
     }
 }

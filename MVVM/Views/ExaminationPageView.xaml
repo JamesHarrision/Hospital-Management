@@ -64,23 +64,81 @@
 
                         <Frame BackgroundColor="#F9FAFB" Padding="15" CornerRadius="8" BorderColor="#E0E7FF">
                             <VerticalStackLayout Spacing="10">
-                                <Grid ColumnDefinitions="2*, 1*, 1*, 1*" ColumnSpacing="10">
-                                    <Label Grid.Column="0" Text="Tên Thuốc" TextColor="#6B7280" FontSize="11"/>
-                                    <Label Grid.Column="1" Text="Liều dùng" TextColor="#6B7280" FontSize="11"/>
-                                    <Label Grid.Column="2" Text="Số lượng" TextColor="#6B7280" FontSize="11"/>
-                                    <Label Grid.Column="3" Text="HDSD" TextColor="#6B7280" FontSize="11"/>
+                                <Grid ColumnDefinitions="2*, 1*, 0.7*, 0.8*,1.2*" ColumnSpacing="10">
+                                    <Label Grid.Column="0" Text="Tên Thuốc" TextColor="#6B7280" FontSize="12"/>
+                                    <Label Grid.Column="1" Text="Liều dùng" TextColor="#6B7280" FontSize="12"/>
+                                    <Label Grid.Column="2" Text="Số lượng" TextColor="#6B7280" FontSize="12"/>
+                                    <Label Grid.Column="3" Text="Đơn vị" TextColor="#6B7280" FontSize="12"/>
+                                    <Label Grid.Column="4" Text="HDSD" TextColor="#6B7280" FontSize="12"/>
                                 </Grid>
 
-                                <Grid ColumnDefinitions="2*, 1*, 1*, 1*, Auto" ColumnSpacing="10">
-                                    <Entry Grid.Column="0" Placeholder="Paracetamol 500mg" Text="{Binding NewMedicationName}" TextColor="Black" />
-                                    <Entry Grid.Column="1" Placeholder="1 viên" Text="{Binding NewDosage}"  TextColor="Black" />
-                                    <Entry Grid.Column="2" Placeholder="10 viên" Text="{Binding NewQuantity}"  TextColor="Black" />
-                                    <Entry Grid.Column="3" Placeholder="Sáng/Chiều" Text="{Binding NewInstructions}"  TextColor="Black" />
+                                <Grid ColumnDefinitions="2*, 1*, 0.7*, 0.8*, 1.2*, Auto"
+                                      VerticalOptions="Center"
+                                      ColumnSpacing="10">
+                                    <Border Grid.Column="0" 
+                                            Stroke="#E5E7EB" 
+                                            StrokeThickness="0" 
+                                            StrokeShape="RoundRectangle 8"
+                                            Padding="10,0"
+                                            HeightRequest="55">
+                                            <Picker
+                                                ItemsSource="{Binding AvailableMedicines}"
+                                                ItemDisplayBinding="{Binding Name}"
+                                                SelectedItem="{Binding SelectedMedicineProduct}"
+                                                TextColor="Black"
+                                                TitleColor="#9CA3AF"
+                                                BackgroundColor="Transparent" 
+                                                VerticalOptions="Center" 
+                                                HorizontalOptions="Fill"/>
+                                    </Border>
 
-                                    <Button Grid.Column="4" Text="+" 
-                            Command="{Binding AddMedicationCommand}"
-                            WidthRequest="40" HeightRequest="40"
-                            BackgroundColor="{StaticResource ColorPrimary}" TextColor="White" CornerRadius="8"/>
+                                    <Border Grid.Column="1" Stroke="#E5E7EB"
+                                            StrokeThickness="0" StrokeShape="RoundRectangle 8">
+                                        <Entry Placeholder="Liều (500 mg)" 
+                                               Text="{Binding NewDosage}"  
+                                               TextColor="Black"
+                                               PlaceholderColor="#9CA3AF"
+                                               HeightRequest="45"/>
+                                    </Border>
+
+                                    <Border Grid.Column="2" Stroke="#E5E7EB" StrokeThickness="0" StrokeShape="RoundRectangle 8">
+                                        <Entry Placeholder="SL" 
+                                               Text="{Binding NewQuantity}"  
+                                               TextColor="Black"
+                                               Keyboard="Numeric"
+                                               PlaceholderColor="#9CA3AF"
+                                               HeightRequest="45"/>
+                                    </Border>
+
+                                    <Border Grid.Column="3" Stroke="#E5E7EB" StrokeThickness="0" StrokeShape="RoundRectangle 8">
+                                        <Picker 
+                                                ItemsSource="{Binding AvailableUnits}"
+                                                SelectedItem="{Binding SelectedUnit}"
+                                                TextColor="Black"
+                                                TitleColor="#9CA3AF"
+                                                BackgroundColor="Transparent"
+                                                VerticalOptions="Center"
+                                                HorizontalOptions="Fill"/>
+                                    </Border>
+
+                                    <Border Grid.Column="4" Stroke="#E5E7EB"
+                                            StrokeThickness="0" StrokeShape="RoundRectangle 8"
+                                            HeightRequest="45">
+                                        <Entry Placeholder="HDSD (Sáng/Chiều)"
+                                               Text="{Binding NewInstructions}" 
+                                               TextColor="Black"
+                                               PlaceholderColor="#9CA3AF" 
+                                               HeightRequest="45"
+                                               VerticalTextAlignment="Center"/>
+                                    </Border>
+
+                                    <Button Grid.Column="5" Text="+" 
+                                            Command="{Binding AddMedicationCommand}"
+                                            WidthRequest="40" HeightRequest="40"
+                                            BackgroundColor="{StaticResource ColorPrimary}" 
+                                            TextColor="White"
+                                            CornerRadius="8"
+                                            FontSize="25"/>    
                                 </Grid>
                             </VerticalStackLayout>
                         </Frame>

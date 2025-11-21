@@ -19,7 +19,7 @@
                 <Grid ColumnDefinitions="*,Auto"
                       VerticalOptions="Center">
                     <Label Text="Chi tiết đơn thuốc"
-                           FontSize="20"
+                           FontSize="30"
                            FontAttributes="Bold"
                            TextColor="{StaticResource ColorPrimary}" />
 
@@ -106,7 +106,9 @@
                          Margin="0,10" />
 
                 <!-- Tiêu đề danh sách thuốc -->
-                <Label Grid.Row="3" Text="Danh sách thuốc" FontAttributes="Bold" TextColor="#374151" Margin="0,10,0,0"/>
+                <Label Grid.Row="3" Text="DANH SÁCH THUỐC"
+                       FontSize="20"
+                       FontAttributes="Bold" TextColor="#374151" Margin="0,10,0,0"/>
 
                 <!-- Bảng thuốc -->
                 <CollectionView Grid.Row="4" ItemsSource="{Binding SelectedPrescription.Medications}"
@@ -119,7 +121,10 @@
                             <Label Grid.Column="1" Text="LIỀU"      FontAttributes="Bold" TextColor="#6B7280" />
                             <Label Grid.Column="2" Text="SL"   FontAttributes="Bold" TextColor="#6B7280" />
                             <Label Grid.Column="3" Text="HDSD"        FontAttributes="Bold" TextColor="#6B7280" />
-                            <Label Grid.Column="4" Text="SỐ NGÀY" FontAttributes="Bold" TextColor="#6B7280" />
+                            <Label Grid.Column="4" Text="THÀNH TIỀN"
+                                   FontAttributes="Bold" 
+                                   TextColor="#6B7280"
+                                   HorizontalOptions="End"/>
                         </Grid>
                     </CollectionView.Header>
 
@@ -140,21 +145,56 @@
                                        Text="{Binding Instructions}"
                                        TextColor="#4B5563" />
                                 <Label Grid.Column="4"
-                                       Text="{Binding Days}"
-                                       TextColor="#4B5563" />
+                                       Text="{Binding Price, StringFormat='{0:N0} đ'}"
+                                       TextColor="#4B5563"
+                                       HorizontalOptions="End"/>
                             </Grid>
                         </DataTemplate>
                     </CollectionView.ItemTemplate>
                 </CollectionView>
+                
+                
+               <!-- LABEL TỔNG TIỀN -->
+                <Grid ColumnDefinitions="*,Auto" Margin="0,10,0,20">
+                    <Label Grid.Column="0"
+                           Text="TỔNG CỘNG: "
+                           FontSize="19"
+                           FontAttributes="Bold"
+                           TextColor="#374151"
+                           HorizontalOptions="End"
+                           VerticalOptions="Center"
+                           Margin="0,0,10,0"/>
 
-                <!-- Nút đóng -->
+                    <Label Grid.Column="1"
+                           Text="{Binding SelectedPrescription.TotalAmount, StringFormat='{0:N0} VNĐ'}"
+                           FontSize="20"
+                           FontAttributes="Bold"
+                           TextColor="{StaticResource ColorPrimary}"/>
+                </Grid>
+                
                 <HorizontalStackLayout HorizontalOptions="End">
+                    <!-- Nút in đơn thuốc -->
+                    <Button Text="In đơn thuốc"
+                            Command="{Binding PrintPrescriptionCommand}"
+                            BackgroundColor="{StaticResource ColorPrimary}"
+                            CornerRadius="10"
+                            Padding="20,8"
+                            Margin="10">
+                        <Button.ImageSource>
+                            <FontImageSource Glyph="&#x1F5A8;"
+                                            FontFamily="Arial"
+                                            Color="White"/>
+                        </Button.ImageSource>
+                    </Button>
+
+                    <!-- Nút đóng -->
                     <Button Text="Đóng"
                             Command="{Binding ClosePrescriptionDetailCommand}"
                             BackgroundColor="{StaticResource ColorPrimary}"
                             TextColor="White"
                             CornerRadius="10"
-                            Padding="20,8" />
+                            Padding="20,8"
+                            Margin="10"/>
                 </HorizontalStackLayout>
 
             </VerticalStackLayout>
