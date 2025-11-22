@@ -83,7 +83,7 @@
                         <Label Text="Lịch hẹn" TextColor="White" VerticalOptions="Center" />
                     </HorizontalStackLayout>
                 </Border>
-<!-- Doanh thu và binding cua no-->
+                
                 <Border x:Name="RevenueTab"
                           Padding="10" 
                           Margin="5,0"
