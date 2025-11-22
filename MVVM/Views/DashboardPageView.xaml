@@ -5,7 +5,8 @@
              xmlns:views="clr-namespace:HosipitalManager.MVVM.Views"
              x:Class="HospitalManager.MVVM.Views.DashboardPageView"
              Title="Dashboard"
-             BackgroundColor="#F4F7FC">
+             BackgroundColor="#F4F7FC"
+             Shell.NavBarIsVisible="False">
 
     <ContentPage.BindingContext>
         <vm:DashboardViewModel />
@@ -13,133 +14,151 @@
 
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition x:Name="SideMenuColumn" Width="250" />
+            <ColumnDefinition x:Name="SideMenuColumn" Width="{Binding SidebarWidth}" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
         <Border Grid.Column="0"
                 Grid.Row="0"
-                Grid.RowSpan="2" x:Name="SideMenu"
-                BackgroundColor="White"
-                Stroke="#E0E0E0"
-                StrokeThickness="1"
-                Padding="10">
+                Grid.RowSpan="2" 
+                x:Name="SideMenu"
+                Background="{StaticResource GradientPrimary}" 
+                StrokeThickness="0"
+                Padding="0">
+            <!--<Border.Behavior>
+                <BehaviorCollection>
+                </behaviorcollection>
+            </border.behavior>-->
+            <Grid RowDefinitions="*, Auto" Padding="10">
 
-            <VerticalStackLayout Spacing="10" Margin="5, 10, 5, 5"
-                                 Background="{StaticResource GradientPrimary}">
+                <VerticalStackLayout Spacing="10" Margin="0, 10, 0, 0">
 
-                <Border x:Name="DashboardTab"
-                        Padding="10" 
-                        Margin="5,15,0,0"
-                        StrokeThickness="0">
-                    <Border.GestureRecognizers>
-                        <TapGestureRecognizer Tapped="OnTabClicked" CommandParameter="Dashboard" />
-                        <PointerGestureRecognizer PointerEntered="OnTabPointerEntered"
-                                  PointerExited="OnTabPointerExited" />
-                    </Border.GestureRecognizers>
-                    <HorizontalStackLayout Spacing="10">
-                        <Label Text="Tổng quan" TextColor="White" VerticalOptions="Center" />
-                    </HorizontalStackLayout>
-                </Border>
+                    <HorizontalStackLayout Spacing="10" Padding="5,0,0,20">
+                        <Image Source="appicon.svg" WidthRequest="30" HeightRequest="30" HorizontalOptions="Center"/>
 
-                <Border x:Name="PatientsTab"
-                        Padding="10" 
-                        Margin="5,0"
-                        StrokeThickness="0">
-                    <Border.GestureRecognizers>
-                        <TapGestureRecognizer Tapped="OnTabClicked" CommandParameter="Patients" />
-                        <PointerGestureRecognizer PointerEntered="OnTabPointerEntered"
-                                                    PointerExited="OnTabPointerExited" />
-                    </Border.GestureRecognizers>
-                    <HorizontalStackLayout Spacing="10">
-                        <Label Text="Bệnh nhân" TextColor="White" VerticalOptions="Center" />
+                        <Label Text="MedCare" FontSize="20" FontAttributes="Bold" TextColor="White" VerticalOptions="Center"
+                               Opacity="{Binding MenuTextOpacity}" IsVisible="{Binding IsMenuExpanded}" LineBreakMode="NoWrap"/>
                     </HorizontalStackLayout>
-                </Border>
-                
-                <Border x:Name="PrescriptionsTab"
-                    Padding="10" 
-                    Margin="5,0"
-                    StrokeThickness="0">
-                    <Border.GestureRecognizers>
-                        <TapGestureRecognizer Tapped="OnTabClicked" CommandParameter="Prescriptions" />
-                        <PointerGestureRecognizer PointerEntered="OnTabPointerEntered"
-                                                    PointerExited="OnTabPointerExited" />
-                    </Border.GestureRecognizers>
-                    <HorizontalStackLayout Spacing="10">
-                        <Label Text="Đơn thuốc" TextColor="White" VerticalOptions="Center" />
-                    </HorizontalStackLayout>
-                </Border>
 
-                <Border x:Name="AppointmentsTab"
-                        Padding="10" 
-                        Margin="5,0"
-                        StrokeThickness="0">
-                    <Border.GestureRecognizers>
-                        <TapGestureRecognizer Tapped="OnTabClicked" CommandParameter="Appointments" />
-                        <PointerGestureRecognizer PointerEntered="OnTabPointerEntered"
-                                                    PointerExited="OnTabPointerExited" />
-                    </Border.GestureRecognizers>
-                    <HorizontalStackLayout Spacing="10">
-                        <Label Text="Lịch hẹn" TextColor="White" VerticalOptions="Center" />
-                    </HorizontalStackLayout>
-                </Border>
-                
-                <Border x:Name="RevenueTab"
-                          Padding="10" 
-                          Margin="5,0"
-                          StrokeThickness="0">
-                    <Border.GestureRecognizers>
-                        <TapGestureRecognizer Tapped="OnTabClicked" CommandParameter="Revenue" />
-                        <PointerGestureRecognizer PointerEntered="OnTabPointerEntered"
-                    PointerExited="OnTabPointerExited" />
-                    </Border.GestureRecognizers>
-                    <HorizontalStackLayout Spacing="10">
-                        <Label Text="Doanh thu" TextColor="White" VerticalOptions="Center" />
-                    </HorizontalStackLayout>
-                </Border>
-            </VerticalStackLayout>
+                    <Border x:Name="DashboardTab" Padding="10" StrokeThickness="0" BackgroundColor="Transparent">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnTabClicked" CommandParameter="Dashboard" />
+                            <PointerGestureRecognizer PointerEntered="OnTabPointerEntered" PointerExited="OnTabPointerExited" />
+                        </Border.GestureRecognizers>
+                        <Grid ColumnDefinitions="30, *">
+                            <Image Source="dashboardicon.png" WidthRequest="24" HeightRequest="24" HorizontalOptions="Center"/>
+                            <Label Text="Tổng quan" 
+                               Grid.Column="1"
+                               TextColor="White" 
+                               VerticalOptions="Center" 
+                               Margin="10,0,0,0"
+                               Opacity="{Binding MenuTextOpacity}" 
+                               LineBreakMode="NoWrap"/>
+                        </Grid>
+                    </Border>
+
+                    <Border x:Name="PatientsTab" Padding="10" StrokeThickness="0" BackgroundColor="Transparent">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnTabClicked" CommandParameter="Patients" />
+                            <PointerGestureRecognizer PointerEntered="OnTabPointerEntered" PointerExited="OnTabPointerExited" />
+                        </Border.GestureRecognizers>
+                        <Grid ColumnDefinitions="30, *">
+                            <Image Source="patienticon.png" WidthRequest="24" HeightRequest="24" HorizontalOptions="Center"/>
+                            <Label Text="Bệnh nhân" 
+                               Grid.Column="1"
+                               TextColor="White" 
+                               VerticalOptions="Center" 
+                               Margin="10,0,0,0"
+                               Opacity="{Binding MenuTextOpacity}" 
+                               LineBreakMode="NoWrap"/>
+                        </Grid>
+                    </Border>
+
+                    <Border x:Name="PrescriptionsTab" Padding="10" StrokeThickness="0" BackgroundColor="Transparent">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnTabClicked" CommandParameter="Prescriptions" />
+                            <PointerGestureRecognizer PointerEntered="OnTabPointerEntered" PointerExited="OnTabPointerExited" />
+                        </Border.GestureRecognizers>
+                        <Grid ColumnDefinitions="30, *">
+                            <Image Source="papericon.png" WidthRequest="24" HeightRequest="24" HorizontalOptions="Center"/>
+                            <Label Text="Đơn thuốc" 
+                               Grid.Column="1"
+                               TextColor="White" 
+                               VerticalOptions="Center" 
+                               Margin="10,0,0,0"
+                               Opacity="{Binding MenuTextOpacity}" 
+                               LineBreakMode="NoWrap"/>
+                        </Grid>
+                    </Border>
+
+                    <Border x:Name="AppointmentsTab" Padding="10" StrokeThickness="0" BackgroundColor="Transparent">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnTabClicked" CommandParameter="Appointments" />
+                            <PointerGestureRecognizer PointerEntered="OnTabPointerEntered" PointerExited="OnTabPointerExited" />
+                        </Border.GestureRecognizers>
+                        <Grid ColumnDefinitions="30, *">
+                            <Image Source="calendaricon.png" WidthRequest="24" HeightRequest="24" HorizontalOptions="Center"/>
+                            <Label Text="Lịch hẹn" 
+                                Grid.Column="1"
+                               TextColor="White" 
+                               VerticalOptions="Center" 
+                               Margin="10,0,0,0"
+                               Opacity="{Binding MenuTextOpacity}" 
+                               LineBreakMode="NoWrap"/>
+                        </Grid>
+                    </Border>
+
+                    <Border x:Name="RevenueTab" Padding="10" StrokeThickness="0" BackgroundColor="Transparent">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnTabClicked" CommandParameter="Revenue" />
+                            <PointerGestureRecognizer PointerEntered="OnTabPointerEntered" PointerExited="OnTabPointerExited" />
+                        </Border.GestureRecognizers>
+                        <Grid ColumnDefinitions="30, *">
+                            <Image Source="cashicon.png" WidthRequest="24" HeightRequest="24" HorizontalOptions="Center"/>
+                            <Label Text="Doanh thu" 
+                                Grid.Column="1"
+                               TextColor="White" 
+                               VerticalOptions="Center" 
+                               Margin="10,0,0,0"
+                               Opacity="{Binding MenuTextOpacity}" 
+                               LineBreakMode="NoWrap"/>
+                        </Grid>
+                    </Border>
+                </VerticalStackLayout>
+
+                <Grid Grid.Row="1" Margin="0,0,0,10" HorizontalOptions="End">
+
+                    <Border StrokeThickness="0">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnTabClicked" CommandParameter="Prescriptions" />
+                            <PointerGestureRecognizer PointerEntered="OnTabPointerEntered" PointerExited="OnTabPointerExited" />
+                        </Border.GestureRecognizers>
+                        <Button WidthRequest="40" HeightRequest="40" CornerRadius="20"
+                            BackgroundColor="White" Opacity="0.2"
+                            Command="{Binding ToggleSidebarCommand}"/>
+                    </Border>
+                    
+                    <Label Text="❮" TextColor="White" FontSize="18" FontAttributes="Bold"
+                           HorizontalOptions="Center" VerticalOptions="Center"
+                           Rotation="{Binding MenuArrowRotation}" 
+                           InputTransparent="True"/>
+                </Grid>
+            </Grid>
         </Border>
-
 
         <Grid Grid.Column="1"
               Grid.Row="0"
               Grid.RowSpan="2"
               RowDefinitions="Auto, *">
-            <Grid Grid.Row="0"
-                  Padding="20"
-                  ColumnDefinitions="*, Auto, Auto, Auto" BackgroundColor="White">
 
-                <Label Grid.Column="0"
-                       x:Name="PageTitleLabel" Text="Tổng quan bệnh viện"
-                       FontSize="24"
-                       FontAttributes="Bold"
-                       TextColor="#1D2E4E"
-                       VerticalOptions="Center" />
+            <Grid Grid.Row="0" Padding="20" ColumnDefinitions="*, Auto, Auto, Auto" BackgroundColor="White">
+                <Label Grid.Column="0" x:Name="PageTitleLabel" Text="Tổng quan bệnh viện" FontSize="24" FontAttributes="Bold" TextColor="#1D2E4E" VerticalOptions="Center" />
 
-                <Frame Grid.Column="1"
-                       CornerRadius="8"
-                       Padding="10"
-                       Margin="0, 0, 15, 0"
-                       BackgroundColor="#F4F7FC"
-                       BorderColor="#E0E0E0"
-                       HeightRequest="40"
-                       VerticalOptions="Center">
-                </Frame>
-
-                <Image Grid.Column="2"
-                       Source="bell.png"
-                       WidthRequest="24"
-                       HeightRequest="24"
-                       Margin="0, 0, 15, 0" />
-
+                <Frame Grid.Column="1" CornerRadius="8" Padding="10" Margin="0, 0, 15, 0" BackgroundColor="#F4F7FC" BorderColor="#E0E0E0" HeightRequest="40" VerticalOptions="Center"></Frame>
+                <Image Grid.Column="2" Source="bell.png" WidthRequest="24" HeightRequest="24" Margin="0, 0, 15, 0" />
                 <HorizontalStackLayout Grid.Column="3" Spacing="10" VerticalOptions="Center">
-                    <Label Text="{Binding UserName}"
-                           TextColor="#1D2E4E"
-                           VerticalOptions="Center" />
-                    <Image Source="{Binding UserAvatar}"
-                           WidthRequest="40"
-                           HeightRequest="40"
-                           Aspect="AspectFill">
+                    <Label Text="{Binding UserName}" TextColor="#1D2E4E" VerticalOptions="Center" />
+                    <Image Source="{Binding UserAvatar}" WidthRequest="40" HeightRequest="40" Aspect="AspectFill">
                         <Image.Clip>
                             <EllipseGeometry Center="20, 20" RadiusX="20" RadiusY="20" />
                         </Image.Clip>
@@ -159,8 +178,7 @@
                                     <Frame BackgroundColor="White" CornerRadius="12" Padding="20" HasShadow="True" HeightRequest="150" BorderColor="#E0E0E0">
                                         <Grid RowDefinitions="Auto, *, Auto">
                                             <HorizontalStackLayout Grid.Row="0" Spacing="10">
-                                                <Frame BackgroundColor="{Binding CardColor}" CornerRadius="8" WidthRequest="40" HeightRequest="40" Padding="8">
-                                                </Frame>
+                                                <Frame BackgroundColor="{Binding CardColor}" CornerRadius="8" WidthRequest="40" HeightRequest="40" Padding="8"></Frame>
                                                 <Label Text="{Binding Title}" FontSize="16" FontAttributes="Bold" TextColor="#1D2E4E" VerticalOptions="Center" />
                                             </HorizontalStackLayout>
                                             <Label Grid.Row="1" Text="{Binding Value}" FontSize="36" FontAttributes="Bold" TextColor="#1D2E4E" VerticalOptions="Center" />
@@ -170,7 +188,6 @@
                                 </DataTemplate>
                             </CollectionView.ItemTemplate>
                         </CollectionView>
-
                         <views:DashboardContentView/>
                     </VerticalStackLayout>
                 </ScrollView>
@@ -180,8 +197,7 @@
                 </VerticalStackLayout>
 
                 <VerticalStackLayout x:Name="PrescriptionsContentView" IsVisible="False">
-                    <views:PrescriptionsContentView
-                        x:Name="PrescriptionsContentInner"/>
+                    <views:PrescriptionsContentView x:Name="PrescriptionsContentInner"/>
                 </VerticalStackLayout>
 
                 <VerticalStackLayout x:Name="AppointmentsContentView" IsVisible="False">
@@ -191,155 +207,62 @@
                 <VerticalStackLayout x:Name="RevenueContentView" IsVisible="False">
                     <views:RevenueContentView/>
                 </VerticalStackLayout>
-
             </Grid>
         </Grid>
-        
-        <Grid Grid.Column="0"
-              Grid.ColumnSpan="2" Grid.RowSpan="2" IsVisible="{Binding IsAddPatientPopupVisible}"
-              BackgroundColor="#80000000">
-            <Border Padding="20"
-                    Margin="0"
-                    BackgroundColor="White"
-                    StrokeThickness="0"
-                    VerticalOptions="Center"
-                    HorizontalOptions="Center"
-                    WidthRequest="600"
-                    StrokeShape="RoundRectangle 12">
+
+        <Grid Grid.Column="0" Grid.ColumnSpan="2" Grid.RowSpan="2" IsVisible="{Binding IsAddPatientPopupVisible}" BackgroundColor="#80000000">
+            <Border Padding="20" Margin="0" BackgroundColor="White" StrokeThickness="0" VerticalOptions="Center" HorizontalOptions="Center" WidthRequest="600" StrokeShape="RoundRectangle 12">
                 <VerticalStackLayout Spacing="15">
                     <Label Text="{Binding PopupTitle}" FontSize="24" FontAttributes="Bold" TextColor="#1D2E4E" HorizontalOptions="Center" />
-
                     <Grid ColumnDefinitions="Auto, *" RowDefinitions="Auto, Auto, Auto, Auto, Auto, Auto, Auto, Auto" RowSpacing="10" ColumnSpacing="10">
-
                         <Label Grid.Row="0" Grid.Column="0" Text="Họ tên:" VerticalOptions="Center" TextColor="#1D2E4E" />
                         <Entry Grid.Row="0" Grid.Column="1" Text="{Binding NewPatientFullName}" Placeholder="Nguyễn Văn An" TextColor="#1D2E4E" />
-
                         <Label Grid.Row="1" Grid.Column="0" Text="Ngày sinh:" VerticalOptions="Center" TextColor="#1D2E4E" />
                         <DatePicker Grid.Row="1" Grid.Column="1" Date="{Binding NewPatientDateOfBirth}" TextColor="#1D2E4E" />
-
                         <Label Grid.Row="2" Grid.Column="0" Text="Giới tính:" VerticalOptions="Center" TextColor="#1D2E4E" />
                         <Picker Grid.Row="2" Grid.Column="1" ItemsSource="{Binding Genders}" SelectedItem="{Binding NewPatientGender}" TextColor="#1D2E4E" />
-
                         <Label Grid.Row="3" Grid.Column="0" Text="SĐT:" VerticalOptions="Center" TextColor="#1D2E4E" />
                         <Entry Grid.Row="3" Grid.Column="1" Text="{Binding NewPatientPhoneNumber}" Placeholder="0901234567" Keyboard="Telephone" TextColor="#1D2E4E" />
-
                         <Label Grid.Row="4" Grid.Column="0" Text="Địa chỉ:" VerticalOptions="Center" TextColor="#1D2E4E"/>
                         <Entry Grid.Row="4" Grid.Column="1" Text="{Binding NewPatientAddress}" Placeholder="123 Đường ABC..." TextColor="#1D2E4E" />
-
                         <Label Grid.Row="5" Grid.Column="0" Text="Trạng thái:" VerticalOptions="Center" TextColor="#1D2E4E" />
-
                         <Border Grid.Row="5" Grid.Column="1" Stroke="#D1D5DB" StrokeShape="RoundRectangle 8" Padding="0" HeightRequest="45">
-                            <Picker ItemsSource="{Binding StatusOptions}" 
-                                SelectedItem="{Binding NewPatientStatus}" 
-                                TextColor="#1D2E4E"
-                                IsEnabled="{Binding IsStatusEnabled}" />
+                            <Picker ItemsSource="{Binding StatusOptions}" SelectedItem="{Binding NewPatientStatus}" TextColor="#1D2E4E" IsEnabled="{Binding IsStatusEnabled}" />
                         </Border>
-
                         <Label Grid.Row="6" Grid.Column="0" Text="Mức độ:" VerticalOptions="Center" TextColor="#1D2E4E" />
-                        <Picker Grid.Row="6" Grid.Column="1" 
-                            ItemsSource="{Binding SeverityOptions}" 
-                            SelectedItem="{Binding NewPatientSeverity}"
-                            TextColor="#1D2E4E" />
-
+                        <Picker Grid.Row="6" Grid.Column="1" ItemsSource="{Binding SeverityOptions}" SelectedItem="{Binding NewPatientSeverity}" TextColor="#1D2E4E" />
                         <Label Grid.Row="7" Grid.Column="0" Text="Triệu chứng:" VerticalOptions="Start" TextColor="#1D2E4E" Margin="0,10,0,0"/>
-                        <Editor Grid.Row="7" Grid.Column="1" 
-                            Text="{Binding NewPatientSymptoms}" 
-                            Placeholder="Nhập triệu chứng (ví dụ: Đau ngực, khó thở...)"
-                            HeightRequest="60"
-                            TextColor="#1D2E4E"
-                            AutoSize="TextChanges"/>
+                        <Editor Grid.Row="7" Grid.Column="1" Text="{Binding NewPatientSymptoms}" Placeholder="Nhập triệu chứng..." HeightRequest="60" TextColor="#1D2E4E" AutoSize="TextChanges"/>
                     </Grid>
-
                     <HorizontalStackLayout Spacing="10" HorizontalOptions="End" Margin="0, 20, 0, 0">
-                        <Button Text="Hủy"
-                                Command="{Binding CloseAddPatientPopupCommand}"
-                                BackgroundColor="#E0E0E0"
-                                TextColor="#333333" />
-                        <Button Text="Lưu"
-                                Command="{Binding SavePatientCommand}"
-                                BackgroundColor="{StaticResource ColorPrimary}"
-                                TextColor="White" />
+                        <Button Text="Hủy" Command="{Binding CloseAddPatientPopupCommand}" BackgroundColor="#E0E0E0" TextColor="#333333" />
+                        <Button Text="Lưu" Command="{Binding SavePatientCommand}" BackgroundColor="{StaticResource ColorPrimary}" TextColor="White" />
                     </HorizontalStackLayout>
-
                 </VerticalStackLayout>
             </Border>
         </Grid>
-        <Grid 
-            Grid.Column="0"
-            Grid.ColumnSpan="2" Grid.RowSpan="2" 
-            x:Name="AddPrescriptionPopup"
-            IsVisible="{Binding IsAddPrescriptionPopupVisible}"
-            BackgroundColor="#80000000" 
-            ZIndex="99"
-            Padding="25">
 
-            <Border
-                VerticalOptions="Center"
-                HorizontalOptions="Center"
-                BackgroundColor="White"
-                StrokeThickness="0"
-                WidthRequest="350">
-
+        <Grid Grid.Column="0" Grid.ColumnSpan="2" Grid.RowSpan="2" x:Name="AddPrescriptionPopup" IsVisible="{Binding IsAddPrescriptionPopupVisible}" BackgroundColor="#80000000" ZIndex="99" Padding="25">
+            <Border VerticalOptions="Center" HorizontalOptions="Center" BackgroundColor="White" StrokeThickness="0" WidthRequest="350">
                 <Border.StrokeShape>
                     <RoundRectangle CornerRadius="10" />
                 </Border.StrokeShape>
-
                 <VerticalStackLayout Spacing="15" Padding="20">
-
-                    <Label 
-                        Text="Thêm Đơn Thuốc Mới"
-                        FontSize="20"
-                        FontAttributes="Bold"
-                        TextColor="Black"
-                        HorizontalOptions="Center" />
-
+                    <Label Text="Thêm Đơn Thuốc Mới" FontSize="20" FontAttributes="Bold" TextColor="Black" HorizontalOptions="Center" />
                     <Label Text="Tên Bệnh Nhân:" TextColor="Black" />
-                    <Entry 
-                        TextColor="Black"
-                        Text="{Binding NewPrescriptionPatientName}"
-                        Placeholder="Nguyễn Văn A . . . " PlaceholderColor="LightGrey"
-                        BackgroundColor="Transparent"/>
-
+                    <Entry TextColor="Black" Text="{Binding NewPrescriptionPatientName}" Placeholder="Nguyễn Văn A..." PlaceholderColor="LightGrey" BackgroundColor="Transparent"/>
                     <Label Text="Tên Bác Sĩ Kê Đơn:" TextColor="Black" />
-                    <Entry  
-                        TextColor="Black"
-                        Text="{Binding NewPrescriptionDoctorName}"
-                        Placeholder="Dr. Khang . . ." PlaceholderColor="LightGrey" 
-                        BackgroundColor="Transparent"/>
-
+                    <Entry TextColor="Black" Text="{Binding NewPrescriptionDoctorName}" Placeholder="Dr. Khang..." PlaceholderColor="LightGrey" BackgroundColor="Transparent"/>
                     <Grid ColumnDefinitions="*,*" ColumnSpacing="10" Margin="0,10,0,0">
-
-
-                        <Button 
-                    Grid.Column="0"
-                    Text="Hủy"
-                    Command="{Binding CloseAddPrescriptionPopupCommand}"
-                    BackgroundColor="#E0E0E0"
-                    TextColor="#333333" />
-
-                        <Button 
-                    Grid.Column="1"
-                    Text="Lưu"
-                    TextColor="White"
-                    BackgroundColor="{StaticResource ColorPrimary}"
-                    Command="{Binding SavePrescriptionCommand}" />
+                        <Button Grid.Column="0" Text="Hủy" Command="{Binding CloseAddPrescriptionPopupCommand}" BackgroundColor="#E0E0E0" TextColor="#333333" />
+                        <Button Grid.Column="1" Text="Lưu" TextColor="White" BackgroundColor="{StaticResource ColorPrimary}" Command="{Binding SavePrescriptionCommand}" />
                     </Grid>
-
                 </VerticalStackLayout>
             </Border>
         </Grid>
-        <Grid
-            Grid.Column="0"
-            Grid.ColumnSpan="2"
-            Grid.RowSpan="2"
-            BackgroundColor="#80000000"
 
-            BindingContext="{Binding Source={x:Reference PrescriptionsContentInner},
-                                    Path=BindingContext}"
-
-            IsVisible="{Binding IsPrescriptionDetailVisible}">
-            <views:PrescriptionDetailPopupView
-        BindingContext="{Binding}" />
+        <Grid Grid.Column="0" Grid.ColumnSpan="2" Grid.RowSpan="2" BackgroundColor="#80000000" BindingContext="{Binding Source={x:Reference PrescriptionsContentInner}, Path=BindingContext}" IsVisible="{Binding IsPrescriptionDetailVisible}">
+            <views:PrescriptionDetailPopupView BindingContext="{Binding}" />
         </Grid>
     </Grid>
 

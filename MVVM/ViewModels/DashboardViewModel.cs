@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using HosipitalManager.MVVM.Models;
 using HospitalManager.MVVM.Models;
 using Microsoft.Maui.Graphics;
@@ -30,6 +31,43 @@ public partial class DashboardViewModel : ObservableObject
     // Thuốc đang được chọn trong Dropdown (Picker)
     [ObservableProperty]
     private MedicineProduct selectedMedicineProduct;
+
+    // Trạng thái menu (Mở/Đóng)
+    [ObservableProperty]
+    private bool isMenuExpanded = true;
+
+    // Độ rộng menu: Mở = 250, Đóng = 70
+    [ObservableProperty]
+    private double sidebarWidth = 250;
+
+    // Góc xoay của nút mũi tên (0 độ hoặc 180 độ)
+    [ObservableProperty]
+    private double menuArrowRotation = 0;
+
+    // Độ mờ của chữ (1 = hiện, 0 = ẩn)
+    [ObservableProperty]
+    private double menuTextOpacity = 1;
+
+    [RelayCommand]
+    private void ToggleSidebar()
+    {
+        IsMenuExpanded = !IsMenuExpanded;
+
+        if (IsMenuExpanded)
+        {
+            // MỞ RỘNG
+            SidebarWidth = 250;
+            MenuArrowRotation = 0;   // Mũi tên quay về trái
+            MenuTextOpacity = 1;     // Hiện chữ
+        }
+        else
+        {
+            // THU NHỎ
+            SidebarWidth = 70;       // Chỉ đủ chỗ cho Icon
+            MenuArrowRotation = 180; // Mũi tên quay sang phải
+            MenuTextOpacity = 0;     // Ẩn chữ
+        }
+    }
 
     public DashboardViewModel()
     {

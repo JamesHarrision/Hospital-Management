@@ -1,5 +1,6 @@
 ﻿namespace HospitalManager.MVVM.Views;
 using HospitalManager.MVVM.Models;
+using HospitalManager.MVVM.ViewModels;
 using System.Collections.ObjectModel;
 
 public partial class DashboardPageView : ContentPage
@@ -20,6 +21,52 @@ public partial class DashboardPageView : ContentPage
         InitializeComponent();
         BindingContext = new HospitalManager.MVVM.ViewModels.DashboardViewModel();
 
+    }
+
+    protected override void OnBindingContextChanged()
+    {
+        base.OnBindingContextChanged();
+        if (BindingContext is DashboardViewModel vm)
+        {
+            // Hủy đăng ký cũ để tránh memory leak
+            vm.PropertyChanged -= Vm_PropertyChanged;
+            // Đăng ký mới
+            vm.PropertyChanged += Vm_PropertyChanged;
+        }
+    }
+
+    private void Vm_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(DashboardViewModel.IsMenuExpanded))
+        {
+            var vm = (DashboardViewModel)BindingContext;
+
+            // --- BƯỚC 1: HỦY ANIMATION CŨ NGAY LẬP TỨC ---
+            // "SidebarAnim" là tên định danh animation. Hủy nó sẽ dừng việc vẽ lại ngay.
+            this.AbortAnimation("SidebarAnim");
+
+            // --- BƯỚC 2: LẤY VỊ TRÍ HIỆN TẠI ---
+            // Quan trọng: Bắt đầu từ độ rộng hiện tại (dù đang lỡ dở) để không bị giật cục
+            double startWidth = SideMenuColumn.Width.Value;
+            double endWidth = vm.IsMenuExpanded ? 250 : 75; // Đích đến
+
+            // Nếu đã ở đúng chỗ rồi thì thôi, không làm gì cả
+            if (Math.Abs(startWidth - endWidth) < 1) return;
+
+            // --- BƯỚC 3: CHẠY ANIMATION MỚI ---
+            var animation = new Animation(v =>
+            {
+                SideMenuColumn.Width = new GridLength(v);
+            }, startWidth, endWidth);
+
+            // Commit với tên "SidebarAnim" để lần sau có thể Abort được
+            // Rate 16ms = 60fps
+            animation.Commit(this, "SidebarAnim", 16, 250, Easing.CubicOut, (v, c) =>
+            {
+                // Đảm bảo kết thúc chính xác
+                SideMenuColumn.Width = new GridLength(endWidth);
+            });
+        }
     }
 
     /// <summary>
