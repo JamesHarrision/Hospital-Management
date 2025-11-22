@@ -4,16 +4,23 @@
              x:Class="HosipitalManager.MVVM.Views.PatientsContentView"
              xmlns:views="clr-namespace:HospitalManager.MVVM.Views">
    
-    <Grid
-      RowDefinitions="Auto, *">
-        <HorizontalStackLayout Grid.Row="0" Margin="0, 0, 0, 15">
+    <Grid RowDefinitions="Auto, *">
+        <Grid Grid.Row="0" ColumnDefinitions="Auto, *" Margin="0, 0, 0, 15" ColumnSpacing="10">
             <Button Text="+ Thêm Bệnh nhân"
                         Command="{Binding ShowAddPatientPopupCommand}"
                         BackgroundColor="{StaticResource ColorPrimary}"
                         TextColor="White"
                         CornerRadius="8"
                         Padding="15, 10" />
-        </HorizontalStackLayout>
+
+            <SearchBar Grid.Column="1"
+                       Placeholder="Tìm theo tên hoặc mã BN..."
+                       Text="{Binding SearchText}" 
+                       BackgroundColor="White"
+                       CancelButtonColor="{StaticResource ColorPrimary}"
+                       PlaceholderColor="Gray"
+                       TextColor="Black" />
+        </Grid>
 
         <Frame Grid.Row="1"
            Padding="0"
@@ -23,7 +30,7 @@
            HasShadow="True"
            VerticalOptions="FillAndExpand">
 
-            <CollectionView ItemsSource="{Binding Patients}">
+            <CollectionView ItemsSource="{Binding FilteredPatients}">
                 <CollectionView.Header>
                     <Grid Padding="15, 10" BackgroundColor="#F9FAFB" ColumnDefinitions="0.8*, 1.5*, 0.5*, 0.5*, 1.2*, 2*, 1*, 1*">
                         <Label Grid.Column="0" Text="MÃ BN" FontAttributes="Bold" TextColor="#6B7280" />

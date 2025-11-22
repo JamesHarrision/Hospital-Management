@@ -7,15 +7,16 @@
     <Grid>
         <Grid RowDefinitions="Auto, *">
 
-            <HorizontalStackLayout Grid.Row="0" Margin="0, 0, 0, 15">
-                <Button Text="+ Thêm Đơn thuốc"
-                        Command="{Binding ShowAddPrescriptionPopupCommand}"
-                        BackgroundColor="{StaticResource ColorPrimary}"
-                        TextColor="White"
-                        CornerRadius="8"
-                        Padding="15, 10" 
-                        FontAttributes="Bold"/>
-            </HorizontalStackLayout>
+            <Grid Grid.Row="0" ColumnDefinitions="*, Auto" ColumnSpacing="15" Margin="0, 0, 0, 15">
+
+                <SearchBar Grid.Column="1"
+                            Placeholder="Tìm theo tên hoặc mã BN..."
+                            Text="{Binding SearchPrescriptionText}" 
+                            BackgroundColor="White"
+                            CancelButtonColor="{StaticResource ColorPrimary}"
+                            PlaceholderColor="Gray"
+                            TextColor="Black" />
+            </Grid>
 
             <Frame Grid.Row="1"
                    Padding="0"
