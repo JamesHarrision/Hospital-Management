@@ -9,8 +9,8 @@
 
             <Grid Grid.Row="0" ColumnDefinitions="*, Auto" ColumnSpacing="15" Margin="0, 0, 0, 15">
 
-                <SearchBar Grid.Column="1"
-                            Placeholder="Tìm theo tên hoặc mã BN..."
+                <SearchBar Grid.Column="0"
+                            Placeholder="Tìm theo tên BN / tên BS / mã DT"
                             Text="{Binding SearchPrescriptionText}" 
                             BackgroundColor="White"
                             CancelButtonColor="{StaticResource ColorPrimary}"
