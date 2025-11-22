@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using HosipitalManager.MVVM.Models;
+using HosipitalManager.MVVM.Services;
 using HospitalManager.MVVM.Models;
 using Microsoft.Maui.Graphics;
 using System.Collections.ObjectModel;
@@ -95,13 +96,11 @@ public partial class DashboardViewModel : ObservableObject
 
     private void LoadMedicineCatalog()
     {
-        AvailableMedicines = new ObservableCollection<MedicineProduct>
-        {
-            new MedicineProduct { Name = "Paracetamol 500mg", Unit = "Viên", UnitPrice = 1000 },
-            new MedicineProduct { Name = "Panadol Extra", Unit = "Viên", UnitPrice = 1500 },
-            new MedicineProduct { Name = "Vitamin C", Unit = "Vỉ", UnitPrice = 15000 },
-            new MedicineProduct { Name = "Kháng sinh Augmentin", Unit = "Viên", UnitPrice = 25000 },
-        };
+        // 1. Tạo Service
+        var medService = new MedicineService();
+        // 2. Lấy dữ liệu và đổ vào ObservableCollection
+        var listFromService = medService.GetMedicineCatalog();
+        AvailableMedicines = new ObservableCollection<MedicineProduct>(listFromService);
     }
 
     private void LoadSummaryCards()

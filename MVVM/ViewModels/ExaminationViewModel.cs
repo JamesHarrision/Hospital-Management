@@ -1,55 +1,57 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using HosipitalManager.MVVM.Models;
-using HosipitalManager.MVVM.Services;
-using HospitalManager.MVVM.Models;
-using Microsoft.Maui.Controls;
+using HosipitalManager.MVVM.Services; // Namespace Service
+using HosipitalManager.MVVM.Models;   // Namespace Model cho MedicineProduct
+using HospitalManager.MVVM.Models;    // Namespace Model cho Patient/Prescription
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
+using System.Linq;
 
 namespace HospitalManager.MVVM.ViewModels;
 
 public partial class ExaminationViewModel : ObservableObject
 {
-    // Bệnh nhân đang được khám
+    // --- CÁC PROPERTY CƠ BẢN ---
     [ObservableProperty]
     private Patient patient;
 
-    // Các trường nhập liệu của Bác sĩ
     [ObservableProperty]
-    private string diagnosis; // Chẩn đoán
+    private string diagnosis;
 
     [ObservableProperty]
-    private string doctorNotes; // Ghi chú / Lời dặn
+    private string doctorNotes;
 
-    // Danh sách thuốc trong kho (để hiển thị lên Picker)
     [ObservableProperty]
-    private ObservableCollection<MedicineProduct> availableMedicines;
+    private ObservableCollection<MedicationItem> medications;
 
-    // Thuốc bác sĩ đang chọn trong Picker
+    // --- KHU VỰC AUTO-SUGGEST (GỢI Ý THUỐC) ---
+
+    // 1. Danh sách gốc (Private, không cần hiện lên UI)
+    private List<MedicineProduct> _allMedicines;
+
+    // 2. Danh sách gợi ý (Hiện lên khi gõ)
     [ObservableProperty]
-    private MedicineProduct selectedMedicineProduct;
+    private ObservableCollection<MedicineProduct> filteredMedicines;
 
-    // DANH SÁCH ĐƠN VỊ TÍNH (Cố định hoặc load từ DB)
+    // 3. Biến ẩn/hiện Popup gợi ý
     [ObservableProperty]
-    private ObservableCollection<string> availableUnits;
+    private bool isSuggestionVisible;
 
-    // ĐƠN VỊ ĐANG ĐƯỢC CHỌN
-    [ObservableProperty]
-    private string selectedUnit;
-
-    public ExaminationViewModel(Patient patientData)
+    // 4. Ô Nhập tên thuốc (Binding vào Entry trong XAML)
+    private string _searchQuery;
+    public string SearchQuery
     {
-        // Gán dữ liệu bắt buộc ngay lập tức
-        Patient = patientData;
-        // Có thể gán giá trị mặc định cho Diagnosis/Notes nếu cần
+        get => _searchQuery;
+        set
+        {
+            if (SetProperty(ref _searchQuery, value))
+            {
+                FilterMedicines(value); // Tự động lọc khi gõ
+            }
+        }
     }
 
-    [ObservableProperty]
-    private ObservableCollection<MedicationItem> medications = new ObservableCollection<MedicationItem>();
-
-    // Input fields for adding a new medication
-    
+    // --- CÁC TRƯỜNG NHẬP LIỆU KHÁC ---
 
     [ObservableProperty]
     private string newDosage;
@@ -58,55 +60,144 @@ public partial class ExaminationViewModel : ObservableObject
     private int newQuantity;
 
     [ObservableProperty]
-    private string newInstructions; // Instructions (Hướng dẫn sử dụng)
+    private string newInstructions;
 
+    // Đơn vị tính
+    [ObservableProperty]
+    private ObservableCollection<string> availableUnits;
+    [ObservableProperty]
+    private string selectedUnit;
 
+    // Thuốc đang được chọn (ẩn)
+    private MedicineProduct _selectedMedicineProduct;
+
+    // Service
     private readonly PrescriptionService _prescriptionService;
 
-    // CONSTRUCTOR MỚI: Nhận thêm PrescriptionService
-    public ExaminationViewModel(Patient patientData, PrescriptionService service)
+    // --- CONSTRUCTOR ---
+    public ExaminationViewModel(
+        Patient patientData,
+        PrescriptionService service,
+        ObservableCollection<MedicineProduct> fullMedicineCatalog)
     {
         Patient = patientData;
         _prescriptionService = service;
 
-        // Khởi tạo danh sách thuốc rỗng
+        // Khởi tạo danh sách
         Medications = new ObservableCollection<MedicationItem>();
+        FilteredMedicines = new ObservableCollection<MedicineProduct>();
 
-        LoadMedicineCatalog();
+        // Lưu danh sách gốc để lọc
+        _allMedicines = fullMedicineCatalog.ToList();
+
         LoadUnits();
     }
 
     private void LoadUnits()
     {
-        AvailableUnits = new ObservableCollection<string>
-        {
-            "Viên", "Vỉ", "Hộp", "Chai", "Lọ", "Tuýp", "Gói", "Ống"
-        };
-        SelectedUnit = "Viên"; // Mặc định
+        AvailableUnits = new ObservableCollection<string> { "Viên", "Vỉ", "Hộp", "Chai", "Lọ", "Tuýp", "Gói", "Ống" };
+        SelectedUnit = "Viên";
     }
 
-    partial void OnSelectedMedicineProductChanged(MedicineProduct value)
+    // --- LOGIC LỌC THUỐC ---
+    private void FilterMedicines(string query)
     {
-        if (value != null)
+        if (string.IsNullOrWhiteSpace(query))
         {
-            // Tự động chọn đơn vị mặc định của thuốc đó
-            SelectedUnit = value.Unit;
-
-            // reset số lượng về 1
-            NewQuantity = 1;
+            FilteredMedicines.Clear();
+            IsSuggestionVisible = false;
+            return;
         }
+
+        var lowerQuery = query.ToLower();
+        var results = _allMedicines
+            .Where(m => m.Name.ToLower().Contains(lowerQuery))
+            .Take(5)
+            .ToList();
+
+        FilteredMedicines = new ObservableCollection<MedicineProduct>(results);
+
+        // Chỉ hiện Popup nếu có kết quả
+        IsSuggestionVisible = results.Count > 0;
     }
 
-    private void LoadMedicineCatalog()
+    // --- LOGIC CHỌN THUỐC TỪ GỢI Ý ---
+    [RelayCommand]
+    private void SelectSuggestion(MedicineProduct selectedMed)
     {
-        AvailableMedicines = new ObservableCollection<MedicineProduct>
+        if (selectedMed == null) return;
+
+        // 1. Điền tên vào ô nhập
+        SearchQuery = selectedMed.Name;
+
+        // 2. Lưu object thuốc để dùng cho nút Thêm
+        _selectedMedicineProduct = selectedMed;
+
+        // 3. XỬ LÝ ĐƠN VỊ (FIX LỖI KHÔNG HIỆN ĐƠN VỊ)
+        // Kiểm tra xem đơn vị của thuốc có trong danh sách chưa
+        if (!AvailableUnits.Contains(selectedMed.Unit))
         {
-            new MedicineProduct { Name = "Paracetamol 500mg", Unit = "Viên", UnitPrice = 1000 },
-            new MedicineProduct { Name = "Panadol Extra", Unit = "Viên", UnitPrice = 1500 },
-            new MedicineProduct { Name = "Vitamin C", Unit = "Vỉ", UnitPrice = 15000 },
-            new MedicineProduct { Name = "Kháng sinh Augmentin", Unit = "Viên", UnitPrice = 25000 },
-            new MedicineProduct { Name = "Thuốc ho Prospan", Unit = "Chai", UnitPrice = 85000 },
-        };
+            // Nếu chưa có, thêm vào danh sách để Picker có thể hiển thị
+            AvailableUnits.Add(selectedMed.Unit);
+        }
+        // Sau đó mới gán (Lúc này Picker sẽ nhận diện được)
+        SelectedUnit = selectedMed.Unit;
+
+        // Reset số lượng
+        NewQuantity = 1;
+
+        // 4. Ẩn danh sách gợi ý
+        IsSuggestionVisible = false;
+        FilteredMedicines.Clear();
+    }
+
+    // --- LOGIC THÊM THUỐC VÀO ĐƠN ---
+    [RelayCommand]
+    private void AddMedication()
+    {
+        // Validation: Phải chọn thuốc từ gợi ý hoặc nhập đúng tên
+        if (_selectedMedicineProduct == null)
+        {
+            // Nếu người dùng nhập tay đúng tên thuốc trong kho thì vẫn chấp nhận
+            var match = _allMedicines.FirstOrDefault(m => m.Name.Equals(SearchQuery, System.StringComparison.OrdinalIgnoreCase));
+            if (match != null)
+            {
+                _selectedMedicineProduct = match;
+            }
+            else
+            {
+                // Nếu không tìm thấy thuốc, có thể báo lỗi hoặc return
+                return;
+            }
+        }
+
+        // Tính thành tiền
+        decimal totalItemPrice = _selectedMedicineProduct.UnitPrice * NewQuantity;
+
+        Medications.Add(new MedicationItem
+        {
+            MedicationName = _selectedMedicineProduct.Name,
+            Dosage = NewDosage,
+            Quantity = NewQuantity,
+            Instructions = NewInstructions,
+            Unit = SelectedUnit,
+            //UnitPrice = _selectedMedicineProduct.UnitPrice, // Lưu đơn giá gốc
+            Price = totalItemPrice // (Nếu model MedicationItem có trường này)
+        });
+
+        // Reset Form
+        SearchQuery = string.Empty;
+        NewDosage = string.Empty;
+        NewQuantity = 0;
+        NewInstructions = string.Empty;
+        _selectedMedicineProduct = null;
+        IsSuggestionVisible = false;
+    }
+
+    [RelayCommand]
+    private void RemoveMedication(MedicationItem itemToRemove)
+    {
+        if (itemToRemove != null) Medications.Remove(itemToRemove);
     }
 
     [RelayCommand]
@@ -114,62 +205,16 @@ public partial class ExaminationViewModel : ObservableObject
     {
         if (Patient != null)
         {
-            // 1. Cập nhật trạng thái bệnh nhân
             Patient.Status = "Hoàn thành điều trị";
-
-            // 2. GỌI SERVICE ĐỂ LƯU ĐƠN THUỐC
-            _prescriptionService.CreateAndSavePrescription(
-                Patient,
-                Diagnosis,
-                DoctorNotes,
-                Medications
-            );
+            _prescriptionService.CreateAndSavePrescription(Patient, Diagnosis, DoctorNotes, Medications);
         }
-
-        await Application.Current.MainPage.DisplayAlert("Hoàn tất", "Đã lưu hồ sơ bệnh án thành công.", "OK");
+        await Application.Current.MainPage.DisplayAlert("Hoàn tất", "Đã lưu hồ sơ.", "OK");
         await Shell.Current.Navigation.PopModalAsync();
     }
 
     [RelayCommand]
     private async Task Cancel()
     {
-        // Dùng PopModalAsync để quay lại Dashboard
         await Shell.Current.Navigation.PopModalAsync();
-    }
-
-    [RelayCommand]
-    private void AddMedication()
-    {
-        if (SelectedMedicineProduct == null)
-            return; // Validation cơ bản
-
-        // Tính toán thành tiền
-        // Giá = Giá niêm yết * Số lượng
-        decimal totalItemPrice = SelectedMedicineProduct.UnitPrice * NewQuantity;
-
-        Medications.Add(new MedicationItem
-        {
-            MedicationName = SelectedMedicineProduct.Name,
-            Dosage = NewDosage,
-            Quantity = NewQuantity,
-            Instructions = NewInstructions,
-            Unit = SelectedUnit,
-            Price = totalItemPrice,
-        });
-
-        // Xóa input fields sau khi thêm
-        SelectedMedicineProduct = null;
-        NewDosage = string.Empty;
-        NewQuantity = 0;
-        NewInstructions = string.Empty;
-    }
-
-    [RelayCommand]
-    private void RemoveMedication(MedicationItem itemToRemove)
-    {
-        if (itemToRemove != null)
-        {
-            Medications.Remove(itemToRemove);
-        }
     }
 }

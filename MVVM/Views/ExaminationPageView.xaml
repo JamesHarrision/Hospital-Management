@@ -64,6 +64,7 @@
 
                         <Frame BackgroundColor="#F9FAFB" Padding="15" CornerRadius="8" BorderColor="#E0E7FF">
                             <VerticalStackLayout Spacing="10">
+
                                 <Grid ColumnDefinitions="2*, 1*, 0.7*, 0.8*,1.2*" ColumnSpacing="10">
                                     <Label Grid.Column="0" Text="Tên Thuốc" TextColor="#6B7280" FontSize="12"/>
                                     <Label Grid.Column="1" Text="Liều dùng" TextColor="#6B7280" FontSize="12"/>
@@ -73,24 +74,59 @@
                                 </Grid>
 
                                 <Grid ColumnDefinitions="2*, 1*, 0.7*, 0.8*, 1.2*, Auto"
-                                      VerticalOptions="Center"
-                                      ColumnSpacing="10">
-                                    <Border Grid.Column="0" 
-                                            Stroke="#E5E7EB" 
+                                      VerticalOptions="Start"
+                                      ColumnSpacing="10"
+                                      ZIndex="100">
+                                    <Grid Grid.Column="0" VerticalOptions="Start">
+                                        <Border Stroke="#E5E7EB" 
                                             StrokeThickness="0" 
-                                            StrokeShape="RoundRectangle 8"
-                                            Padding="10,0"
-                                            HeightRequest="55">
-                                            <Picker
-                                                ItemsSource="{Binding AvailableMedicines}"
-                                                ItemDisplayBinding="{Binding Name}"
-                                                SelectedItem="{Binding SelectedMedicineProduct}"
-                                                TextColor="Black"
-                                                TitleColor="#9CA3AF"
-                                                BackgroundColor="Transparent" 
-                                                VerticalOptions="Center" 
-                                                HorizontalOptions="Fill"/>
-                                    </Border>
+                                            StrokeShape="RoundRectangle 8" 
+                                            HeightRequest="45" 
+                                            BackgroundColor="White"
+                                            VerticalOptions="Start">
+                                            <Entry Placeholder="Nhập tên thuốc..." 
+                                               Text="{Binding SearchQuery}"
+                                               TextColor="Black"
+                                               PlaceholderColor="#9CA3AF"
+                                               HeightRequest="45"
+                                               VerticalTextAlignment="Center"/>
+                                        </Border>
+
+                                        <Border Stroke="#E5E7EB" 
+                                            StrokeThickness="1" 
+                                            StrokeShape="RoundRectangle 8" 
+                                            BackgroundColor="White"
+                                            Padding="0"
+                                            VerticalOptions="Start" 
+                                            TranslationY="50" 
+                                            IsVisible="{Binding IsSuggestionVisible}"
+                                            ZIndex="999">
+                                            <CollectionView ItemsSource="{Binding FilteredMedicines}" HeightRequest="200">
+                                                <CollectionView.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Grid Padding="10" BackgroundColor="White">
+                                                            <Label Text="{Binding Name}" TextColor="#1F2937" FontSize="13" FontAttributes="Bold"/>
+                                                            <Label Text="{Binding Unit, StringFormat='({0})'}" TextColor="#6B7280" FontSize="11" Margin="5,0,0,0" VerticalOptions="Center" Opacity="0"/>
+
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto"/>
+                                                                <ColumnDefinition Width="Auto"/>
+                                                            </Grid.ColumnDefinitions>
+
+                                                            <Grid.GestureRecognizers>
+                                                                <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ExaminationViewModel}}, Path=SelectSuggestionCommand}"
+                                                  CommandParameter="{Binding .}"/>
+                                                            </Grid.GestureRecognizers>
+                                                        </Grid>
+                                                    </DataTemplate>
+                                                </CollectionView.ItemTemplate>
+                                            </CollectionView>
+
+                                            <Border.Shadow>
+                                                <Shadow Brush="Black" Offset="0,5" Radius="10" Opacity="0.2"/>
+                                            </Border.Shadow>
+                                        </Border>
+                                    </Grid>
 
                                     <Border Grid.Column="1" Stroke="#E5E7EB"
                                             StrokeThickness="0" StrokeShape="RoundRectangle 8">
@@ -111,8 +147,7 @@
                                     </Border>
 
                                     <Border Grid.Column="3" Stroke="#E5E7EB" StrokeThickness="0" StrokeShape="RoundRectangle 8">
-                                        <Picker 
-                                                ItemsSource="{Binding AvailableUnits}"
+                                        <Picker ItemsSource="{Binding AvailableUnits}"
                                                 SelectedItem="{Binding SelectedUnit}"
                                                 TextColor="Black"
                                                 TitleColor="#9CA3AF"
@@ -138,7 +173,7 @@
                                             BackgroundColor="{StaticResource ColorPrimary}" 
                                             TextColor="White"
                                             CornerRadius="8"
-                                            FontSize="25"/>    
+                                            FontSize="25"/>
                                 </Grid>
                             </VerticalStackLayout>
                         </Frame>
@@ -162,8 +197,8 @@
                                         <Label Grid.Column="3" Text="{Binding Instructions}" TextColor="#4B5563"/>
 
                                         <ImageButton Grid.Column="4" Source="delete.png" WidthRequest="15" HeightRequest="15"
-                                     Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ExaminationViewModel}}, Path=RemoveMedicationCommand}"
-                                     CommandParameter="{Binding .}"/>
+                                                     Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ExaminationViewModel}}, Path=RemoveMedicationCommand}"
+                                                     CommandParameter="{Binding .}"/>
                                         <BoxView Grid.ColumnSpan="5" HeightRequest="1" Color="#E5E7EB" VerticalOptions="End"/>
                                     </Grid>
                                 </DataTemplate>
@@ -182,7 +217,7 @@
                             Command="{Binding FinishExaminationCommand}"
                             BackgroundColor="#4F46E5" TextColor="White" FontAttributes="Bold" CornerRadius="8"/>
                 </Grid>
-                
+
             </VerticalStackLayout>
         </ScrollView>
     </Grid>

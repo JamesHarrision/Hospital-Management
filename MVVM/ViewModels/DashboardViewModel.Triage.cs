@@ -180,7 +180,7 @@ public partial class DashboardViewModel
 
             // 3. Khởi tạo VM Khám bệnh và đưa Service vào
             // (Đảm bảo ExaminationViewModel đã có constructor nhận Service nhé!)
-            var examVM = new ExaminationViewModel(patient, presService);
+            var examVM = new ExaminationViewModel(patient, presService, AvailableMedicines);
 
             // 4. Chuyển trang
             var examPage = new HosipitalManager.MVVM.Views.ExaminationPageView(examVM);
