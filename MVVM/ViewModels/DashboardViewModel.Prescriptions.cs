@@ -14,10 +14,14 @@ namespace HospitalManager.MVVM.ViewModels;
 
 public partial class DashboardViewModel
 {
+    private List<Prescription> _allPrescriptions = new List<Prescription>();
     // Danh sách đơn thuốc (Chính chủ)
     [ObservableProperty]
     private ObservableCollection<Prescription> prescriptions;
 
+
+    [ObservableProperty]
+    private string searchPrescriptionText;
     // Đơn thuốc đang chọn xem chi tiết
     [ObservableProperty]
     private Prescription selectedPrescription;
@@ -34,18 +38,53 @@ public partial class DashboardViewModel
     [ObservableProperty]
     private string newPrescriptionDoctorName;
 
+    partial void OnSearchPrescriptionTextChanged(string value)
+    {
+        SearchPrescriptions();
+    }
+
     // --- CÁC HÀM LOAD DỮ LIỆU ---
     private void LoadPrescriptions()
     {
-        // Dữ liệu mẫu ban đầu
-        Prescriptions.Add(new Prescription
+        // Tạo dữ liệu mẫu
+        var data = new List<Prescription>
         {
-            Id = "DT001",
-            PatientName = "Nguyễn Văn An",
-            DoctorName = "BS. Trần Thị B",
-            DatePrescribed = new DateTime(2025, 11, 15),
-            Status = "Đã cấp"
-        });
+            new Prescription { Id = "DT001", PatientName = "Nguyễn Văn An", DoctorName = "BS. Trần Thị B", DatePrescribed = new DateTime(2025, 11, 15), Status = "Đã cấp" },
+            new Prescription { Id = "DT002", PatientName = "Lê Thị C", DoctorName = "BS. Nguyễn Văn D", DatePrescribed = DateTime.Now, Status = "Chưa cấp" },
+            new Prescription { Id = "DT003", PatientName = "Hoàng Văn E", DoctorName = "BS. Trần Thị B", DatePrescribed = DateTime.Now.AddDays(-1), Status = "Đã cấp" },
+        };
+
+        // Lưu vào list gốc
+        _allPrescriptions = data;
+
+        // Đổ vào list hiển thị
+        Prescriptions = new ObservableCollection<Prescription>(_allPrescriptions);
+    }
+
+    private void SearchPrescriptions()
+    {
+        if (string.IsNullOrWhiteSpace(SearchPrescriptionText))
+        {
+            // Reset về danh sách gốc
+            if (_allPrescriptions != null && _allPrescriptions.Any())
+            {
+                Prescriptions = new ObservableCollection<Prescription>(_allPrescriptions);
+            }
+        }
+        else
+        {
+            // Chuyển từ khóa về chữ thường để tìm không phân biệt hoa thường
+            var keyword = SearchPrescriptionText.ToLower();
+
+            // Lọc dữ liệu: Tìm theo Tên BN hoặc Tên Bác Sĩ hoặc Mã đơn
+            var filtered = _allPrescriptions.Where(p =>
+                p.PatientName.ToLower().Contains(keyword) ||
+                p.DoctorName.ToLower().Contains(keyword) ||  // <--- Đã thêm tìm theo Bác sĩ
+                p.Id.ToLower().Contains(keyword)
+            ).ToList();
+
+            Prescriptions = new ObservableCollection<Prescription>(filtered);
+        }
     }
 
     // --- CÁC COMMAND XỬ LÝ ---
@@ -92,6 +131,7 @@ public partial class DashboardViewModel
             DatePrescribed = DateTime.Now,
             Status = "Chưa cấp"
         };
+        _allPrescriptions.Add(newPrescription);
         Prescriptions.Add(newPrescription);
         CloseAddPrescriptionPopup();
     }
