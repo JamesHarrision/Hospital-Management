@@ -137,4 +137,6 @@ public partial class DashboardViewModel : ObservableObject
             }
         };
     }
+
+    public class DashboardRefreshMessage { }
 }

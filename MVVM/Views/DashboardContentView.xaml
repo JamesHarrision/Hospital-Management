@@ -1,28 +1,64 @@
-<?xml version="1.0" encoding="utf-8" ?>
 <ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="HosipitalManager.MVVM.Views.DashboardContentView"
              xmlns:vm="clr-namespace:HospitalManager.MVVM.ViewModels"
-            xmlns:views="clr-namespace:HosipitalManager.MVVM.Views">
-    
-    
+             xmlns:vlxx="clr-namespace:HosipitalManager.MVVM.ViewModels"
+             xmlns:views="clr-namespace:HosipitalManager.MVVM.Views"
+             xmlns:micro="clr-namespace:Microcharts.Maui;assembly=Microcharts.Maui"
+             x:Class="HosipitalManager.MVVM.Views.DashboardContentView">
+
     <Grid ColumnDefinitions="1.5*, 1*" ColumnSpacing="25">
-        <Frame Grid.Column="0" BackgroundColor="White" CornerRadius="12" Padding="20" HasShadow="True" HeightRequest="400" BorderColor="#E0E0E0">
-            <VerticalStackLayout Spacing="10">
-                <Label Text="Biểu đồ trạng thái Lịch hẹn" FontSize="18" FontAttributes="Bold" TextColor="#1D2E4E" />
-                <BoxView Color="#E0E0E0" HeightRequest="300" VerticalOptions="FillAndExpand" HorizontalOptions="FillAndExpand" />
-                <Label Text="Chart Placeholder" HorizontalOptions="Center" TextColor="#9E9E9E" />
-            </VerticalStackLayout>
+
+        <Frame Grid.Column="0" 
+               BackgroundColor="White" 
+               CornerRadius="12" 
+               Padding="10" 
+               HasShadow="True" 
+               HeightRequest="500" 
+               BorderColor="#E0E0E0" 
+               VerticalOptions="Start">
+
+            <Grid RowDefinitions="Auto, *">
+                <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Margin="0,0,0,10">
+                    <Label Text="Lịch làm việc tuần này" 
+                           FontSize="18" 
+                           FontAttributes="Bold" 
+                           TextColor="#1D2E4E" 
+                           VerticalOptions="Center"/>
+
+                    <Button Grid.Column="1" 
+                            Text="Làm mới" 
+                            Clicked="RefreshCalendar_Clicked" 
+                            FontSize="12" 
+                            HeightRequest="30" 
+                            Padding="10,0" 
+                            BackgroundColor="#F3F4F6" 
+                            TextColor="#1D2E4E"
+                            CornerRadius="6"/>
+                </Grid>
+
+                <ScrollView Grid.Row="1" VerticalScrollBarVisibility="Always">
+                    <Grid x:Name="ScheduleGrid" RowSpacing="1" ColumnSpacing="1" BackgroundColor="#F0F0F0">
+                    </Grid>
+                </ScrollView>
+            </Grid>
         </Frame>
 
-        <Frame Grid.Column="1" BackgroundColor="White" CornerRadius="12" Padding="20" HasShadow="True" BorderColor="#E0E0E0">
+        <Frame Grid.Column="1" 
+               BackgroundColor="White" 
+               CornerRadius="12" 
+               Padding="20" 
+               HasShadow="True" 
+               HeightRequest="500"
+               BorderColor="#E0E0E0"
+               VerticalOptions="Start">
+
             <VerticalStackLayout Spacing="15">
                 <Grid ColumnDefinitions="*, Auto">
-                    <Label Text="Hàng đợi chờ khám (Triage)" FontSize="18" FontAttributes="Bold" TextColor="#1D2E4E" VerticalOptions="Center"/>
+                    <Label Text="Hàng đợi chờ khám" FontSize="18" FontAttributes="Bold" TextColor="#1D2E4E" VerticalOptions="Center"/>
                     <Button Grid.Column="1" Text="+ Tiếp nhận" 
-                Command="{Binding ShowAddPatientPopupCommand}"
-                BackgroundColor="{StaticResource ColorPrimary}" TextColor="White" 
-                HeightRequest="35" Padding="15,0" CornerRadius="8" FontSize="12"/>
+                                Command="{Binding ShowAddPatientPopupCommand}"
+                                BackgroundColor="{StaticResource ColorPrimary}" TextColor="White" 
+                                HeightRequest="35" Padding="15,0" CornerRadius="8" FontSize="12"/>
                 </Grid>
 
                 <CollectionView ItemsSource="{Binding WaitingQueue}" EmptyView="Hiện chưa có bệnh nhân nào trong hàng đợi.">
@@ -81,6 +117,7 @@
                         </DataTemplate>
                     </CollectionView.ItemTemplate>
                 </CollectionView>
+
             </VerticalStackLayout>
         </Frame>
     </Grid>

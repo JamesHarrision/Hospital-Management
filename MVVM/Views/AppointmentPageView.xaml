@@ -77,12 +77,6 @@
         <Grid Grid.Row="2" ColumnDefinitions="*,*,*,*" ColumnSpacing="10" Margin="0,0,0,20">
             <Frame Grid.Column="0" Padding="10">
                 <VerticalStackLayout>
-                    <Label Text="Tổng" FontSize="12" TextColor="Gray"/>
-                    <Label Text="{Binding TotalCount}" FontSize="20" FontAttributes="Bold" TextColor="#1D2E4E"/>
-                </VerticalStackLayout>
-            </Frame>
-            <Frame Grid.Column="1" Padding="10">
-                <VerticalStackLayout>
                     <Label Text="Sắp tới" FontSize="12" TextColor="Gray"/>
                     <Label Text="{Binding UpcomingCount}" FontSize="20" FontAttributes="Bold" TextColor="#4CAF50"/>
                 </VerticalStackLayout>
@@ -95,15 +89,29 @@
             </CollectionView.EmptyView>
             <CollectionView.ItemTemplate>
                 <DataTemplate>
-                    <Frame Margin="0,0,0,10" Padding="15" CornerRadius="12" HasShadow="True" BorderColor="#E0E0E0">
+                    <Frame Margin="0,0,0,15" 
+               Padding="15" 
+               CornerRadius="12" 
+               HasShadow="True" 
+               BorderColor="#E0E0E0"
+               BackgroundColor="White">
+
                         <Grid ColumnDefinitions="Auto, *, Auto" ColumnSpacing="15">
 
-                            <Border Grid.Column="0" WidthRequest="60" HeightRequest="60" StrokeShape="RoundRectangle 10">
-                                <Image Source="{Binding Doctor.ImageSource}" Aspect="AspectFill"/>
+                            <Border Grid.Column="0" 
+                        WidthRequest="70" 
+                        HeightRequest="70" 
+                        StrokeShape="RoundRectangle 10"
+                        VerticalOptions="Start">
+                                <Image Source="{Binding Doctor.ImageSource}" 
+                           Aspect="AspectFill"
+                           WidthRequest="70" 
+                           HeightRequest="70"/>
                             </Border>
 
-                            <VerticalStackLayout Grid.Column="1" Spacing="5" VerticalOptions="Center">
-                                <Label FontAttributes="Bold" FontSize="16">
+                            <VerticalStackLayout Grid.Column="1" Spacing="6" VerticalOptions="Center">
+
+                                <Label FontSize="15" FontAttributes="Bold" LineBreakMode="TailTruncation">
                                     <Label.FormattedText>
                                         <FormattedString>
                                             <Span Text="BS. " TextColor="#5B9FFF"/>
@@ -112,14 +120,94 @@
                                     </Label.FormattedText>
                                 </Label>
 
-                                <Label Text="{Binding PatientName, StringFormat='BN: {0}'}" FontSize="13" TextColor="Gray"/>
+                                <HorizontalStackLayout Spacing="8">
+                                    <Image Source="calendaricon.png" WidthRequest="14" HeightRequest="14" VerticalOptions="Center"/>
+                                    <Label Text="{Binding AppointmentDate, StringFormat='{0:dd/MM/yyyy}'}" 
+                               FontSize="13" 
+                               TextColor="#757575" 
+                               VerticalOptions="Center"/>
+                                </HorizontalStackLayout>
 
-                                <Label Text="{Binding AppointmentDate, StringFormat='{0:dd/MM/yyyy}'}" FontSize="13" TextColor="Gray"/>
+                                <HorizontalStackLayout Spacing="8">
+                                    <Image Source="clock.png" WidthRequest="14" HeightRequest="14" VerticalOptions="Center">
+                                    </Image>
+                                    <Label FontSize="13" TextColor="#1D2E4E" VerticalOptions="Center" FontAttributes="Bold">
+                                        <Label.FormattedText>
+                                            <FormattedString>
+                                                <Span Text="{Binding StartTime, StringFormat='{0:hh\\:mm}'}"/>
+                                                <Span Text=" - "/>
+                                                <Span Text="{Binding EndTime, StringFormat='{0:hh\\:mm}'}"/>
+                                            </FormattedString>
+                                        </Label.FormattedText>
+                                    </Label>
+                                </HorizontalStackLayout>
+
+                                <HorizontalStackLayout Spacing="8">
+                                    <Image WidthRequest="14" HeightRequest="14" VerticalOptions="Center">
+                                        <Image.Source>
+                                            <FontImageSource FontFamily="FontAwesomeSolid" Glyph="&#xf007;" Color="#757575" Size="14"/>
+                                        </Image.Source>
+                                    </Image>
+                                    <Label Text="{Binding PatientName}" 
+                               FontSize="13" 
+                               TextColor="#757575" 
+                               LineBreakMode="TailTruncation"
+                               VerticalOptions="Center"/>
+                                </HorizontalStackLayout>
                             </VerticalStackLayout>
 
-                            <Label Grid.Column="2" Text="{Binding Status}" 
-                                   VerticalOptions="Center" 
-                                   TextColor="#5B9FFF" FontAttributes="Bold" FontSize="12"/>
+                            <VerticalStackLayout Grid.Column="2" Spacing="10" VerticalOptions="Center">
+
+                                <Button Text="Duyệt"
+                            FontSize="12"
+                            Padding="10,0"
+                            HeightRequest="36"
+                            BackgroundColor="#4CAF50"
+                            TextColor="White"
+                            CornerRadius="6"
+                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:AppointmentViewModel}}, Path=ConfirmAppointmentCommand}"
+                            CommandParameter="{Binding .}">
+                                    <Button.Triggers>
+                                        <DataTrigger TargetType="Button" Binding="{Binding Status}" Value="Pending">
+                                            <Setter Property="IsVisible" Value="True"/>
+                                        </DataTrigger>
+                                        <DataTrigger TargetType="Button" Binding="{Binding Status}" Value="Upcoming">
+                                            <Setter Property="IsVisible" Value="False"/>
+                                        </DataTrigger>
+                                        <DataTrigger TargetType="Button" Binding="{Binding Status}" Value="Cancelled">
+                                            <Setter Property="IsVisible" Value="False"/>
+                                        </DataTrigger>
+                                        <DataTrigger TargetType="Button" Binding="{Binding Status}" Value="Completed">
+                                            <Setter Property="IsVisible" Value="False"/>
+                                        </DataTrigger>
+                                    </Button.Triggers>
+                                </Button>
+
+                                <Button Text="Hủy"
+                            FontSize="12"
+                            Padding="10,0"
+                            HeightRequest="36"
+                            BackgroundColor="#F44336"
+                            TextColor="White"
+                            CornerRadius="6"
+                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:AppointmentViewModel}}, Path=CancelAppointmentCommand}"
+                            CommandParameter="{Binding .}">
+                                    <Button.Triggers>
+                                        <DataTrigger TargetType="Button" Binding="{Binding Status}" Value="Cancelled">
+                                            <Setter Property="IsVisible" Value="False"/>
+                                        </DataTrigger>
+                                        <DataTrigger TargetType="Button" Binding="{Binding Status}" Value="Completed">
+                                            <Setter Property="IsVisible" Value="False"/>
+                                        </DataTrigger>
+                                    </Button.Triggers>
+                                </Button>
+
+                                <Label Text="{Binding Status}" 
+                           FontSize="10" 
+                           TextColor="Gray" 
+                           HorizontalOptions="Center"/>
+
+                            </VerticalStackLayout>
                         </Grid>
                     </Frame>
                 </DataTemplate>

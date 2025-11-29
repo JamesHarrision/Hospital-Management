@@ -1,9 +1,11 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using HosipitalManager.MVVM.Models;
 using HosipitalManager.MVVM.Services;
 using HosipitalManager.MVVM.Views;
 using System.Collections.ObjectModel;
+using static HospitalManager.MVVM.ViewModels.DashboardViewModel;
 
 namespace HosipitalManager.MVVM.ViewModels
 {
@@ -95,6 +97,51 @@ namespace HosipitalManager.MVVM.ViewModels
         {
             // Điều hướng sang trang thêm mới
             await Shell.Current.GoToAsync(nameof(NewAppointmentPageView));
+        }
+
+        [RelayCommand]
+        public async Task ConfirmAppointment(Appointment appt)
+        {
+            if (appt == null) return;
+
+            bool confirm = await Shell.Current.DisplayAlert("Xác nhận",
+                $"Duyệt lịch hẹn của {appt.PatientName}?", "Duyệt", "Hủy");
+
+            if (confirm)
+            {
+                // 1. Chuyển trạng thái sang Upcoming
+                appt.Status = AppointmentStatus.Upcoming;
+
+                // 2. Làm mới danh sách hiện tại (để nó bay từ tab Pending sang Upcoming)
+                RefreshData();
+
+                // 3. Gửi tin nhắn để Dashboard vẽ lại lịch
+                WeakReferenceMessenger.Default.Send(new DashboardRefreshMessage());
+
+                // (Tùy chọn) Thông báo
+                // await Shell.Current.DisplayToastAsync("Đã duyệt lịch hẹn!");
+            }
+        }
+
+        [RelayCommand]
+        public async Task CancelAppointment(Appointment appt)
+        {
+            if (appt == null) return;
+
+            bool confirm = await Shell.Current.DisplayAlert("Hủy lịch",
+                $"Bạn chắc chắn muốn hủy lịch của {appt.PatientName}?", "Đồng ý", "Thoát");
+
+            if (confirm)
+            {
+                // 1. Chuyển trạng thái sang Cancelled
+                appt.Status = AppointmentStatus.Cancelled;
+
+                // 2. Làm mới danh sách
+                RefreshData();
+
+                // 3. Gửi tin nhắn (Để dashboard xóa nếu lỡ nó đang hiện)
+                WeakReferenceMessenger.Default.Send(new DashboardRefreshMessage());
+            }
         }
     }
 }
