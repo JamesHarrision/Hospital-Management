@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:HosipitalManager.MVVM.ViewModels"
+             x:Class="HosipitalManager.MVVM.Views.NewAppointmentPageView"
+             Title="Đặt Lịch Mới"
+             BackgroundColor="#F5F7FA">
+
+    <ContentPage.BindingContext>
+        <vm:NewAppointmentViewModel />
+    </ContentPage.BindingContext>
+
+    <ScrollView>
+        <VerticalStackLayout Spacing="20" Padding="20">
+
+            <Label Text="Thông tin đặt lịch" FontSize="18" FontAttributes="Bold" TextColor="#1D2E4E"/>
+
+            <Frame CornerRadius="10" Padding="15" HasShadow="True" BorderColor="Transparent">
+                <VerticalStackLayout Spacing="15">
+
+                    <Label Text="Chọn Bác sĩ *" FontSize="14" TextColor="Gray"/>
+                    <Border Stroke="#E0E0E0" StrokeThickness="1" StrokeShape="RoundRectangle 8">
+                        <Picker ItemsSource="{Binding Doctors}"
+                                ItemDisplayBinding="{Binding FullName}"
+                                SelectedItem="{Binding SelectedDoctor}"
+                                Title="-- Chọn bác sĩ --"
+                                BackgroundColor="White"
+                                TextColor="#1D2E4E"/>
+                    </Border>
+
+                    <Label Text="Tên Bệnh nhân *" FontSize="14" TextColor="Gray"/>
+                    <Border Stroke="#E0E0E0" StrokeThickness="1" StrokeShape="RoundRectangle 8">
+                        <Entry Placeholder="Nhập tên..." Text="{Binding PatientName}" TextColor="#1D2E4E"/>
+                    </Border>
+
+                    <Label Text="Số điện thoại" FontSize="14" TextColor="Gray"/>
+                    <Border Stroke="#E0E0E0" StrokeThickness="1" StrokeShape="RoundRectangle 8">
+                        <Entry Placeholder="09xx..." Text="{Binding PhoneNumber}" Keyboard="Telephone" TextColor="#1D2E4E"/>
+                    </Border>
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                        <VerticalStackLayout Grid.Column="0">
+                            <Label Text="Ngày khám" FontSize="14" TextColor="Gray"/>
+                            <DatePicker Date="{Binding Date}" Format="dd/MM/yyyy" TextColor="#1D2E4E"/>
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="1">
+                            <Label Text="Giờ khám" FontSize="14" TextColor="Gray"/>
+                            <TimePicker Time="{Binding Time}" Format="HH:mm" TextColor="#1D2E4E"/>
+                        </VerticalStackLayout>
+                    </Grid>
+
+                    <Label Text="Ghi chú" FontSize="14" TextColor="Gray"/>
+                    <Border Stroke="#E0E0E0" StrokeThickness="1" StrokeShape="RoundRectangle 8">
+                        <Editor Placeholder="Triệu chứng..." Text="{Binding Note}" HeightRequest="80" TextColor="#1D2E4E"/>
+                    </Border>
+
+                </VerticalStackLayout>
+            </Frame>
+
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="15" Margin="0,10,0,0">
+                <Button Text="Hủy" Command="{Binding CancelCommand}" BackgroundColor="#E0E0E0" TextColor="Black"/>
+                <Button Text="Lưu Lịch Hẹn" Command="{Binding SaveCommand}" BackgroundColor="#5B9FFF" TextColor="White" FontAttributes="Bold"/>
+            </Grid>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

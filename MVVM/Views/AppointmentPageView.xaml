@@ -1,522 +1,130 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:HosipitalManager.MVVM.ViewModels"
+             xmlns:models="clr-namespace:HosipitalManager.MVVM.Models"
              x:Class="HosipitalManager.MVVM.Views.AppointmentPageView">
+
     <Grid Padding="20" RowDefinitions="Auto, Auto, Auto, *">
 
-        <!-- Tabs -->
-        <Grid Grid.Row="0" Margin="0,0,0,20">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
+        <Grid Grid.Row="0" ColumnDefinitions="*,*,*,*" Margin="0,0,0,20">
+    
+    <VerticalStackLayout Grid.Column="0">
+        <VerticalStackLayout.GestureRecognizers>
+            <TapGestureRecognizer Command="{Binding SwitchTabCommand}" CommandParameter="Upcoming"/>
+        </VerticalStackLayout.GestureRecognizers>
+        
+        <Label Text="Sắp tới" HorizontalOptions="Center" FontSize="16" FontAttributes="Bold">
+            <Label.Triggers>
+                <DataTrigger TargetType="Label" 
+                             Binding="{Binding CurrentTab, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Upcoming}" 
+                             Value="True">
+                    <Setter Property="TextColor" Value="#1D2E4E" />
+                </DataTrigger>
+                <DataTrigger TargetType="Label" 
+                             Binding="{Binding CurrentTab, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Upcoming}" 
+                             Value="False">
+                    <Setter Property="TextColor" Value="Gray" />
+                </DataTrigger>
+            </Label.Triggers>
+        </Label>
+        
+        <BoxView HeightRequest="3" Color="#6B4FA1" 
+                 IsVisible="{Binding CurrentTab, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Upcoming}"/>
+    </VerticalStackLayout>
 
-            <!-- Upcoming Tab (Active) -->
-            <VerticalStackLayout Grid.Column="0" Spacing="8">
-                <Label Text="Sắp tới"
-                       FontSize="16"
-                       FontAttributes="Bold"
-                       TextColor="#1D2E4E"
-                       HorizontalOptions="Center"/>
-                <BoxView HeightRequest="3"
-                         BackgroundColor="#6B4FA1"
-                         CornerRadius="2"
-                         HorizontalOptions="Fill"/>
-            </VerticalStackLayout>
+    <VerticalStackLayout Grid.Column="1">
+        <VerticalStackLayout.GestureRecognizers>
+            <TapGestureRecognizer Command="{Binding SwitchTabCommand}" CommandParameter="Pending"/>
+        </VerticalStackLayout.GestureRecognizers>
 
-            <!-- Pending Tab -->
-            <Label Grid.Column="1"
-                   Text="Chờ xác nhận"
-                   FontSize="16"
-                   TextColor="#BBBBBB"
-                   HorizontalOptions="Center"
-                   VerticalOptions="Center"/>
+        <Label Text="Chờ xác nhận" HorizontalOptions="Center" FontSize="16" FontAttributes="Bold">
+            <Label.Triggers>
+                <DataTrigger TargetType="Label" 
+                             Binding="{Binding CurrentTab, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Pending}" 
+                             Value="True">
+                    <Setter Property="TextColor" Value="#1D2E4E" />
+                </DataTrigger>
+                <DataTrigger TargetType="Label" 
+                             Binding="{Binding CurrentTab, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Pending}" 
+                             Value="False">
+                    <Setter Property="TextColor" Value="Gray" />
+                </DataTrigger>
+            </Label.Triggers>
+        </Label>
 
-            <!-- Past Tab -->
-            <Label Grid.Column="2"
-                   Text="Đã hoàn thành"
-                   FontSize="16"
-                   TextColor="#BBBBBB"
-                   HorizontalOptions="Center"
-                   VerticalOptions="Center"/>
+        <BoxView HeightRequest="3" Color="#6B4FA1" 
+                 IsVisible="{Binding CurrentTab, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Pending}"/>
+    </VerticalStackLayout>
 
-            <!-- Cancelled Tab -->
-            <Label Grid.Column="3"
-                   Text="Đã hủy"
-                   FontSize="16"
-                   TextColor="#BBBBBB"
-                   HorizontalOptions="Center"
-                   VerticalOptions="Center"/>
-        </Grid>
-
-        <!-- Search Bar -->
-        <Border Grid.Row="1"
-                StrokeThickness="1"
-                Stroke="#E0E0E0"
-                BackgroundColor="White"
-                Padding="15,12"
-                Margin="0,0,0,20">
-            <Border.StrokeShape>
-                <RoundRectangle CornerRadius="8"/>
-            </Border.StrokeShape>
-
-            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
-                <!-- Search Icon -->
-                <Image Grid.Column="0"
-                       WidthRequest="18"
-                       HeightRequest="18"
-                       VerticalOptions="Center">
-                    <Image.Source>
-                        <FontImageSource FontFamily="FontAwesomeSolid"
-                                       Glyph="&#xf002;"
-                                       Color="#9E9E9E"
-                                       Size="18"/>
-                    </Image.Source>
-                </Image>
-
-                <!-- Search Entry -->
-                <Entry Grid.Column="1"
-                       Placeholder="Tìm kiếm theo tên hoặc vai trò..."
-                       BackgroundColor="Transparent"
-                       TextColor="#1D2E4E"
-                       PlaceholderColor="#9E9E9E"
-                       VerticalOptions="Center"/>
-
-                <!-- Filter Icon -->
-                <Image Grid.Column="2"
-                       WidthRequest="18"
-                       HeightRequest="18"
-                       VerticalOptions="Center">
-                    <Image.Source>
-                        <FontImageSource FontFamily="FontAwesomeSolid"
-                                       Glyph="&#xf0b0;"
-                                       Color="#9E9E9E"
-                                       Size="18"/>
-                    </Image.Source>
-                </Image>
-            </Grid>
-        </Border>
-
-        <!-- Summary Stats -->
-        <Grid Grid.Row="2" 
-              ColumnDefinitions="*,*,*,*" 
-              ColumnSpacing="15" 
-              Margin="0,0,0,20">
-
-            <!-- Total Appointments -->
-            <Frame Grid.Column="0" 
-                   BackgroundColor="White" 
-                   CornerRadius="12" 
-                   Padding="15" 
-                   HasShadow="True" 
-                   BorderColor="#E0E0E0">
-                <VerticalStackLayout Spacing="5">
-                    <Label Text="Tổng lịch hẹn" 
-                           FontSize="13" 
-                           TextColor="#757575"/>
-                    <Label Text="156" 
-                           FontSize="24" 
-                           FontAttributes="Bold" 
+    </Grid>
+        <Grid Grid.Row="1" ColumnDefinitions="*, Auto" ColumnSpacing="10" Margin="0,0,0,20">
+            <Border Grid.Column="0" Stroke="#E0E0E0" StrokeShape="RoundRectangle 8" Padding="10,0">
+                <Grid ColumnDefinitions="Auto, *">
+                    <Image Source="search.png" WidthRequest="18" HeightRequest="18"/>
+                    <Entry Grid.Column="1" Placeholder="Tìm tên BS hoặc Bệnh nhân..." 
+                           Text="{Binding SearchText}"
+                           ReturnCommand="{Binding PerformSearchCommand}"
                            TextColor="#1D2E4E"/>
+                </Grid>
+            </Border>
+
+            <Button Grid.Column="1" Text="+" FontSize="24" WidthRequest="50" HeightRequest="50" CornerRadius="25"
+                    BackgroundColor="#5B9FFF" TextColor="White"
+                    Command="{Binding NavigateToAddCommand}"/>
+        </Grid>
+
+        <Grid Grid.Row="2" ColumnDefinitions="*,*,*,*" ColumnSpacing="10" Margin="0,0,0,20">
+            <Frame Grid.Column="0" Padding="10">
+                <VerticalStackLayout>
+                    <Label Text="Tổng" FontSize="12" TextColor="Gray"/>
+                    <Label Text="{Binding TotalCount}" FontSize="20" FontAttributes="Bold" TextColor="#1D2E4E"/>
                 </VerticalStackLayout>
             </Frame>
-
-            <!-- Upcoming -->
-            <Frame Grid.Column="1" 
-                   BackgroundColor="White" 
-                   CornerRadius="12" 
-                   Padding="15" 
-                   HasShadow="True" 
-                   BorderColor="#E0E0E0">
-                <VerticalStackLayout Spacing="5">
-                    <Label Text="Sắp tới" 
-                           FontSize="13" 
-                           TextColor="#757575"/>
-                    <Label Text="23" 
-                           FontSize="24" 
-                           FontAttributes="Bold" 
-                           TextColor="#4CAF50"/>
-                </VerticalStackLayout>
-            </Frame>
-
-            <!-- Pending -->
-            <Frame Grid.Column="2" 
-                   BackgroundColor="White" 
-                   CornerRadius="12" 
-                   Padding="15" 
-                   HasShadow="True" 
-                   BorderColor="#E0E0E0">
-                <VerticalStackLayout Spacing="5">
-                    <Label Text="Chờ xác nhận" 
-                           FontSize="13" 
-                           TextColor="#757575"/>
-                    <Label Text="8" 
-                           FontSize="24" 
-                           FontAttributes="Bold" 
-                           TextColor="#FF9800"/>
-                </VerticalStackLayout>
-            </Frame>
-
-            <!-- Cancelled -->
-            <Frame Grid.Column="3" 
-                   BackgroundColor="White" 
-                   CornerRadius="12" 
-                   Padding="15" 
-                   HasShadow="True" 
-                   BorderColor="#E0E0E0">
-                <VerticalStackLayout Spacing="5">
-                    <Label Text="Đã hủy" 
-                           FontSize="13" 
-                           TextColor="#757575"/>
-                    <Label Text="5" 
-                           FontSize="24" 
-                           FontAttributes="Bold" 
-                           TextColor="#F44336"/>
+            <Frame Grid.Column="1" Padding="10">
+                <VerticalStackLayout>
+                    <Label Text="Sắp tới" FontSize="12" TextColor="Gray"/>
+                    <Label Text="{Binding UpcomingCount}" FontSize="20" FontAttributes="Bold" TextColor="#4CAF50"/>
                 </VerticalStackLayout>
             </Frame>
         </Grid>
 
-        <!-- Appointments List -->
-        <ScrollView Grid.Row="3">
-            <VerticalStackLayout Spacing="15">
+        <CollectionView Grid.Row="3" ItemsSource="{Binding FilteredAppointments}">
+            <CollectionView.EmptyView>
+                <Label Text="Không có lịch hẹn nào." HorizontalOptions="Center" VerticalOptions="Center" TextColor="Gray"/>
+            </CollectionView.EmptyView>
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Frame Margin="0,0,0,10" Padding="15" CornerRadius="12" HasShadow="True" BorderColor="#E0E0E0">
+                        <Grid ColumnDefinitions="Auto, *, Auto" ColumnSpacing="15">
 
-                <!-- Appointment Card 1 -->
-                <Frame BackgroundColor="White" 
-                       CornerRadius="12" 
-                       Padding="20" 
-                       HasShadow="True" 
-                       BorderColor="#E0E0E0">
-                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="20">
-                        <!-- Doctor Image -->
-                        <Border Grid.Column="0"
-                                WidthRequest="70"
-                                HeightRequest="70"
-                                VerticalOptions="Start">
-                            <Border.StrokeShape>
-                                <RoundRectangle CornerRadius="10"/>
-                            </Border.StrokeShape>
-                            <Image Source="doctor1.jpg"
-                                   Aspect="AspectFill"/>
-                        </Border>
+                            <Border Grid.Column="0" WidthRequest="60" HeightRequest="60" StrokeShape="RoundRectangle 10">
+                                <Image Source="{Binding Doctor.ImageSource}" Aspect="AspectFill"/>
+                            </Border>
 
-                        <!-- Appointment Info -->
-                        <VerticalStackLayout Grid.Column="1" Spacing="8" VerticalOptions="Center">
-                            <!-- Doctor Name -->
-                            <Label FontSize="16" FontAttributes="Bold">
-                                <Label.FormattedText>
-                                    <FormattedString>
-                                        <Span Text="Lịch hẹn với "
-                                              TextColor="#1D2E4E"/>
-                                        <Span Text="BS. Nguyễn Thị Lan"
-                                              TextColor="#5B9FFF"/>
-                                    </FormattedString>
-                                </Label.FormattedText>
-                            </Label>
+                            <VerticalStackLayout Grid.Column="1" Spacing="5" VerticalOptions="Center">
+                                <Label FontAttributes="Bold" FontSize="16">
+                                    <Label.FormattedText>
+                                        <FormattedString>
+                                            <Span Text="BS. " TextColor="#5B9FFF"/>
+                                            <Span Text="{Binding Doctor.Name}" TextColor="#1D2E4E"/>
+                                        </FormattedString>
+                                    </Label.FormattedText>
+                                </Label>
 
-                            <!-- Date and Time -->
-                            <Grid ColumnDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="15">
-                                <!-- Calendar Icon -->
-                                <Image Grid.Column="0"
-                                       WidthRequest="14"
-                                       HeightRequest="14"
-                                       VerticalOptions="Center">
-                                    <Image.Source>
-                                        <FontImageSource FontFamily="FontAwesomeSolid"
-                                                       Glyph="&#xf133;"
-                                                       Color="#757575"
-                                                       Size="14"/>
-                                    </Image.Source>
-                                </Image>
-                                <Label Grid.Column="1"
-                                       Text="T4, 10 Tháng 5"
-                                       FontSize="13"
-                                       TextColor="#757575"
-                                       VerticalOptions="Center"/>
+                                <Label Text="{Binding PatientName, StringFormat='BN: {0}'}" FontSize="13" TextColor="Gray"/>
 
-                                <!-- Clock Icon -->
-                                <Image Grid.Column="2"
-                                       WidthRequest="14"
-                                       HeightRequest="14"
-                                       VerticalOptions="Center">
-                                    <Image.Source>
-                                        <FontImageSource FontFamily="FontAwesomeSolid"
-                                                       Glyph="&#xf017;"
-                                                       Color="#757575"
-                                                       Size="14"/>
-                                    </Image.Source>
-                                </Image>
-                                <Label Grid.Column="3"
-                                       Text="16:00 - 16:45"
-                                       FontSize="13"
-                                       TextColor="#757575"
-                                       VerticalOptions="Center"/>
-                            </Grid>
+                                <Label Text="{Binding AppointmentDate, StringFormat='{0:dd/MM/yyyy}'}" FontSize="13" TextColor="Gray"/>
+                            </VerticalStackLayout>
 
-                            <!-- Patient Info -->
-                            <HorizontalStackLayout Spacing="6">
-                                <Image WidthRequest="14" HeightRequest="14" VerticalOptions="Center">
-                                    <Image.Source>
-                                        <FontImageSource FontFamily="FontAwesomeSolid"
-                                                       Glyph="&#xf007;"
-                                                       Color="#757575"
-                                                       Size="14"/>
-                                    </Image.Source>
-                                </Image>
-                                <Label Text="Bệnh nhân: Trần Văn Nam"
-                                       FontSize="13"
-                                       TextColor="#757575"
-                                       VerticalOptions="Center"/>
-                            </HorizontalStackLayout>
-                        </VerticalStackLayout>
-
-                        <!-- Action Buttons -->
-                        <VerticalStackLayout Grid.Column="2" Spacing="8" VerticalOptions="Center">
-                            <Button Text="Chi tiết"
-                                    BackgroundColor="{StaticResource ColorSecondary}"
-                                    TextColor="White"
-                                    CornerRadius="8"
-                                    Padding="15,8"
-                                    FontSize="13"/>
-                            <Frame BackgroundColor="#E8F5E9" 
-                                   Padding="8,5" 
-                                   CornerRadius="6"
-                                   BorderColor="Transparent"
-                                   HorizontalOptions="Center">
-                                <Label Text="Đã xác nhận" 
-                                       TextColor="#4CAF50"
-                                       FontSize="12"
-                                       FontAttributes="Bold"/>
-                            </Frame>
-                        </VerticalStackLayout>
-                    </Grid>
-                </Frame>
-
-                <!-- Appointment Card 2 -->
-                <Frame BackgroundColor="White" 
-                       CornerRadius="12" 
-                       Padding="20" 
-                       HasShadow="True" 
-                       BorderColor="#E0E0E0">
-                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="20">
-                        <!-- Doctor Image -->
-                        <Border Grid.Column="0"
-                                WidthRequest="70"
-                                HeightRequest="70"
-                                VerticalOptions="Start">
-                            <Border.StrokeShape>
-                                <RoundRectangle CornerRadius="10"/>
-                            </Border.StrokeShape>
-                            <Image Source="doctor2.jpg"
-                                   Aspect="AspectFill"/>
-                        </Border>
-
-                        <!-- Appointment Info -->
-                        <VerticalStackLayout Grid.Column="1" Spacing="8" VerticalOptions="Center">
-                            <!-- Doctor Name -->
-                            <Label FontSize="16" FontAttributes="Bold">
-                                <Label.FormattedText>
-                                    <FormattedString>
-                                        <Span Text="Lịch hẹn với "
-                                              TextColor="#1D2E4E"/>
-                                        <Span Text="BS. Lê Minh Hoàng"
-                                              TextColor="#5B9FFF"/>
-                                    </FormattedString>
-                                </Label.FormattedText>
-                            </Label>
-
-                            <!-- Date and Time -->
-                            <Grid ColumnDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="15">
-                                <!-- Calendar Icon -->
-                                <Image Grid.Column="0"
-                                       WidthRequest="14"
-                                       HeightRequest="14"
-                                       VerticalOptions="Center">
-                                    <Image.Source>
-                                        <FontImageSource FontFamily="FontAwesomeSolid"
-                                                       Glyph="&#xf133;"
-                                                       Color="#757575"
-                                                       Size="14"/>
-                                    </Image.Source>
-                                </Image>
-                                <Label Grid.Column="1"
-                                       Text="T6, 12 Tháng 5"
-                                       FontSize="13"
-                                       TextColor="#757575"
-                                       VerticalOptions="Center"/>
-
-                                <!-- Clock Icon -->
-                                <Image Grid.Column="2"
-                                       WidthRequest="14"
-                                       HeightRequest="14"
-                                       VerticalOptions="Center">
-                                    <Image.Source>
-                                        <FontImageSource FontFamily="FontAwesomeSolid"
-                                                       Glyph="&#xf017;"
-                                                       Color="#757575"
-                                                       Size="14"/>
-                                    </Image.Source>
-                                </Image>
-                                <Label Grid.Column="3"
-                                       Text="17:00 - 17:45"
-                                       FontSize="13"
-                                       TextColor="#757575"
-                                       VerticalOptions="Center"/>
-                            </Grid>
-
-                            <!-- Patient Info -->
-                            <HorizontalStackLayout Spacing="6">
-                                <Image WidthRequest="14" HeightRequest="14" VerticalOptions="Center">
-                                    <Image.Source>
-                                        <FontImageSource FontFamily="FontAwesomeSolid"
-                                                       Glyph="&#xf007;"
-                                                       Color="#757575"
-                                                       Size="14"/>
-                                    </Image.Source>
-                                </Image>
-                                <Label Text="Bệnh nhân: Phạm Thị Mai"
-                                       FontSize="13"
-                                       TextColor="#757575"
-                                       VerticalOptions="Center"/>
-                            </HorizontalStackLayout>
-                        </VerticalStackLayout>
-
-                        <!-- Action Buttons -->
-                        <VerticalStackLayout Grid.Column="2" Spacing="8" VerticalOptions="Center">
-                            <Button Text="Chi tiết"
-                                    BackgroundColor="{StaticResource ColorSecondary}"
-                                    TextColor="White"
-                                    CornerRadius="8"
-                                    Padding="15,8"
-                                    FontSize="13"/>
-                            <Frame BackgroundColor="#E8F5E9" 
-                                   Padding="8,5" 
-                                   CornerRadius="6"
-                                   BorderColor="Transparent"
-                                   HorizontalOptions="Center">
-                                <Label Text="Đã xác nhận" 
-                                       TextColor="#4CAF50"
-                                       FontSize="12"
-                                       FontAttributes="Bold"/>
-                            </Frame>
-                        </VerticalStackLayout>
-                    </Grid>
-                </Frame>
-
-                <!-- Appointment Card 3 -->
-                <Frame BackgroundColor="White" 
-                       CornerRadius="12" 
-                       Padding="20" 
-                       HasShadow="True" 
-                       BorderColor="#E0E0E0">
-                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="20">
-                        <!-- Doctor Image -->
-                        <Border Grid.Column="0"
-                                WidthRequest="70"
-                                HeightRequest="70"
-                                VerticalOptions="Start">
-                            <Border.StrokeShape>
-                                <RoundRectangle CornerRadius="10"/>
-                            </Border.StrokeShape>
-                            <Image Source="doctor3.jpg"
-                                   Aspect="AspectFill"/>
-                        </Border>
-
-                        <!-- Appointment Info -->
-                        <VerticalStackLayout Grid.Column="1" Spacing="8" VerticalOptions="Center">
-                            <!-- Doctor Name -->
-                            <Label FontSize="16" FontAttributes="Bold">
-                                <Label.FormattedText>
-                                    <FormattedString>
-                                        <Span Text="Lịch hẹn với "
-                                              TextColor="#1D2E4E"/>
-                                        <Span Text="BS. Võ Thanh Tùng"
-                                              TextColor="#5B9FFF"/>
-                                    </FormattedString>
-                                </Label.FormattedText>
-                            </Label>
-
-                            <!-- Date and Time -->
-                            <Grid ColumnDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="15">
-                                <!-- Calendar Icon -->
-                                <Image Grid.Column="0"
-                                       WidthRequest="14"
-                                       HeightRequest="14"
-                                       VerticalOptions="Center">
-                                    <Image.Source>
-                                        <FontImageSource FontFamily="FontAwesomeSolid"
-                                                       Glyph="&#xf133;"
-                                                       Color="#757575"
-                                                       Size="14"/>
-                                    </Image.Source>
-                                </Image>
-                                <Label Grid.Column="1"
-                                       Text="T6, 19 Tháng 5"
-                                       FontSize="13"
-                                       TextColor="#757575"
-                                       VerticalOptions="Center"/>
-
-                                <!-- Clock Icon -->
-                                <Image Grid.Column="2"
-                                       WidthRequest="14"
-                                       HeightRequest="14"
-                                       VerticalOptions="Center">
-                                    <Image.Source>
-                                        <FontImageSource FontFamily="FontAwesomeSolid"
-                                                       Glyph="&#xf017;"
-                                                       Color="#757575"
-                                                       Size="14"/>
-                                    </Image.Source>
-                                </Image>
-                                <Label Grid.Column="3"
-                                       Text="15:00 - 15:45"
-                                       FontSize="13"
-                                       TextColor="#757575"
-                                       VerticalOptions="Center"/>
-                            </Grid>
-
-                            <!-- Patient Info -->
-                            <HorizontalStackLayout Spacing="6">
-                                <Image WidthRequest="14" HeightRequest="14" VerticalOptions="Center">
-                                    <Image.Source>
-                                        <FontImageSource FontFamily="FontAwesomeSolid"
-                                                       Glyph="&#xf007;"
-                                                       Color="#757575"
-                                                       Size="14"/>
-                                    </Image.Source>
-                                </Image>
-                                <Label Text="Bệnh nhân: Hoàng Văn Đức"
-                                       FontSize="13"
-                                       TextColor="#757575"
-                                       VerticalOptions="Center"/>
-                            </HorizontalStackLayout>
-                        </VerticalStackLayout>
-
-                        <!-- Action Buttons -->
-                        <VerticalStackLayout Grid.Column="2" Spacing="8" VerticalOptions="Center">
-                            <Button Text="Chi tiết"
-                                    BackgroundColor="#5B9FFF"
-                                    TextColor="White"
-                                    CornerRadius="8"
-                                    Padding="15,8"
-                                    FontSize="13"/>
-                            <Frame BackgroundColor="#FFF3E0" 
-                                   Padding="8,5" 
-                                   CornerRadius="6"
-                                   BorderColor="Transparent"
-                                   HorizontalOptions="Center">
-                                <Label Text="Chờ xác nhận" 
-                                       TextColor="#FF9800"
-                                       FontSize="12"
-                                       FontAttributes="Bold"/>
-                            </Frame>
-                        </VerticalStackLayout>
-                    </Grid>
-                </Frame>
-
-            </VerticalStackLayout>
-        </ScrollView>
+                            <Label Grid.Column="2" Text="{Binding Status}" 
+                                   VerticalOptions="Center" 
+                                   TextColor="#5B9FFF" FontAttributes="Bold" FontSize="12"/>
+                        </Grid>
+                    </Frame>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
 
     </Grid>
 </ContentView>
