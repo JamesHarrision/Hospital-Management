@@ -6,11 +6,12 @@
              x:Class="HospitalManager.MVVM.Views.DashboardPageView"
              Title="Dashboard"
              BackgroundColor="#F4F7FC"
-             Shell.NavBarIsVisible="False">
+             Shell.NavBarIsVisible="False"
+             >
 
-    <ContentPage.BindingContext>
+    <!--<ContentPage.BindingContext>
         <vm:DashboardViewModel />
-    </ContentPage.BindingContext>
+    </ContentPage.BindingContext>-->
 
     <Grid>
         <Grid.ColumnDefinitions>

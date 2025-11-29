@@ -35,7 +35,7 @@
                     <Grid Padding="15, 10" BackgroundColor="#F9FAFB" ColumnDefinitions="0.8*, 1.5*, 0.5*, 0.5*, 1.2*, 2*, 1*, 1*">
                         <Label Grid.Column="0" Text="MÃ BN" FontAttributes="Bold" TextColor="#6B7280" />
                         <Label Grid.Column="1" Text="HỌ TÊN" FontAttributes="Bold" TextColor="#6B7280" />
-                        <Label Grid.Column="2" Text="GIỚI" FontAttributes="Bold" TextColor="#6B7280" />
+                        <Label Grid.Column="2" Text="GIỚI TÍNH" FontAttributes="Bold" TextColor="#6B7280" />
                         <Label Grid.Column="3" Text="TUỔI" FontAttributes="Bold" TextColor="#6B7280" />
                         <Label Grid.Column="4" Text="SĐT" FontAttributes="Bold" TextColor="#6B7280" />
                         <Label Grid.Column="5" Text="ĐỊA CHỈ" FontAttributes="Bold" TextColor="#6B7280" />

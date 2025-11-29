@@ -1,6 +1,7 @@
 ﻿// Nằm trong file: /MVVM/Models/Patient.cs
 using CommunityToolkit.Mvvm.ComponentModel;
 using System;
+using SQLite;
 
 namespace HospitalManager.MVVM.Models
 {
@@ -9,6 +10,8 @@ namespace HospitalManager.MVVM.Models
     {
         // 2. Chuyển tất cả properties sang [ObservableProperty]
         // (Đây là cách MVVM Toolkit tự động tạo code INotifyPropertyChanged)
+        // Gắn cái primary key vào cho property được sinh ra cho không gán vào biến private này
+        [property: PrimaryKey]
         [ObservableProperty]
         private string id;
 

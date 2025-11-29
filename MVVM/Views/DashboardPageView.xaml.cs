@@ -16,10 +16,10 @@ public partial class DashboardPageView : ContentPage
 
     // Tab hiện đang được chọn
     Border? _selectedTab;
-    public DashboardPageView()
+    public DashboardPageView(DashboardViewModel vm)
     {
         InitializeComponent();
-        BindingContext = new HospitalManager.MVVM.ViewModels.DashboardViewModel();
+        BindingContext = vm;
 
     }
 

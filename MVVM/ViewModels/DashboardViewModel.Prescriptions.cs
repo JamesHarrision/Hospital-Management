@@ -9,6 +9,8 @@ using Microsoft.Maui.Storage;
 using Microsoft.Maui.ApplicationModel;
 using Colors = QuestPDF.Helpers.Colors;
 using IContainer = QuestPDF.Infrastructure.IContainer;
+using HospitalManager.MVVM.Models;
+using System.Threading.Tasks;
 
 namespace HospitalManager.MVVM.ViewModels;
 
@@ -44,21 +46,45 @@ public partial class DashboardViewModel
     }
 
     // --- CÁC HÀM LOAD DỮ LIỆU ---
-    private void LoadPrescriptions()
+    private async Task LoadPrescriptions()
     {
-        // Tạo dữ liệu mẫu
-        var data = new List<Prescription>
+        var list = await _databaseService.GetPrescriptionsAsync();
+        MainThread.BeginInvokeOnMainThread(() =>
         {
-            new Prescription { Id = "DT001", PatientName = "Nguyễn Văn An", DoctorName = "BS. Trần Thị B", DatePrescribed = new DateTime(2025, 11, 15), Status = "Đã cấp" },
-            new Prescription { Id = "DT002", PatientName = "Lê Thị C", DoctorName = "BS. Nguyễn Văn D", DatePrescribed = DateTime.Now, Status = "Chưa cấp" },
-            new Prescription { Id = "DT003", PatientName = "Hoàng Văn E", DoctorName = "BS. Trần Thị B", DatePrescribed = DateTime.Now.AddDays(-1), Status = "Đã cấp" },
-        };
+            Prescriptions.Clear();
+            foreach (var p in list)
+            {
+                Prescriptions.Add(p);
+            }
 
-        // Lưu vào list gốc
-        _allPrescriptions = data;
+            // Lưu danh sách gốc để dùng cho tính năng tìm kiếm (nếu có)
+            _allPrescriptions = list;
+        });
+    }
 
-        // Đổ vào list hiển thị
-        Prescriptions = new ObservableCollection<Prescription>(_allPrescriptions);
+    [RelayCommand]
+    private async Task DeletePrescription(Prescription prescriptionToDelete)
+    {
+        if (prescriptionToDelete == null) return;
+
+        // 1. Hỏi xác nhận trước khi xóa
+        bool confirmed = await Application.Current.MainPage.DisplayAlert(
+            "Xác nhận xóa",
+            $"Bạn có chắc chắn muốn xóa đơn thuốc mã '{prescriptionToDelete.Id}' của bệnh nhân {prescriptionToDelete.PatientName}?",
+            "Xóa",
+            "Hủy");
+
+        if (confirmed)
+        {
+            // 2. Xóa trong Database
+            await _databaseService.DeletePrescriptionAsync(prescriptionToDelete);
+
+            // 3. Xóa trên Giao diện (để không phải load lại toàn bộ)
+            Prescriptions.Remove(prescriptionToDelete);
+
+            // (Tùy chọn) Nếu bạn có list gốc _allPrescriptions thì xóa trong đó nữa
+            // _allPrescriptions.Remove(prescriptionToDelete);
+        }
     }
 
     private void SearchPrescriptions()

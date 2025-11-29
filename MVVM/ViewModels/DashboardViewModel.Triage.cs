@@ -1,14 +1,16 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using HospitalManager.MVVM.Models;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using Microsoft.Maui.ApplicationModel;
-using HosipitalManager.MVVM.Services;
+using HosipitalManager.MVVM.Services; 
+using HospitalManager.MVVM.Views;
+using HosipitalManager.MVVM.Views;
 
 namespace HospitalManager.MVVM.ViewModels;
 
-// File này chỉ lo việc Xếp hàng và Tiếp nhận
+// File này chỉ lo việc Xếp hàng và Tiếp nhận (Triage)
 public partial class DashboardViewModel
 {
     [ObservableProperty]
@@ -59,28 +61,60 @@ public partial class DashboardViewModel
             "Cấp cứu" => "critical",
             "Khẩn cấp" => "emergency",
             "Gấp" => "urgent",
+            "Trung bình" => "medium",
             _ => "normal"
+        };
+    }
+
+    // Hàm hiển thị ngược lại (dùng khi mở popup sửa)
+    private string GetSeverityDisplayName(string code)
+    {
+        if (string.IsNullOrEmpty(code)) return "Bình thường";
+        return code.ToLower() switch
+        {
+            "critical" => "Cấp cứu",
+            "emergency" => "Khẩn cấp",
+            "urgent" => "Gấp",
+            "medium" => "Trung bình",
+            _ => "Bình thường"
         };
     }
 
     private double CalculatePriority(Patient patient)
     {
+        if (patient == null) return 0;
         double score = 0;
-        if (patient.Severity == "critical") score += 1000;
-        else if (patient.Severity == "emergency") score += 500;
-        else if (patient.Severity == "urgent") score += 200;
+        
+        // So sánh code (critical, urgent...)
+        string severity = patient.Severity?.ToLower() ?? "";
 
-        if (patient.Age < 12) score += 100;
-        if (patient.Age > 65) score += 100;
+        if (severity == "critical" || severity == "cấp cứu") score += 1000;
+        else if (severity == "emergency" || severity == "khẩn cấp") score += 500;
+        else if (severity == "urgent" || severity == "gấp") score += 200;
+        else if (severity == "medium") score += 50;
 
-        score -= patient.QueueOrder * 0.1;
+        if (patient.Age < 12) score += 20;
+        if (patient.Age > 65) score += 20;
+
+        // Trừ điểm theo thứ tự hàng đợi để đảm bảo ai đến trước (số nhỏ) ưu tiên hơn
+        score -= patient.QueueOrder * 0.01;
         return score;
     }
 
     public void SortPatientQueue()
     {
-        foreach (var p in WaitingQueue) p.PriorityScore = CalculatePriority(p);
-        var sortedList = WaitingQueue.OrderByDescending(p => p.PriorityScore).ToList();
+        if (WaitingQueue == null || WaitingQueue.Count == 0) return;
+
+        // Tính điểm và sắp xếp lại
+        var sortedList = WaitingQueue
+            .Select(p => 
+            {
+                p.PriorityScore = CalculatePriority(p);
+                return p;
+            })
+            .OrderByDescending(p => p.PriorityScore)
+            .ToList();
+
         WaitingQueue.Clear();
         foreach (var p in sortedList) WaitingQueue.Add(p);
     }
@@ -94,7 +128,7 @@ public partial class DashboardViewModel
         PopupTitle = "Tiếp nhận bệnh nhân mới";
         ClearPopupForm();
 
-        // Logic khóa form
+        // Logic khóa form khi tiếp nhận mới
         NewPatientStatus = "Chờ khám";
         IsStatusEnabled = false;
 
@@ -108,53 +142,9 @@ public partial class DashboardViewModel
         ClearPopupForm();
     }
 
-    [RelayCommand]
-    private void SavePatient()
-    {
-        try
-        {
-            string severityCode = GetSeverityCode(NewPatientSeverity);
-
-            if (isEditing && patientToEdit != null)
-            {
-                // Logic Sửa (Admin dùng)
-                patientToEdit.FullName = NewPatientFullName;
-                patientToEdit.DateOfBirth = NewPatientDateOfBirth;
-                patientToEdit.Gender = NewPatientGender;
-                patientToEdit.PhoneNumber = NewPatientPhoneNumber;
-                patientToEdit.Address = NewPatientAddress;
-                patientToEdit.Status = NewPatientStatus;
-                patientToEdit.Severity = severityCode;
-                patientToEdit.Symptoms = NewPatientSymptoms;
-            }
-            else
-            {
-                // Logic Thêm Mới (Tiếp nhận)
-                var newPatient = new Patient
-                {
-                    Id = $"BN{new Random().Next(1000, 9999)}",
-                    FullName = NewPatientFullName,
-                    DateOfBirth = NewPatientDateOfBirth,
-                    Gender = NewPatientGender,
-                    PhoneNumber = NewPatientPhoneNumber,
-                    Address = NewPatientAddress,
-                    AdmittedDate = DateTime.Now,
-                    Status = "Chờ khám", // Fix cứng
-                    Severity = severityCode,
-                    Symptoms = NewPatientSymptoms,
-                    QueueOrder = WaitingQueue.Count + 1
-                };
-                WaitingQueue.Add(newPatient);
-            }
-
-            SortPatientQueue();
-            CloseAddPatientPopup();
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"Lỗi: {ex.Message}");
-        }
-    }
+    // LƯU Ý: Đã XÓA hàm SavePatient ở đây. 
+    // ViewModel sẽ tự động dùng hàm SavePatient bên file DashboardViewModel.Patients.cs
+    // Bạn nhớ kiểm tra file Patients.cs xem đã có hàm SavePatient chưa nhé.
 
     [RelayCommand]
     private async Task CallPatient(Patient patient)
@@ -169,21 +159,19 @@ public partial class DashboardViewModel
 
         if (isConfirmed)
         {
-            // 1. Xử lý hàng đợi (như cũ)
+            // 1. Cập nhật trạng thái và Lưu vào Database
             patient.Status = "Đang điều trị";
-            Patients.Add(patient);
+            await _databaseService.SavePatientAsync(patient);
+
+            // 2. Xóa khỏi hàng đợi trên giao diện
             WaitingQueue.Remove(patient);
 
-            // 2. --- TẠO SERVICE KẾT NỐI ---
-            // Truyền danh sách Prescriptions của Dashboard vào Service
-            var presService = new PrescriptionService(Prescriptions);
-
-            // 3. Khởi tạo VM Khám bệnh và đưa Service vào
-            // (Đảm bảo ExaminationViewModel đã có constructor nhận Service nhé!)
-            var examVM = new ExaminationViewModel(patient, presService, AvailableMedicines);
+            // 3. Khởi tạo VM Khám bệnh
+            // Truyền _databaseService (đã có ở file chính) vào ExaminationViewModel
+            var examVM = new ExaminationViewModel(patient, _databaseService);
 
             // 4. Chuyển trang
-            var examPage = new HosipitalManager.MVVM.Views.ExaminationPageView(examVM);
+            var examPage = new ExaminationPageView(examVM);
 
             MainThread.BeginInvokeOnMainThread(async () =>
             {
@@ -191,6 +179,7 @@ public partial class DashboardViewModel
             });
         }
     }
+
     private void ClearPopupForm()
     {
         NewPatientFullName = string.Empty;
@@ -204,4 +193,4 @@ public partial class DashboardViewModel
         isEditing = false;
         patientToEdit = null;
     }
-}
+}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       
