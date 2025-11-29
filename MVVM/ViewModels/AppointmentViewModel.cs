@@ -165,5 +165,11 @@ namespace HosipitalManager.MVVM.ViewModels
                 WeakReferenceMessenger.Default.Send(new DashboardRefreshMessage());
             }
         }
+
+        partial void OnSearchTextChanged(string value)
+        {
+            // Gọi hàm lọc dữ liệu ngay lập tức
+            FilterData();
+        }
     }
 }
