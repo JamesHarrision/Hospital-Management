@@ -57,7 +57,24 @@
                  IsVisible="{Binding CurrentTab, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Pending}"/>
     </VerticalStackLayout>
 
-    </Grid>
+    <VerticalStackLayout Grid.Column="2">
+        <VerticalStackLayout.GestureRecognizers>
+            <TapGestureRecognizer Command="{Binding SwitchTabCommand}" CommandParameter="Completed"/>
+        </VerticalStackLayout.GestureRecognizers>
+        <Label Text="Đã hoàn thành" HorizontalOptions="Center" FontSize="14" FontAttributes="Bold">
+            <Label.Triggers>
+                <DataTrigger TargetType="Label" Binding="{Binding CurrentTab, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Completed}" Value="True">
+                    <Setter Property="TextColor" Value="#1D2E4E" />
+                </DataTrigger>
+                <DataTrigger TargetType="Label" Binding="{Binding CurrentTab, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Completed}" Value="False">
+                    <Setter Property="TextColor" Value="Gray" />
+                </DataTrigger>
+            </Label.Triggers>
+        </Label>
+        <BoxView HeightRequest="3" Color="#6B4FA1" IsVisible="{Binding CurrentTab, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Completed}"/>
+    </VerticalStackLayout>
+
+        </Grid>
         <Grid Grid.Row="1" ColumnDefinitions="*, Auto" ColumnSpacing="10" Margin="0,0,0,20">
             <Border Grid.Column="0" Stroke="#E0E0E0" StrokeShape="RoundRectangle 8" Padding="10,0">
                 <Grid ColumnDefinitions="Auto, *">
@@ -159,14 +176,14 @@
                             <VerticalStackLayout Grid.Column="2" Spacing="10" VerticalOptions="Center">
 
                                 <Button Text="Duyệt"
-                            FontSize="12"
-                            Padding="10,0"
-                            HeightRequest="36"
-                            BackgroundColor="#4CAF50"
-                            TextColor="White"
-                            CornerRadius="6"
-                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:AppointmentViewModel}}, Path=ConfirmAppointmentCommand}"
-                            CommandParameter="{Binding .}">
+                                    FontSize="12"
+                                    Padding="10,0"
+                                    HeightRequest="35"
+                                    BackgroundColor="#4CAF50"
+                                    TextColor="White"
+                                    CornerRadius="5"
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:AppointmentViewModel}}, Path=ConfirmAppointmentCommand}"
+                                    CommandParameter="{Binding .}">
                                     <Button.Triggers>
                                         <DataTrigger TargetType="Button" Binding="{Binding Status}" Value="Pending">
                                             <Setter Property="IsVisible" Value="True"/>

@@ -38,6 +38,11 @@ namespace HosipitalManager.MVVM.ViewModels
 
             // Tính toán và hiển thị lần đầu
             RefreshData();
+
+            WeakReferenceMessenger.Default.Register<DashboardRefreshMessage>(this, (r, m) =>
+            {
+                RefreshData();
+            });
         }
 
         // Hàm làm mới dữ liệu (gọi khi vào trang hoặc khi có thay đổi)
@@ -104,22 +109,39 @@ namespace HosipitalManager.MVVM.ViewModels
         {
             if (appt == null) return;
 
+            // --- BẮT ĐẦU ĐOẠN CHECK TRÙNG ---
+
+            // 1. Lấy danh sách các lịch ĐÃ DUYỆT của bác sĩ này trong ngày hôm đó
+            var conflicts = HospitalSystem.Instance.Appointments.Where(a =>
+                a.Id != appt.Id && // Không so sánh với chính nó
+                a.Status == AppointmentStatus.Upcoming && // Chỉ so với lịch đã duyệt
+                a.Doctor.Id == appt.Doctor.Id && // Cùng bác sĩ
+                a.AppointmentDate.Date == appt.AppointmentDate.Date // Cùng ngày
+            ).ToList();
+
+            // 2. Kiểm tra va chạm thời gian
+            foreach (var existing in conflicts)
+            {
+                // Công thức trùng: (StartA < EndB) và (EndA > StartB)
+                if (appt.StartTime < existing.EndTime && appt.EndTime > existing.StartTime)
+                {
+                    await Shell.Current.DisplayAlert("Trùng lịch!",
+                        $"Bác sĩ {appt.Doctor.Name} đã bận từ {existing.StartTime:hh\\:mm} đến {existing.EndTime:hh\\:mm}.\nKhông thể duyệt lịch này.",
+                        "Đóng");
+                    return; // Dừng lại ngay, không cho duyệt
+                }
+            }
+            // --- KẾT THÚC ĐOẠN CHECK TRÙNG ---
+
+            // Nếu không trùng thì hỏi xác nhận
             bool confirm = await Shell.Current.DisplayAlert("Xác nhận",
-                $"Duyệt lịch hẹn của {appt.PatientName}?", "Duyệt", "Hủy");
+                $"Duyệt lịch hẹn của {appt.PatientName} lúc {appt.StartTime:hh\\:mm}?", "Duyệt", "Hủy");
 
             if (confirm)
             {
-                // 1. Chuyển trạng thái sang Upcoming
                 appt.Status = AppointmentStatus.Upcoming;
-
-                // 2. Làm mới danh sách hiện tại (để nó bay từ tab Pending sang Upcoming)
                 RefreshData();
-
-                // 3. Gửi tin nhắn để Dashboard vẽ lại lịch
                 WeakReferenceMessenger.Default.Send(new DashboardRefreshMessage());
-
-                // (Tùy chọn) Thông báo
-                // await Shell.Current.DisplayToastAsync("Đã duyệt lịch hẹn!");
             }
         }
 

@@ -3,6 +3,7 @@ using HosipitalManager.MVVM.Models;
 using HosipitalManager.MVVM.Services;
 using Microsoft.Maui.Controls.Shapes;
 using static HospitalManager.MVVM.ViewModels.DashboardViewModel;
+using HospitalManager.MVVM.ViewModels;
 
 namespace HosipitalManager.MVVM.Views;
 
@@ -19,6 +20,12 @@ public partial class DashboardContentView : ContentView
 
         // Vẽ lịch khi khởi tạo
         RenderSchedule();
+
+        WeakReferenceMessenger.Default.Register<DashboardRefreshMessage>(this, (r, m) =>
+        {
+            // Khi nhận được tin nhắn, chạy hàm vẽ lại lịch
+            RenderSchedule();
+        });
 
         // Đăng ký nhận tin nhắn để vẽ lại lịch khi có thay đổi (Thêm/Xóa lịch)
         WeakReferenceMessenger.Default.Send(new DashboardRefreshMessage());
@@ -137,59 +144,127 @@ public partial class DashboardContentView : ContentView
 
     private View CreateAppointmentCard(Appointment appt)
     {
-        // Vì chỉ hiện Upcoming nên ta cố định màu Xanh (hoặc logic màu khác tùy bạn)
-        Color bgColor = Color.FromArgb("#E3F2FD");
-        Color stripeColor = Color.FromArgb("#2196F3");
+        // 1. Màu sắc phân biệt
+        Color bgColor = Color.FromArgb("#E3F2FD"); // Xanh nhạt
+        Color stripeColor = Color.FromArgb("#2196F3"); // Xanh đậm
 
+        // 2. Tạo khung bao ngoài
         var border = new Border
         {
             StrokeShape = new RoundRectangle { CornerRadius = 5 },
             StrokeThickness = 0,
             BackgroundColor = bgColor,
             Margin = new Thickness(1),
-            Padding = new Thickness(5)
+            Padding = new Thickness(0)
         };
 
-        var content = new VerticalStackLayout
+        // 3. Nội dung bên trong thẻ (VerticalStackLayout)
+        var contentLayout = new VerticalStackLayout
         {
+            Padding = new Thickness(5),
             Spacing = 2,
             Children =
         {
-            // Tên Bệnh nhân
-            new Label {
+            // Tên bệnh nhân
+            new Label
+            {
                 Text = appt.PatientName,
                 FontSize = 11,
                 FontAttributes = FontAttributes.Bold,
                 TextColor = Colors.Black,
                 LineBreakMode = LineBreakMode.TailTruncation
             },
-            
-            // --- THAY ĐỔI 2: HIỆN NGÀY VÀ GIỜ ---
-            // Ví dụ: 15/05 (09:00 - 09:30)
-            new Label {
-                Text = $"{appt.AppointmentDate:dd/MM} ({appt.StartTime:hh\\:mm}-{appt.EndTime:hh\\:mm})",
+            // Giờ khám (QUAN TRỌNG: Phải hiện giờ)
+            new Label
+            {
+                Text = $"{appt.StartTime:hh\\:mm} - {appt.EndTime:hh\\:mm}",
                 FontSize = 10,
-                TextColor = Color.FromArgb("#1D2E4E"),
-                FontAttributes = FontAttributes.Italic
+                TextColor = Color.FromArgb("#1D2E4E")
             },
-
-            // Tên Bác sĩ (Tùy chọn)
-            new Label {
+            // Tên bác sĩ
+            new Label
+            {
                 Text = $"BS. {appt.Doctor.Name}",
                 FontSize = 9,
-                TextColor = Colors.Gray
+                TextColor = Colors.Gray,
+                LineBreakMode = LineBreakMode.TailTruncation
             }
         }
         };
 
-        // Layout chứa thanh màu bên trái
-        var container = new Grid { ColumnDefinitions = new ColumnDefinitionCollection { new ColumnDefinition { Width = 4 }, new ColumnDefinition { Width = GridLength.Star } } };
+        // 4. Tạo thanh màu bên trái
+        var container = new Grid
+        {
+            ColumnDefinitions = new ColumnDefinitionCollection
+        {
+            new ColumnDefinition { Width = 4 },
+            new ColumnDefinition { Width = GridLength.Star }
+        }
+        };
+
         var stripe = new BoxView { Color = stripeColor, VerticalOptions = LayoutOptions.Fill };
 
         container.Add(stripe, 0, 0);
-        container.Add(content, 1, 0);
+        container.Add(contentLayout, 1, 0);
         border.Content = container;
 
+        // 5. Thêm sự kiện bấm vào thẻ
+        var tapGesture = new TapGestureRecognizer();
+        tapGesture.Tapped += async (s, e) =>
+        {
+            await ProcessCheckIn(appt);
+        };
+        border.GestureRecognizers.Add(tapGesture);
+
         return border;
+    }
+
+    // Hàm xử lý logic Check-in (QUAN TRỌNG)
+    private async Task ProcessCheckIn(Appointment appt)
+    {
+        // 1. Lấy thời gian hiện tại và thời gian hẹn
+        DateTime now = DateTime.Now;
+        DateTime appointmentTime = appt.AppointmentDate.Date + appt.StartTime;
+
+        // 2. Tính độ lệch (Phút)
+        double diffMinutes = (now - appointmentTime).TotalMinutes;
+
+        // 3. Kiểm tra điều kiện thời gian
+        // Điều kiện: Sớm tối đa 10p (diff >= -10) và Trễ tối đa 10p (diff <= 10)
+
+        if (diffMinutes < -10)
+        {
+            // Đến quá sớm (VD: Hẹn 9h, giờ là 8h40 -> diff = -20)
+            int minutesEarly = (int)Math.Abs(diffMinutes);
+            await Shell.Current.DisplayAlert("Chưa đến giờ",
+                $"Bệnh nhân đến quá sớm ({minutesEarly} phút).\nVui lòng đợi đến {appointmentTime.AddMinutes(-10):HH:mm} để tiếp nhận.", "Đóng");
+            return;
+        }
+
+        if (diffMinutes > 10)
+        {
+            // Đến quá trễ (VD: Hẹn 9h, giờ là 9h15 -> diff = +15)
+            int minutesLate = (int)diffMinutes;
+            await Shell.Current.DisplayAlert("Quá giờ",
+                $"Đã quá giờ hẹn {minutesLate} phút. Không thể tiếp nhận tự động.\nVui lòng xếp hàng thủ công hoặc đặt lại lịch.", "Đóng");
+            return;
+        }
+
+        // 4. Nếu thời gian hợp lệ -> Hỏi xác nhận
+        bool isConfirmed = await Shell.Current.DisplayAlert(
+              "Tiếp nhận",
+              $"Tiếp nhận bệnh nhân {appt.PatientName}?\n(Lịch hẹn lúc {appt.StartTime:hh\\:mm})",
+              "Tiếp nhận",
+              "Hủy");
+
+        if (!isConfirmed)
+        {
+            return;
+        }
+
+        WeakReferenceMessenger.Default.Send(new DashboardRefreshMessage());
+
+        // Chỉ khi chọn "Tiếp nhận" mới gửi tin nhắn mở Popup
+        WeakReferenceMessenger.Default.Send(new DashboardViewModel.RequestCheckInMessage(appt));
     }
 }

@@ -1,7 +1,11 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
+using HosipitalManager.MVVM.Models;
 using HospitalManager.MVVM.Models;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
+
 
 namespace HospitalManager.MVVM.ViewModels;
 
@@ -227,6 +231,138 @@ public partial class DashboardViewModel : ObservableObject
         {
             Patients.Remove(patientToDelete);
             FilteredPatients.Remove(patientToDelete);
+        }
+    }
+
+
+    private Appointment _pendingCheckInAppointment;
+
+    // Message để nhận yêu cầu Check-in từ DashboardContentView
+    public class RequestCheckInMessage
+    {
+        public Appointment Appointment { get; set; }
+        public RequestCheckInMessage(Appointment appt) { Appointment = appt; }
+    }
+
+    private void OpenCheckInPopup(Appointment appt)
+    {
+        _pendingCheckInAppointment = appt;
+
+        // 1. Điền thông tin từ Lịch hẹn vào các biến Binding của Popup
+        PopupTitle = "Tiếp nhận Bệnh nhân"; // Đổi tiêu đề
+        NewPatientFullName = appt.PatientName;
+        NewPatientPhoneNumber = appt.PhoneNumber;
+        NewPatientSymptoms = appt.Note;
+
+        // Các trường mặc định khác
+        NewPatientDateOfBirth = DateTime.Today; // Hoặc tính từ appt nếu có
+        NewPatientAddress = "";
+        NewPatientStatus = "Chờ khám";
+        NewPatientSeverity = "Bình thường";
+
+        // 2. Hiện Popup (Binding IsAddPatientPopupVisible = true)
+        IsAddPatientPopupVisible = true;
+    }
+
+    [RelayCommand]
+    private void SavePatient()
+    {
+        try
+        {
+            string severityCode = GetSeverityCode(NewPatientSeverity);
+
+            // TRƯỜNG HỢP 1: SỬA THÔNG TIN (Edit)
+            if (isEditing && patientToEdit != null)
+            {
+                patientToEdit.FullName = NewPatientFullName;
+                patientToEdit.DateOfBirth = NewPatientDateOfBirth;
+                patientToEdit.Gender = NewPatientGender;
+                patientToEdit.PhoneNumber = NewPatientPhoneNumber;
+                patientToEdit.Address = NewPatientAddress;
+                patientToEdit.Status = NewPatientStatus;
+                patientToEdit.Severity = severityCode;
+                patientToEdit.Symptoms = NewPatientSymptoms;
+
+                // Tính lại điểm ưu tiên sau khi sửa
+                patientToEdit.PriorityScore = CalculatePriority(patientToEdit);
+            }
+            // TRƯỜNG HỢP 2: THÊM MỚI / TIẾP NHẬN TỪ LỊCH HẸN
+            else
+            {
+                // A. Kiểm tra bệnh nhân cũ (dựa trên SĐT)
+                var existingPatient = Patients.FirstOrDefault(p => p.PhoneNumber == NewPatientPhoneNumber);
+                string finalId;
+
+                if (existingPatient != null)
+                {
+                    // Nếu đã có hồ sơ -> Dùng lại ID cũ
+                    finalId = existingPatient.Id;
+
+                    // (Tùy chọn) Cập nhật lại thông tin mới nhất vào hồ sơ gốc
+                    existingPatient.FullName = NewPatientFullName;
+                    existingPatient.Address = NewPatientAddress;
+                }
+                else
+                {
+                    // Nếu chưa có -> Tạo ID mới
+                    finalId = $"BN{new Random().Next(1000, 9999)}";
+                }
+
+                // B. Tạo đối tượng Patient cho hàng đợi
+                var newPatient = new Patient
+                {
+                    Id = finalId,
+                    FullName = NewPatientFullName,
+                    DateOfBirth = NewPatientDateOfBirth,
+                    Gender = NewPatientGender,
+                    PhoneNumber = NewPatientPhoneNumber,
+                    Address = NewPatientAddress,
+                    AdmittedDate = DateTime.Now,
+                    Status = "Chờ khám",
+                    Severity = severityCode,
+                    Symptoms = NewPatientSymptoms,
+                    QueueOrder = WaitingQueue.Count + 1,
+
+                    // Lấy tên bác sĩ từ lịch hẹn (nếu có)
+                    //AssignedDoctor = _pendingCheckInAppointment?.Doctor.Name ?? "Chưa chỉ định"
+                };
+
+                // Tính điểm ưu tiên
+                newPatient.PriorityScore = CalculatePriority(newPatient);
+
+                // C. Thêm vào Hàng đợi
+                WaitingQueue.Add(newPatient);
+
+                // D. XỬ LÝ LỊCH HẸN (QUAN TRỌNG)
+                if (_pendingCheckInAppointment != null)
+                {
+                    // Đổi trạng thái lịch hẹn -> Completed
+                    _pendingCheckInAppointment.Status = AppointmentStatus.Completed;
+
+                    // Gửi tin nhắn để màn hình Lịch hẹn tự làm mới (ẩn lịch đi)
+                    WeakReferenceMessenger.Default.Send(new DashboardRefreshMessage());
+
+                    // Reset biến tạm
+                    _pendingCheckInAppointment = null;
+                }
+
+                // E. Nếu là bệnh nhân hoàn toàn mới, lưu vào danh sách gốc
+                if (existingPatient == null)
+                {
+                    Patients.Add(newPatient);
+                }
+            }
+
+            // 3. Sắp xếp lại hàng đợi và đóng Popup
+            SortPatientQueue();
+            CloseAddPatientPopup();
+
+            // (Tùy chọn) Thông báo thành công
+            // Shell.Current.DisplayAlert("Thành công", "Đã tiếp nhận bệnh nhân!", "OK");
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Lỗi SavePatient: {ex.Message}");
         }
     }
 }

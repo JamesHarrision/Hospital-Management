@@ -1,8 +1,10 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using HosipitalManager.MVVM.Models;
 using HosipitalManager.MVVM.Services;
 using System.Collections.ObjectModel;
+using static HospitalManager.MVVM.ViewModels.DashboardViewModel;
 
 namespace HosipitalManager.MVVM.ViewModels
 {
@@ -58,6 +60,8 @@ namespace HosipitalManager.MVVM.ViewModels
 
             await Shell.Current.DisplayAlert("Thành công", "Đã thêm lịch hẹn mới!", "OK");
 
+            WeakReferenceMessenger.Default.Send(new DashboardRefreshMessage());
+
             // Quay lại trang trước
             await Shell.Current.GoToAsync("..");
         }
@@ -67,5 +71,7 @@ namespace HosipitalManager.MVVM.ViewModels
         {
             await Shell.Current.GoToAsync("..");
         }
+
+
     }
 }

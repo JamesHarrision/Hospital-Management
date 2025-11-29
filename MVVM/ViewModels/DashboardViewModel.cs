@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using HosipitalManager.MVVM.Models;
 using HosipitalManager.MVVM.Services;
 using HospitalManager.MVVM.Models;
@@ -92,6 +93,43 @@ public partial class DashboardViewModel : ObservableObject
         {
             WaitingQueue.Add(p);
         }
+
+        WeakReferenceMessenger.Default.Register<AddPatientToQueueMessage>(this, (r, m) =>
+        {
+            AddToWaitingQueue(m.Appointment);
+        });
+
+        WeakReferenceMessenger.Default.Register<RequestCheckInMessage>(this, (r, m) =>
+        {
+            OpenCheckInPopup(m.Appointment);
+        });
+    }
+
+    // Hàm xử lý logic chuyển đổi
+    private void AddToWaitingQueue(Appointment appt)
+    {
+        // 1. Tạo hồ sơ bệnh nhân từ thông tin lịch hẹn
+        var newPatient = new Patient
+        {
+            FullName = appt.PatientName,
+            Id = "P" + DateTime.Now.Ticks.ToString().Substring(12), // ID giả lập
+            //Age = 0, // Chưa có thông tin
+            Gender = "Khác",
+            PhoneNumber = appt.PhoneNumber,
+            Address = "Chưa cập nhật",
+            Symptoms = appt.Note ?? "Đặt lịch hẹn trước", // Lý do khám
+            //TimeIn = DateTime.Now.ToString("HH:mm"),
+            Status = "Chờ khám",
+            Severity = "normal", // Mặc định bình thường
+            PriorityScore = 10,  // Điểm ưu tiên mặc định
+            //AssignedDoctor = appt.Doctor.Name // Gán luôn bác sĩ đã hẹn
+        };
+
+        // 2. Thêm vào hàng đợi
+        WaitingQueue.Add(newPatient);
+
+        // 3. (Tùy chọn) Sắp xếp lại hàng đợi theo độ ưu tiên
+        SortPatientQueue(); 
     }
 
     private void LoadMedicineCatalog()
@@ -139,4 +177,12 @@ public partial class DashboardViewModel : ObservableObject
     }
 
     public class DashboardRefreshMessage { }
+
+    public class AddPatientToQueueMessage
+    {
+        public Appointment Appointment { get; set; }
+        public AddPatientToQueueMessage(Appointment appt) { Appointment = appt; }
+    }
+
+
 }
