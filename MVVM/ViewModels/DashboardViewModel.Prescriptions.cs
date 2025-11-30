@@ -11,7 +11,8 @@ using System.Collections.ObjectModel;
 using Colors = QuestPDF.Helpers.Colors;
 using IContainer = QuestPDF.Infrastructure.IContainer;
 using CommunityToolkit.Mvvm.Messaging; 
-using HosipitalManager.MVVM.Messages;  
+using HosipitalManager.MVVM.Messages;
+using HosipitalManager.MVVM.ViewModels;
 
 namespace HospitalManager.MVVM.ViewModels;
 
@@ -46,6 +47,8 @@ public partial class DashboardViewModel
     private string newPrescriptionPatientName;
     [ObservableProperty]
     private string newPrescriptionDoctorName;
+
+    private RevenueViewModel _revenueViewModel;
 
     partial void OnSearchPrescriptionTextChanged(string value)
     {
@@ -95,6 +98,9 @@ public partial class DashboardViewModel
 
         _allPrescriptions = data;
         Prescriptions = new ObservableCollection<Prescription>(_allPrescriptions);
+        
+        // Send the full prescriptions list so RevenueViewModel can compute initial revenue immediately
+        WeakReferenceMessenger.Default.Send(new PrescriptionsLoadedMessage(_allPrescriptions));
     }
 
     private void SearchPrescriptions()
