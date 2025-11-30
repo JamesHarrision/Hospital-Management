@@ -31,8 +31,8 @@
                             FontSize="12" 
                             HeightRequest="30" 
                             Padding="10,0" 
-                            BackgroundColor="#F3F4F6" 
-                            TextColor="#1D2E4E"
+                            BackgroundColor="{StaticResource ColorSecondary}"
+                            TextColor="White"
                             CornerRadius="6"/>
                 </Grid>
 

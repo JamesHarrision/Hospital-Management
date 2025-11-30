@@ -151,19 +151,11 @@
               Grid.RowSpan="2"
               RowDefinitions="Auto, *">
 
-            <Grid Grid.Row="0" Padding="20" ColumnDefinitions="*, Auto, Auto, Auto" BackgroundColor="White">
+            <Grid Grid.Row="0" Padding="20" ColumnDefinitions="*, Auto, Auto" BackgroundColor="White">
                 <Label Grid.Column="0" x:Name="PageTitleLabel" Text="Tổng quan bệnh viện" FontSize="24" FontAttributes="Bold" TextColor="#1D2E4E" VerticalOptions="Center" />
 
                 <Frame Grid.Column="1" CornerRadius="8" Padding="10" Margin="0, 0, 15, 0" BackgroundColor="#F4F7FC" BorderColor="#E0E0E0" HeightRequest="40" VerticalOptions="Center"></Frame>
                 <Image Grid.Column="2" Source="bell.png" WidthRequest="24" HeightRequest="24" Margin="0, 0, 15, 0" />
-                <HorizontalStackLayout Grid.Column="3" Spacing="10" VerticalOptions="Center">
-                    <Label Text="{Binding UserName}" TextColor="#1D2E4E" VerticalOptions="Center" />
-                    <Image Source="{Binding UserAvatar}" WidthRequest="40" HeightRequest="40" Aspect="AspectFill">
-                        <Image.Clip>
-                            <EllipseGeometry Center="20, 20" RadiusX="20" RadiusY="20" />
-                        </Image.Clip>
-                    </Image>
-                </HorizontalStackLayout>
             </Grid>
 
             <Grid Grid.Row="1" Padding="20">

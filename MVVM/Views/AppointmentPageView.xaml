@@ -76,18 +76,20 @@
 
         </Grid>
         <Grid Grid.Row="1" ColumnDefinitions="*, Auto" ColumnSpacing="10" Margin="0,0,0,20">
-            <Border Grid.Column="0" Stroke="#E0E0E0" StrokeShape="RoundRectangle 8" Padding="10,0">
-                <Grid ColumnDefinitions="Auto, *">
-                    <Image Source="search.png" WidthRequest="18" HeightRequest="18"/>
+            <Border Grid.Column="0" Stroke="#E0E0E0" StrokeShape="RoundRectangle 8">
+                <Grid ColumnDefinitions="Auto, *"
+                      BackgroundColor="White">
+                    <Image Source="search.png" WidthRequest="18" HeightRequest="18"  Margin="5,0,5,0"/>
                     <Entry Grid.Column="1" Placeholder="Tìm tên BS hoặc Bệnh nhân..." 
                            Text="{Binding SearchText}"
                            ReturnCommand="{Binding PerformSearchCommand}"
-                           TextColor="#1D2E4E"/>
+                           TextColor="#1D2E4E"
+                           BackgroundColor="White"/>
                 </Grid>
             </Border>
 
             <Button Grid.Column="1" Text="+" FontSize="24" WidthRequest="50" HeightRequest="50" CornerRadius="25"
-                    BackgroundColor="#5B9FFF" TextColor="White"
+                    BackgroundColor="{StaticResource ColorPrimary}"  TextColor="White"
                     Command="{Binding NavigateToAddCommand}"/>
         </Grid>
 
@@ -179,7 +181,7 @@
                                     FontSize="12"
                                     Padding="10,0"
                                     HeightRequest="35"
-                                    BackgroundColor="#4CAF50"
+                                    BackgroundColor="{StaticResource ColorPrimary}"
                                     TextColor="White"
                                     CornerRadius="5"
                                     Command="{Binding Source={RelativeSource AncestorType={x:Type vm:AppointmentViewModel}}, Path=ConfirmAppointmentCommand}"
@@ -204,7 +206,7 @@
                             FontSize="12"
                             Padding="10,0"
                             HeightRequest="36"
-                            BackgroundColor="#F44336"
+                            BackgroundColor="#757575"
                             TextColor="White"
                             CornerRadius="6"
                             Command="{Binding Source={RelativeSource AncestorType={x:Type vm:AppointmentViewModel}}, Path=CancelAppointmentCommand}"

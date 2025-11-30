@@ -16,15 +16,15 @@
                    FontSize="20" FontAttributes="Bold" 
                    TextColor="#1D2E4E" Margin="5,0,0,0"/>
 
-            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="15">
-                <Border Grid.Column="0" BackgroundColor="White" StrokeShape="RoundRectangle 12" Padding="15" StrokeThickness="0">
+            <Grid ColumnDefinitions="0.3*,0.3*" ColumnSpacing="15">
+                <Border Grid.Column="0" BackgroundColor="White" StrokeShape="RoundRectangle 5" Padding="15" StrokeThickness="0">
                     <Border.Shadow>
                         <Shadow Brush="Black" Offset="2,2" Opacity="0.1" Radius="5"/>
                     </Border.Shadow>
                     <VerticalStackLayout Spacing="5">
-                        <Label Text="THÁNG CAO NHẤT" FontSize="11" TextColor="#757575" FontAttributes="Bold"/>
-                        <Label Text="{Binding BestRevenueMonth}" FontSize="14" TextColor="#1D2E4E"/>
-                        <Label Text="{Binding BestRevenueAmount}" FontSize="18" TextColor="#27ae60" FontAttributes="Bold"/>
+                        <Label HorizontalOptions="Center" Text="THÁNG CAO NHẤT" FontSize="16" TextColor="#757575" FontAttributes="Bold"/>
+                        <Label HorizontalOptions="Center" Text="{Binding BestRevenueMonth}" FontSize="15" TextColor="#1D2E4E"/>
+                        <Label HorizontalOptions="Center" Text="{Binding BestRevenueAmount}" FontSize="20" TextColor="#27ae60" FontAttributes="Bold"/>
                     </VerticalStackLayout>
                 </Border>
 
@@ -33,20 +33,9 @@
                         <Shadow Brush="Black" Offset="2,2" Opacity="0.1" Radius="5"/>
                     </Border.Shadow>
                     <VerticalStackLayout Spacing="5">
-                        <Label Text="ĐÔNG KHÁCH NHẤT" FontSize="11" TextColor="#757575" FontAttributes="Bold"/>
-                        <Label Text="{Binding BusiestMonth}" FontSize="14" TextColor="#1D2E4E"/>
-                        <Label Text="{Binding BusiestPatientCount}" FontSize="18" TextColor="#e17055" FontAttributes="Bold"/>
-                    </VerticalStackLayout>
-                </Border>
-
-                <Border Grid.Column="2" BackgroundColor="White" StrokeShape="RoundRectangle 12" Padding="15" StrokeThickness="0">
-                    <Border.Shadow>
-                        <Shadow Brush="Black" Offset="2,2" Opacity="0.1" Radius="5"/>
-                    </Border.Shadow>
-                    <VerticalStackLayout Spacing="5">
-                        <Label Text="TOP BÁC SĨ (KPI)" FontSize="11" TextColor="#757575" FontAttributes="Bold"/>
-                        <Label Text="{Binding TopDoctorName}" FontSize="16" TextColor="#1D2E4E" FontAttributes="Bold"/>
-                        <Label Text="{Binding TopDoctorRevenue}" FontSize="12" TextColor="#6c5ce7"/>
+                        <Label  HorizontalOptions="Center" Text="ĐÔNG KHÁCH NHẤT" FontSize="16" TextColor="#757575" FontAttributes="Bold"/>
+                        <Label  HorizontalOptions="Center" Text="{Binding BusiestMonth}" FontSize="15" TextColor="#1D2E4E"/>
+                        <Label HorizontalOptions="Center" Text="{Binding BusiestPatientCount}" FontSize="20" TextColor="#e17055" FontAttributes="Bold"/>
                     </VerticalStackLayout>
                 </Border>
             </Grid>
