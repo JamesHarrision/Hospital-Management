@@ -324,7 +324,7 @@ public partial class DashboardViewModel : ObservableObject
                     QueueOrder = WaitingQueue.Count + 1,
 
                     // Lấy tên bác sĩ từ lịch hẹn (nếu có)
-                    //AssignedDoctor = _pendingCheckInAppointment?.Doctor.Name ?? "Chưa chỉ định"
+                    Doctorname = _pendingCheckInAppointment?.Doctor.Name ?? "Chưa chỉ định"
                 };
 
                 // Tính điểm ưu tiên

@@ -49,9 +49,9 @@ public partial class DashboardViewModel
         // Tạo dữ liệu mẫu
         var data = new List<Prescription>
         {
-            new Prescription { Id = "DT001", PatientName = "Nguyễn Văn An", DoctorName = "BS. Trần Thị B", DatePrescribed = new DateTime(2025, 11, 15), Status = "Đã cấp" },
-            new Prescription { Id = "DT002", PatientName = "Lê Thị C", DoctorName = "BS. Nguyễn Văn D", DatePrescribed = DateTime.Now, Status = "Chưa cấp" },
-            new Prescription { Id = "DT003", PatientName = "Hoàng Văn E", DoctorName = "BS. Trần Thị B", DatePrescribed = DateTime.Now.AddDays(-1), Status = "Đã cấp" },
+            new Prescription { Id = "DT001", PatientName = "Nguyễn Văn An", DoctorName = "BS. Mai Trọng Khang", DatePrescribed = new DateTime(2025, 11, 15), Status = "Đã cấp" },
+            new Prescription { Id = "DT002", PatientName = "Lê Thị C", DoctorName = "BS. Nguyễn Ngọc Quý", DatePrescribed = DateTime.Now, Status = "Chưa cấp" },
+            new Prescription { Id = "DT003", PatientName = "Hoàng Văn E", DoctorName = "BS. Mai Trọng Khang", DatePrescribed = DateTime.Now.AddDays(-1), Status = "Đã cấp" },
         };
 
         // Lưu vào list gốc

@@ -74,7 +74,7 @@ public partial class DashboardViewModel
         if (patient.Age > 65) score += 100;
 
         score -= patient.QueueOrder * 0.1;
-        return score;
+        return patient.PriorityScore + score;
     }
 
     public void SortPatientQueue()
@@ -108,54 +108,7 @@ public partial class DashboardViewModel
         ClearPopupForm();
     }
 
-    //[RelayCommand]
-    //private void SavePatient()
-    //{
-    //    try
-    //    {
-    //        string severityCode = GetSeverityCode(NewPatientSeverity);
-
-    //        if (isEditing && patientToEdit != null)
-    //        {
-    //            // Logic Sửa (Admin dùng)
-    //            patientToEdit.FullName = NewPatientFullName;
-    //            patientToEdit.DateOfBirth = NewPatientDateOfBirth;
-    //            patientToEdit.Gender = NewPatientGender;
-    //            patientToEdit.PhoneNumber = NewPatientPhoneNumber;
-    //            patientToEdit.Address = NewPatientAddress;
-    //            patientToEdit.Status = NewPatientStatus;
-    //            patientToEdit.Severity = severityCode;
-    //            patientToEdit.Symptoms = NewPatientSymptoms;
-    //        }
-    //        else
-    //        {
-    //            // Logic Thêm Mới (Tiếp nhận)
-    //            var newPatient = new Patient
-    //            {
-    //                Id = $"BN{new Random().Next(1000, 9999)}",
-    //                FullName = NewPatientFullName,
-    //                DateOfBirth = NewPatientDateOfBirth,
-    //                Gender = NewPatientGender,
-    //                PhoneNumber = NewPatientPhoneNumber,
-    //                Address = NewPatientAddress,
-    //                AdmittedDate = DateTime.Now,
-    //                Status = "Chờ khám", // Fix cứng
-    //                Severity = severityCode,
-    //                Symptoms = NewPatientSymptoms,
-    //                QueueOrder = WaitingQueue.Count + 1
-    //            };
-    //            WaitingQueue.Add(newPatient);
-    //        }
-
-    //        SortPatientQueue();
-    //        CloseAddPatientPopup();
-    //    }
-    //    catch (Exception ex)
-    //    {
-    //        Debug.WriteLine($"Lỗi: {ex.Message}");
-    //    }
-    //}
-
+    
     [RelayCommand]
     private async Task CallPatient(Patient patient)
     {

@@ -34,6 +34,9 @@ namespace HospitalManager.MVVM.Models
         [ObservableProperty]
         private string status;
 
+        [ObservableProperty]
+        private string doctorname;
+
         /// <summary>
         /// Xác định mức độ nghiêm trọng của bệnh nhân
         /// </summary>
