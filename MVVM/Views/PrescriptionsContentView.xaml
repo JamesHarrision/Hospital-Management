@@ -153,7 +153,34 @@
                         </CollectionView>
                     </Border>
 
-                    <Button Grid.Row="3" Text="Đóng" Command="{Binding ClosePrescriptionDetailCommand}" BackgroundColor="#E5E7EB" TextColor="Black" CornerRadius="8"/>
+                    <Grid Grid.Row="3" ColumnDefinitions="*, Auto" ColumnSpacing="10">
+
+                        <HorizontalStackLayout VerticalOptions="Center">
+                            <Label Text="Tổng tiền: " TextColor="Gray"/>
+                            <Label Text="{Binding SelectedPrescription.TotalAmount, StringFormat='{0:N0} đ'}" 
+                           TextColor="#B91C1C" FontAttributes="Bold" FontSize="16"/>
+                        </HorizontalStackLayout>
+
+                        <HorizontalStackLayout Grid.Column="1" Spacing="10">
+
+                            <Button Text="Cấp phát" 
+                            Command="{Binding IssuePrescriptionCommand}"
+                            IsVisible="{Binding IsIssueButtonVisible}"
+                            BackgroundColor="#10B981" 
+                            TextColor="White" 
+                            CornerRadius="8"
+                            HeightRequest="40"
+                            Padding="15,0"/>
+
+                            <Button Text="Đóng" 
+                            Command="{Binding ClosePrescriptionDetailCommand}" 
+                            BackgroundColor="#E5E7EB" 
+                            TextColor="Black" 
+                            CornerRadius="8"
+                            HeightRequest="40"
+                            Padding="15,0"/>
+                        </HorizontalStackLayout>
+                    </Grid>
                 </Grid>
             </Border>
         </Grid>

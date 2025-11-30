@@ -1,4 +1,5 @@
 ﻿using HosipitalManager.MVVM.Services;
+using HosipitalManager.MVVM.ViewModels;
 using HospitalManager.MVVM.ViewModels;
 using HospitalManager.MVVM.Views;
 using LiveChartsCore.SkiaSharpView;
@@ -25,6 +26,7 @@ namespace HosipitalManager
                     fonts.AddFont("fa-solid-900.ttf", "FontAwesomeSolid");
                 });
             builder.Services.AddSingleton<LocalDatabaseService>();
+            builder.Services.AddSingleton<RevenueViewModel>();
             builder.Services.AddTransient<DashboardViewModel>();
             builder.Services.AddTransient<DashboardPageView>();
             QuestPDF.Settings.License = LicenseType.Community;

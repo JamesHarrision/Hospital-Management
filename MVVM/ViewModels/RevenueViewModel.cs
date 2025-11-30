@@ -10,6 +10,9 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using CommunityToolkit.Mvvm.Messaging; 
+using HosipitalManager.MVVM.Messages;
+using HospitalManager.MVVM.Models;
 
 namespace HosipitalManager.MVVM.ViewModels
 {
@@ -39,15 +42,170 @@ namespace HosipitalManager.MVVM.ViewModels
         // Danh sách chi tiết để hiển thị bảng
         public ObservableCollection<MonthlyRevenue> YearlyStats { get; set; } = new();
 
+        // Lưu danh sách đơn thuốc để tính toán doanh thu
+        private List<HospitalManager.MVVM.Models.Prescription> _prescriptions = new();
+
         public RevenueViewModel()
         {
-            LoadFakeData();
+            InitializeYearlyStats();
             LoadChartData();
+
+            // Listen for single-prescription updates (when user issues a prescription)
+            WeakReferenceMessenger.Default.Register<RevenueUpdateMessage>(this, (r, m) =>
+            {
+                UpdateRevenue(m.Value.Amount, m.Value.Date);
+            });
+
+            // Listen for the full prescriptions list when Dashboard loads prescriptions
+            WeakReferenceMessenger.Default.Register<PrescriptionsLoadedMessage>(this, (r, m) =>
+            {
+                // m.Value is List<Prescription>
+                LoadRevenueFromPrescriptions(m.Value);
+            });
+        }
+
+        /// <summary>
+        /// Tải dữ liệu doanh thu từ danh sách đơn thuốc đã được cấp
+        /// </summary>
+        public void LoadRevenueFromPrescriptions(List<Prescription> prescriptions)
+        {
+            if (prescriptions == null || prescriptions.Count == 0)
+                return;
+
+            _prescriptions = prescriptions;
+
+            // Đặt lại tất cả Amount về 0
+            foreach (var stat in YearlyStats)
+            {
+                stat.Amount = 0;
+                stat.PatientCount = 0;
+            }
+
+            // Tính toán doanh thu từ các đơn thuốc đã được cấp
+            var issuedPrescriptions = prescriptions
+                .Where(p => p.Status == "Đã cấp")
+                .ToList();
+
+            foreach (var prescription in issuedPrescriptions)
+            {
+                var monthName = $"Tháng {prescription.DatePrescribed.Month}";
+                var monthStat = YearlyStats.FirstOrDefault(x => x.MonthName == monthName);
+
+                if (monthStat != null)
+                {
+                    monthStat.Amount += prescription.TotalAmount;
+                    monthStat.PatientCount++;
+                }
+            }
+
+            // Tính toán độ dài thanh hiển thị
+            double maxAmount = (double)YearlyStats.Max(x => x.Amount);
+            if (maxAmount > 0)
+            {
+                foreach (var item in YearlyStats)
+                {
+                    item.PercentageBar = (double)item.Amount / maxAmount;
+                }
+            }
+
+            // Cập nhật các thẻ Card thống kê
+            UpdateStatsCards();
+
+            // Vẽ lại biểu đồ
+            RefreshChart();
+        }
+
+        private void UpdateRevenue(decimal amount, DateTime date)
+        {
+            // 1. Cộng tiền vào dữ liệu thống kê
+            var targetMonth = $"Tháng {date.Month}";
+            var stat = YearlyStats.FirstOrDefault(x => x.MonthName == targetMonth);
+            if (stat != null)
+            {
+                stat.Amount += amount;
+                stat.PatientCount++;
+            }
+
+            // 2. Tính toán lại độ dài thanh
+            double maxAmount = (double)YearlyStats.Max(x => x.Amount);
+            if (maxAmount > 0)
+            {
+                foreach (var item in YearlyStats)
+                {
+                    item.PercentageBar = (double)item.Amount / maxAmount;
+                }
+            }
+
+            // 3. Vẽ lại biểu đồ
+            RefreshChart();
+
+            // 4. Cập nhật thẻ Top Doanh thu
+            UpdateStatsCards();
+        }
+
+        private void RefreshChart()
+        {
+            // Lấy dữ liệu mới nhất từ YearlyStats
+            var revenues = YearlyStats.Select(s => (double)s.Amount).ToArray();
+
+            // Cập nhật lại RevenueSeries
+            RevenueSeries = new ISeries[]
+            {
+                new ColumnSeries<double>
+                {
+                    Name = "Doanh thu",
+                    Values = revenues,
+                    Fill = new SolidColorPaint(SKColors.Purple.WithAlpha(150)),
+                    Stroke = new SolidColorPaint(SKColors.Purple),
+                    DataLabelsPaint = new SolidColorPaint(SKColors.Black),
+                    DataLabelsFormatter = p => $"{p.Coordinate.PrimaryValue:N0} đ",
+                    DataLabelsPosition = LiveChartsCore.Measure.DataLabelsPosition.Top
+                }
+            };
+
+            // Thông báo cho View biết RevenueSeries đã thay đổi để vẽ lại
+            OnPropertyChanged(nameof(RevenueSeries));
+        }
+
+        private void UpdateStatsCards()
+        {
+            // Tính toán lại tháng cao điểm nhất
+            var bestMonth = YearlyStats.OrderByDescending(x => x.Amount).FirstOrDefault();
+            if (bestMonth != null)
+            {
+                BestRevenueMonth = bestMonth.MonthName;
+                BestRevenueAmount = $"{bestMonth.Amount:N0} đ";
+            }
+
+            // Tính toán tháng bận rộn nhất
+            var busiestMonth = YearlyStats.OrderByDescending(x => x.PatientCount).FirstOrDefault();
+            if (busiestMonth != null)
+            {
+                BusiestMonth = busiestMonth.MonthName;
+                BusiestPatientCount = $"{busiestMonth.PatientCount} Bệnh nhân";
+            }
+
+            // Tính toán bác sĩ có doanh thu cao nhất
+            if (_prescriptions != null && _prescriptions.Any())
+            {
+                var issuedPrescriptions = _prescriptions
+                    .Where(p => p.Status == "Đã cấp")
+                    .GroupBy(p => p.DoctorName)
+                    .OrderByDescending(g => g.Sum(p => p.TotalAmount))
+                    .FirstOrDefault();
+
+                if (issuedPrescriptions != null)
+                {
+                    TopDoctorName = issuedPrescriptions.Key;
+                    var totalRevenue = issuedPrescriptions.Sum(p => p.TotalAmount);
+                    TopDoctorRevenue = $"{totalRevenue:N0} đ";
+                }
+            }
         }
 
         private void LoadChartData()
         {
-            // Lấy danh sách doanh thu từ rawData (đã có từ LoadFakeData)
+            // Lấy danh sách doanh thu từ YearlyStats
             var revenues = YearlyStats.Select(s => (double)s.Amount).ToArray();
             var months = YearlyStats.Select(s => s.MonthName).ToArray();
 
@@ -61,11 +219,6 @@ namespace HosipitalManager.MVVM.ViewModels
                     Stroke = new SolidColorPaint(SKColors.Purple), // Viền tím đậm
                     DataLabelsPaint = new SolidColorPaint(SKColors.Black), // Màu chữ trên cột
                     DataLabelsFormatter = p => $"{p.Coordinate.PrimaryValue:N0} đ", // Định dạng hiển thị trên cột
-                    // p là một điểm trên biểu đồ (ChartPoint).
-
-                     //Coordinate là tọa độ của điểm đó.
-
-                     // PrimaryValue là giá trị trục chính (trục Y - Doanh thu).
                     DataLabelsPosition = LiveChartsCore.Measure.DataLabelsPosition.Top // Hiện trên đỉnh cột
                 }
             };
@@ -94,46 +247,32 @@ namespace HosipitalManager.MVVM.ViewModels
             };
         }
 
-        private void LoadFakeData()
+        /// <summary>
+        /// Khởi tạo danh sách các tháng với doanh thu ban đầu = 0
+        /// </summary>
+        private void InitializeYearlyStats()
         {
-            // 1. Giả lập dữ liệu 6 tháng đầu năm
             var rawData = new List<MonthlyRevenue>
             {
-                new MonthlyRevenue { MonthName = "Tháng 1", Amount = 120000000, PatientCount = 450 },
-                new MonthlyRevenue { MonthName = "Tháng 2", Amount = 150000000, PatientCount = 500 },
-                new MonthlyRevenue { MonthName = "Tháng 3", Amount = 90000000,  PatientCount = 320 },
-                new MonthlyRevenue { MonthName = "Tháng 4", Amount = 200000000, PatientCount = 600 }, // Cao nhất
-                new MonthlyRevenue { MonthName = "Tháng 5", Amount = 180000000, PatientCount = 550 },
-                new MonthlyRevenue { MonthName = "Tháng 6", Amount = 110000000, PatientCount = 400 },
-                new MonthlyRevenue { MonthName = "Tháng 7", Amount = 100000000, PatientCount = 310 },
-                new MonthlyRevenue { MonthName = "Tháng 8", Amount = 19000000, PatientCount = 300 },
-                new MonthlyRevenue { MonthName = "Tháng 9", Amount = 18000000, PatientCount = 250},
-                new MonthlyRevenue { MonthName = "Tháng 10", Amount = 1000000, PatientCount = 100 },
-                new MonthlyRevenue { MonthName = "Tháng 11", Amount = 1100000, PatientCount = 150 },
-                new MonthlyRevenue { MonthName = "Tháng 12", Amount = 11000000, PatientCount = 220 },
+                new MonthlyRevenue { MonthName = "Tháng 1", Amount = 0, PatientCount = 0 },
+                new MonthlyRevenue { MonthName = "Tháng 2", Amount = 0, PatientCount = 0 },
+                new MonthlyRevenue { MonthName = "Tháng 3", Amount = 0, PatientCount = 0 },
+                new MonthlyRevenue { MonthName = "Tháng 4", Amount = 0, PatientCount = 0 },
+                new MonthlyRevenue { MonthName = "Tháng 5", Amount = 0, PatientCount = 0 },
+                new MonthlyRevenue { MonthName = "Tháng 6", Amount = 0, PatientCount = 0 },
+                new MonthlyRevenue { MonthName = "Tháng 7", Amount = 0, PatientCount = 0 },
+                new MonthlyRevenue { MonthName = "Tháng 8", Amount = 0, PatientCount = 0 },
+                new MonthlyRevenue { MonthName = "Tháng 9", Amount = 0, PatientCount = 0 },
+                new MonthlyRevenue { MonthName = "Tháng 10", Amount = 0, PatientCount = 0 },
+                new MonthlyRevenue { MonthName = "Tháng 11", Amount = 0, PatientCount = 0 },
+                new MonthlyRevenue { MonthName = "Tháng 12", Amount = 0, PatientCount = 0 },
             };
-
-            // Tính toán độ dài thanh hiển thị (lấy max làm chuẩn 100%)
-            double maxVal = (double)rawData.Max(x => x.Amount);
 
             foreach (var item in rawData)
             {
-                item.PercentageBar = (double)item.Amount / maxVal;
+                item.PercentageBar = 0;
                 YearlyStats.Add(item);
             }
-
-            // 2. Tính toán các thẻ Card thống kê
-            var bestMonth = rawData.OrderByDescending(x => x.Amount).First();
-            BestRevenueMonth = bestMonth.MonthName;
-            BestRevenueAmount = $"{bestMonth.Amount:N0} đ";
-
-            var busyMonth = rawData.OrderByDescending(x => x.PatientCount).First();
-            BusiestMonth = busyMonth.MonthName;
-            BusiestPatientCount = $"{busyMonth.PatientCount} Bệnh nhân";
-
-            // 3. Giả lập Top Bác sĩ
-            TopDoctorName = "Dr. Khang";
-            TopDoctorRevenue = "500.000.000 đ";
         }
     }
 }

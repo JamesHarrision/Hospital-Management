@@ -196,6 +196,4 @@ public partial class DashboardViewModel : ObservableObject
         public Appointment Appointment { get; set; }
         public AddPatientToQueueMessage(Appointment appt) { Appointment = appt; }
     }
-
-
 }

@@ -1,14 +1,18 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using HosipitalManager.MVVM.Models;
-using System.Collections.ObjectModel;
+using Microsoft.Maui.ApplicationModel;
+using Microsoft.Maui.Storage;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
-using Microsoft.Maui.Storage;
-using Microsoft.Maui.ApplicationModel;
+using System.Collections.ObjectModel;
 using Colors = QuestPDF.Helpers.Colors;
 using IContainer = QuestPDF.Infrastructure.IContainer;
+using CommunityToolkit.Mvvm.Messaging; 
+using HosipitalManager.MVVM.Messages;
+using HosipitalManager.MVVM.ViewModels;
 using HospitalManager.MVVM.Models;
 using System.Threading.Tasks;
 
@@ -31,6 +35,12 @@ public partial class DashboardViewModel
 
     private List<Prescription> _allPrescriptions = new List<Prescription>();
     // Danh sách đơn thuốc (Chính chủ)
+
+    [ObservableProperty]
+    private bool canIssuePrescription;
+    [ObservableProperty]
+    private bool isIssueButtonVisible;
+
     [ObservableProperty]
     private ObservableCollection<Prescription> prescriptions;
 
@@ -84,6 +94,11 @@ public partial class DashboardViewModel
             CanPresGoBack = PresCurrentPage > 1;
             CanPresGoNext = PresCurrentPage < PresTotalPages;
         });
+
+        // Gửi tất cả prescriptions tới RevenueViewModel để tính doanh thu (chạy không đồng bộ)
+        // Lấy toàn bộ danh sách từ DB (không chỉ trang hiện tại)
+        var allPrescriptions = await _databaseService.GetPrescriptionsAsync();
+        WeakReferenceMessenger.Default.Send(new PrescriptionsLoadedMessage(allPrescriptions));
     }
 
     [RelayCommand]
@@ -161,10 +176,38 @@ public partial class DashboardViewModel
 
     // 1. Xem chi tiết đơn thuốc
     [RelayCommand]
+    private async Task IssuePrescription()
+    {
+        if (SelectedPrescription == null) return;
+
+        // Hỏi xác nhận
+        bool confirm = await Shell.Current.DisplayAlert("Thu Ngân",
+            $"Xác nhận thu: {SelectedPrescription.TotalAmount:N0} đ\nvà cấp thuốc cho bệnh nhân?",
+            "Thu tiền & Cấp", "Hủy");
+
+        if (!confirm) return;
+
+        // 1. Cập nhật Status (Nhờ ObservableProperty ở Model, UI tự đổi màu/chữ ngay lập tức)
+        SelectedPrescription.Status = "Đã cấp";
+
+        // 2. Ẩn nút cấp phát đi
+        IsIssueButtonVisible = false;
+
+        // 3. Gửi tiền sang RevenueViewModel
+        // Lưu ý: TotalAmount giờ đã tính đúng (Price * Quantity)
+        WeakReferenceMessenger.Default.Send(new RevenueUpdateMessage((SelectedPrescription.TotalAmount, DateTime.Now)));
+
+        await Shell.Current.DisplayAlert("Thành công", "Đã cập nhật trạng thái và doanh thu!", "OK");
+    }
+    [RelayCommand]
     private void ShowPrescriptionDetail(Prescription prescription)
     {
         if (prescription == null) return;
         SelectedPrescription = prescription;
+
+        // Logic ẩn/hiện nút: Chỉ hiện khi chưa cấp
+        IsIssueButtonVisible = SelectedPrescription.Status == "Chưa cấp";
+
         IsPrescriptionDetailVisible = true;
     }
 

@@ -19,9 +19,18 @@ namespace HospitalManager.MVVM.Models
         public string DoctorId { get; set; }
         public string DoctorName { get; set; }
         public DateTime DatePrescribed { get; set; }
-        public string Status { get; set; }
 
-        // 2. Các property tự động sinh code (ObservableProperty)
+        // --- SỬA ĐỔI QUAN TRỌNG ---
+        // Chuyển Status thành ObservableProperty để UI tự động cập nhật khi đổi giá trị
+        private string _status;
+        public string Status
+        {
+            get => _status;
+            set => SetProperty(ref _status, value); // Hàm này giúp giao diện tự cập nhật
+        }
+
+        // 2. Dùng [ObservableProperty] để tự động sinh ra property public 'Diagnosis'
+        // (Viết thường chữ cái đầu)
         [ObservableProperty]
         private string diagnosis;
 
@@ -66,6 +75,7 @@ namespace HospitalManager.MVVM.Models
                 MedicinesJson = "[]";
             }
         }
+        //public List<MedicationItem> Medications { get; set; } = new List<MedicationItem>();
 
         // 7. Hàm bung chuỗi JSON ra thành danh sách (Gọi sau khi LẤY từ DB lên)
         public void DeserializeMedicines()
