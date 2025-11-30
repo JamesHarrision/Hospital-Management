@@ -15,20 +15,26 @@ namespace HosipitalManager.MVVM.Models
         public string DoctorId { get; set; }
         public string DoctorName { get; set; }
         public DateTime DatePrescribed { get; set; }
-        public string Status { get; set; }
 
-        // 2. Dùng [ObservableProperty] để tự động sinh ra property public 'Diagnosis'
-        // (Viết thường chữ cái đầu)
+        // --- SỬA ĐỔI QUAN TRỌNG ---
+        // Chuyển Status thành ObservableProperty để UI tự động cập nhật khi đổi giá trị
+        private string _status;
+        public string Status
+        {
+            get => _status;
+            set => SetProperty(ref _status, value); // Hàm này giúp giao diện tự cập nhật
+        }
+
         [ObservableProperty]
         private string diagnosis;
 
-        // 3. Dùng [ObservableProperty] để tự động sinh ra property public 'DoctorNotes'
         [ObservableProperty]
         private string doctorNotes;
 
-        // Một đơn thuốc có nhiều loại thuốc
         public List<MedicationItem> Medications { get; set; } = new List<MedicationItem>();
 
-        public decimal TotalAmount => Medications?.Sum(m => m.Price) ?? 0;
+        // --- SỬA ĐỔI QUAN TRỌNG ---
+        // Tổng tiền = Giá * Số lượng
+        public decimal TotalAmount => Medications?.Sum(m => m.Price * m.Quantity) ?? 0;
     }
 }

@@ -8,13 +8,12 @@ namespace HosipitalManager.MVVM.Models
 {
     public class MedicationItem
     {
-        public string MedicationName { get; set; }  // Tên thuốc
-        public string Dosage { get; set; }        // Liều dùng (500mg, 1 viên,...)
-        public string Usage { get; set; }         // Cách dùng (2 lần/ngày,...)
-        public decimal Price { get; set; }        // Giá tiền
-        public int Quantity { get; set; }         // Số lượng
-        public string Note { get; set; }          // Ghi chú
-
+        public string MedicationName { get; set; }
+        public string Dosage { get; set; }
+        public string Usage { get; set; }
+        public decimal Price { get; set; }       // Đơn giá
+        public int Quantity { get; set; }        // Số lượng
+        public string Note { get; set; }
         public string Unit { get; set; }
         public string Instructions { get; set; }
     }

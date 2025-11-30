@@ -10,6 +10,8 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using CommunityToolkit.Mvvm.Messaging; 
+using HosipitalManager.MVVM.Messages;  
 
 namespace HosipitalManager.MVVM.ViewModels
 {
@@ -43,8 +45,64 @@ namespace HosipitalManager.MVVM.ViewModels
         {
             LoadFakeData();
             LoadChartData();
+
+            WeakReferenceMessenger.Default.Register<RevenueUpdateMessage>(this, (r, m) =>
+            {
+                UpdateRevenue(m.Value.Amount, m.Value.Date);
+            });
+        }
+        private void UpdateRevenue(decimal amount, DateTime date)
+        {
+            // 1. Cộng tiền vào dữ liệu thống kê
+            var targetMonth = $"Tháng {date.Month}";
+            var stat = YearlyStats.FirstOrDefault(x => x.MonthName == targetMonth);
+            if (stat != null)
+            {
+                stat.Amount += amount;
+                stat.PatientCount++;
+            }
+
+            // 2. Vẽ lại biểu đồ (Cần thiết để UI cập nhật)
+            var revenues = YearlyStats.Select(s => (double)s.Amount).ToArray();
+            RevenueSeries[0].Values = revenues; // Cập nhật mảng giá trị cho biểu đồ
+
+            // Cập nhật thẻ Top Doanh thu nếu cần
+            var best = YearlyStats.OrderByDescending(x => x.Amount).First();
+            BestRevenueAmount = $"{best.Amount:N0} đ";
         }
 
+        private void RefreshChart()
+        {
+            // Lấy dữ liệu mới nhất từ YearlyStats
+            var revenues = YearlyStats.Select(s => (double)s.Amount).ToArray();
+
+            // Cập nhật lại RevenueSeries
+            // Lưu ý: LiveCharts cần thay đổi instance hoặc dùng ObservableValue để trigger UI update
+            // Ở đây mình tạo mới Series cho đơn giản và chắc chắn
+            RevenueSeries = new ISeries[]
+            {
+                new ColumnSeries<double>
+                {
+                    Name = "Doanh thu",
+                    Values = revenues,
+                    Fill = new SolidColorPaint(SKColors.Purple.WithAlpha(150)),
+                    Stroke = new SolidColorPaint(SKColors.Purple),
+                    DataLabelsPaint = new SolidColorPaint(SKColors.Black),
+                    DataLabelsFormatter = p => $"{p.Coordinate.PrimaryValue:N0} đ",
+                    DataLabelsPosition = LiveChartsCore.Measure.DataLabelsPosition.Top
+                }
+            };
+
+            // Thông báo cho View biết RevenueSeries đã thay đổi để vẽ lại
+            OnPropertyChanged(nameof(RevenueSeries));
+        }
+        private void UpdateStatsCards()
+        {
+            // Tính toán lại tháng cao điểm nhất
+            var bestMonth = YearlyStats.OrderByDescending(x => x.Amount).First();
+            BestRevenueMonth = bestMonth.MonthName;
+            BestRevenueAmount = $"{bestMonth.Amount:N0} đ";
+        }
         private void LoadChartData()
         {
             // Lấy danh sách doanh thu từ rawData (đã có từ LoadFakeData)

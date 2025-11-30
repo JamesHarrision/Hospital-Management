@@ -3,7 +3,6 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="HosipitalManager.MVVM.Views.PrescriptionDetailPopupView">
 
-    <!-- CHỈ LÀ NỘI DUNG POPUP, KHÔNG OVERLAY, KHÔNG IsVisible -->
     <Frame BackgroundColor="White"
            CornerRadius="16"
            Padding="20"
@@ -15,9 +14,7 @@
         <ScrollView>
             <VerticalStackLayout Spacing="12">
 
-                <!-- Header popup -->
-                <Grid ColumnDefinitions="*,Auto"
-                      VerticalOptions="Center">
+                <Grid ColumnDefinitions="*,Auto" VerticalOptions="Center">
                     <Label Text="Chi tiết đơn thuốc"
                            FontSize="30"
                            FontAttributes="Bold"
@@ -31,68 +28,35 @@
                                  HorizontalOptions="End" />
                 </Grid>
 
-                <BoxView HeightRequest="1"
-                         BackgroundColor="#E5E7EB"
-                         Margin="0,5" />
+                <BoxView HeightRequest="1" BackgroundColor="#E5E7EB" Margin="0,5" />
 
-                <!-- Thông tin chung -->
                 <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto"
                       ColumnDefinitions="Auto,*"
                       ColumnSpacing="10"
                       RowSpacing="15">
 
-                    <Label Text="Mã đơn:"
-                           TextColor="#6B7280"
-                           Grid.Row="0"
-                           Grid.Column="0" />
-                    <Label Text="{Binding SelectedPrescription.Id}"
-                           TextColor="#111827"
-                           FontAttributes="Bold"
-                           Grid.Row="0"
-                           Grid.Column="1" />
+                    <Label Text="Mã đơn:" TextColor="#6B7280" Grid.Row="0" Grid.Column="0" />
+                    <Label Text="{Binding SelectedPrescription.Id}" TextColor="#111827" FontAttributes="Bold" Grid.Row="0" Grid.Column="1" />
 
-                    <Label Text="Bệnh nhân:"
-                           TextColor="#6B7280"
-                           Grid.Row="1"
-                           Grid.Column="0" />
-                    <Label Text="{Binding SelectedPrescription.PatientName}"
-                           TextColor="#111827"
-                           FontAttributes="Bold"
-                           Grid.Row="1"
-                           Grid.Column="1" />
+                    <Label Text="Bệnh nhân:" TextColor="#6B7280" Grid.Row="1" Grid.Column="0" />
+                    <Label Text="{Binding SelectedPrescription.PatientName}" TextColor="#111827" FontAttributes="Bold" Grid.Row="1" Grid.Column="1" />
 
-                    <Label Text="Bác sĩ kê:"
-                           TextColor="#6B7280"
-                           Grid.Row="2"
-                           Grid.Column="0" />
-                    <Label Text="{Binding SelectedPrescription.DoctorName}"
-                           TextColor="#111827"
-                           Grid.Row="2"
-                           Grid.Column="1" />
+                    <Label Text="Bác sĩ kê:" TextColor="#6B7280" Grid.Row="2" Grid.Column="0" />
+                    <Label Text="{Binding SelectedPrescription.DoctorName}" TextColor="#111827" Grid.Row="2" Grid.Column="1" />
 
-                    <Label Text="Ngày kê:"
-                           TextColor="#6B7280"
-                           Grid.Row="3"
-                           Grid.Column="0" />
-                    <Label Text="{Binding SelectedPrescription.DatePrescribed, StringFormat='{0:dd/MM/yyyy}'}"
-                           TextColor="#111827"
-                           Grid.Row="3"
-                           Grid.Column="1" />
+                    <Label Text="Ngày kê:" TextColor="#6B7280" Grid.Row="3" Grid.Column="0" />
+                    <Label Text="{Binding SelectedPrescription.DatePrescribed, StringFormat='{0:dd/MM/yyyy}'}" TextColor="#111827" Grid.Row="3" Grid.Column="1" />
 
-                    <Label Text="Trạng thái:"
-                           TextColor="#6B7280"
-                           Grid.Row="4"
-                           Grid.Column="0" />
-                    <Label Text="{Binding SelectedPrescription.Status}"
-                           TextColor="{StaticResource ColorSecondary}"
-                           FontAttributes="Bold"
-                           Grid.Row="4"
+                    <Label Text="Trạng thái:" TextColor="#6B7280" Grid.Row="4" Grid.Column="0" />
+                    <Label Text="{Binding SelectedPrescription.Status}" 
+                           TextColor="{StaticResource ColorSecondary}" 
+                           FontAttributes="Bold" 
+                           Grid.Row="4" 
                            Grid.Column="1" />
-
                 </Grid>
 
-                <Border>
-                    <VerticalStackLayout Grid.Row="2" Spacing="5" Margin="0, 0, 0, 10">
+                <Border StrokeThickness="0">
+                    <VerticalStackLayout Spacing="5" Margin="0, 0, 0, 10">
                         <Label Text="Chẩn đoán:" FontAttributes="Bold" TextColor="#374151" />
                         <Label Text="{Binding SelectedPrescription.Diagnosis}" TextColor="Black" Margin="0,0,0,10"/>
 
@@ -101,101 +65,80 @@
                     </VerticalStackLayout>
                 </Border>
 
-                <BoxView HeightRequest="1"
-                         BackgroundColor="#E5E7EB"
-                         Margin="0,10" />
+                <BoxView HeightRequest="1" BackgroundColor="#E5E7EB" Margin="0,10" />
 
-                <!-- Tiêu đề danh sách thuốc -->
-                <Label Grid.Row="3" Text="DANH SÁCH THUỐC"
-                       FontSize="20"
-                       FontAttributes="Bold" TextColor="#374151" Margin="0,10,0,0"/>
+                <Label Text="DANH SÁCH THUỐC" FontSize="20" FontAttributes="Bold" TextColor="#374151" Margin="0,10,0,0"/>
 
-                <!-- Bảng thuốc -->
-                <CollectionView Grid.Row="4" ItemsSource="{Binding SelectedPrescription.Medications}"
-                                HeightRequest="220">
+                <CollectionView ItemsSource="{Binding SelectedPrescription.Medications}" HeightRequest="220">
                     <CollectionView.Header>
-                        <Grid Padding="8,4"
-                              BackgroundColor="#F9FAFB"
-                              ColumnDefinitions="2*,*,*,*,*">
+                        <Grid Padding="8,4" BackgroundColor="#F9FAFB" ColumnDefinitions="2*,*,*,*,*">
                             <Label Grid.Column="0" Text="TÊN THUỐC" FontAttributes="Bold" TextColor="#6B7280" />
-                            <Label Grid.Column="1" Text="LIỀU"      FontAttributes="Bold" TextColor="#6B7280" />
-                            <Label Grid.Column="2" Text="SL"   FontAttributes="Bold" TextColor="#6B7280" />
-                            <Label Grid.Column="3" Text="HDSD"        FontAttributes="Bold" TextColor="#6B7280" />
-                            <Label Grid.Column="4" Text="THÀNH TIỀN"
-                                   FontAttributes="Bold" 
-                                   TextColor="#6B7280"
-                                   HorizontalOptions="End"/>
+                            <Label Grid.Column="1" Text="LIỀU" FontAttributes="Bold" TextColor="#6B7280" />
+                            <Label Grid.Column="2" Text="SL" FontAttributes="Bold" TextColor="#6B7280" />
+                            <Label Grid.Column="3" Text="HDSD" FontAttributes="Bold" TextColor="#6B7280" />
+                            <Label Grid.Column="4" Text="THÀNH TIỀN" FontAttributes="Bold" TextColor="#6B7280" HorizontalOptions="End"/>
                         </Grid>
                     </CollectionView.Header>
 
                     <CollectionView.ItemTemplate>
                         <DataTemplate>
-                            <Grid Padding="8,6"
-                                  ColumnDefinitions="2*,*,*,*,*">
-                                <Label Grid.Column="0"
-                                       Text="{Binding MedicationName}"
-                                       TextColor="#111827" />
-                                <Label Grid.Column="1"
-                                       Text="{Binding Dosage}"
-                                       TextColor="#4B5563" />
-                                <Label Grid.Column="2"
-                                       Text="{Binding Quantity}"
-                                       TextColor="#4B5563" />
-                                <Label Grid.Column="3"
-                                       Text="{Binding Instructions}"
-                                       TextColor="#4B5563" />
-                                <Label Grid.Column="4"
-                                       Text="{Binding Price, StringFormat='{0:N0} đ'}"
-                                       TextColor="#4B5563"
-                                       HorizontalOptions="End"/>
+                            <Grid Padding="8,6" ColumnDefinitions="2*,*,*,*,*">
+                                <Label Grid.Column="0" Text="{Binding MedicationName}" TextColor="#111827" />
+                                <Label Grid.Column="1" Text="{Binding Dosage}" TextColor="#4B5563" />
+                                <Label Grid.Column="2" Text="{Binding Quantity}" TextColor="#4B5563" />
+                                <Label Grid.Column="3" Text="{Binding Instructions}" TextColor="#4B5563" />
+                                <Label Grid.Column="4" Text="{Binding Price, StringFormat='{0:N0} đ'}" TextColor="#4B5563" HorizontalOptions="End"/>
                             </Grid>
                         </DataTemplate>
                     </CollectionView.ItemTemplate>
                 </CollectionView>
-                
-                
-               <!-- LABEL TỔNG TIỀN -->
-                <Grid ColumnDefinitions="*,Auto" Margin="0,10,0,20">
-                    <Label Grid.Column="0"
-                           Text="TỔNG CỘNG: "
-                           FontSize="19"
-                           FontAttributes="Bold"
-                           TextColor="#374151"
-                           HorizontalOptions="End"
-                           VerticalOptions="Center"
-                           Margin="0,0,10,0"/>
 
-                    <Label Grid.Column="1"
-                           Text="{Binding SelectedPrescription.TotalAmount, StringFormat='{0:N0} VNĐ'}"
-                           FontSize="20"
-                           FontAttributes="Bold"
-                           TextColor="{StaticResource ColorPrimary}"/>
+                <Grid ColumnDefinitions="*, Auto" Margin="0,10,0,0">
+
+                    <VerticalStackLayout VerticalOptions="Center">
+                        <Label Text="TỔNG THANH TOÁN" FontSize="12" TextColor="Gray"/>
+                        <Label Text="{Binding SelectedPrescription.TotalAmount, StringFormat='{0:N0} VNĐ'}"
+                               FontSize="22"
+                               FontAttributes="Bold"
+                               TextColor="#B91C1C"/>
+                    </VerticalStackLayout>
+
+                    <HorizontalStackLayout Grid.Column="1" Spacing="10" VerticalOptions="Center">
+
+                        <Button Text="Cấp phát"
+                                Command="{Binding IssuePrescriptionCommand}"
+                                IsVisible="{Binding IsIssueButtonVisible}"
+                                BackgroundColor="#10B981"
+                                TextColor="White"
+                                CornerRadius="10"
+                                Padding="15,0"
+                                HeightRequest="40"
+                                FontAttributes="Bold">
+                            <Button.ImageSource>
+                                <FontImageSource Glyph="&#x24;" FontFamily="Arial" Color="White" Size="18"/>
+                            </Button.ImageSource>
+                        </Button>
+
+                        <Button Text="In đơn"
+                                Command="{Binding PrintPrescriptionCommand}"
+                                BackgroundColor="{StaticResource ColorPrimary}"
+                                CornerRadius="10"
+                                Padding="15,0"
+                                HeightRequest="40">
+                            <Button.ImageSource>
+                                <FontImageSource Glyph="&#x1F5A8;" FontFamily="Arial" Color="White" Size="18"/>
+                            </Button.ImageSource>
+                        </Button>
+
+                        <Button Text="Đóng"
+                                Command="{Binding ClosePrescriptionDetailCommand}"
+                                BackgroundColor="#E5E7EB"
+                                TextColor="Black"
+                                CornerRadius="10"
+                                Padding="15,0"
+                                HeightRequest="40"/>
+                    </HorizontalStackLayout>
                 </Grid>
-                
-                <HorizontalStackLayout HorizontalOptions="End">
-                    <!-- Nút in đơn thuốc -->
-                    <Button Text="In đơn thuốc"
-                            Command="{Binding PrintPrescriptionCommand}"
-                            BackgroundColor="{StaticResource ColorPrimary}"
-                            CornerRadius="10"
-                            Padding="20,8"
-                            Margin="10">
-                        <Button.ImageSource>
-                            <FontImageSource Glyph="&#x1F5A8;"
-                                            FontFamily="Arial"
-                                            Color="White"/>
-                        </Button.ImageSource>
-                    </Button>
-
-                    <!-- Nút đóng -->
-                    <Button Text="Đóng"
-                            Command="{Binding ClosePrescriptionDetailCommand}"
-                            BackgroundColor="{StaticResource ColorPrimary}"
-                            TextColor="White"
-                            CornerRadius="10"
-                            Padding="20,8"
-                            Margin="10"/>
-                </HorizontalStackLayout>
 
             </VerticalStackLayout>
         </ScrollView>

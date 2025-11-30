@@ -1,14 +1,17 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using HosipitalManager.MVVM.Models;
-using System.Collections.ObjectModel;
+using Microsoft.Maui.ApplicationModel;
+using Microsoft.Maui.Storage;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
-using Microsoft.Maui.Storage;
-using Microsoft.Maui.ApplicationModel;
+using System.Collections.ObjectModel;
 using Colors = QuestPDF.Helpers.Colors;
 using IContainer = QuestPDF.Infrastructure.IContainer;
+using CommunityToolkit.Mvvm.Messaging; 
+using HosipitalManager.MVVM.Messages;  
 
 namespace HospitalManager.MVVM.ViewModels;
 
@@ -16,6 +19,12 @@ public partial class DashboardViewModel
 {
     private List<Prescription> _allPrescriptions = new List<Prescription>();
     // Danh sách đơn thuốc (Chính chủ)
+
+    [ObservableProperty]
+    private bool canIssuePrescription;
+    [ObservableProperty]
+    private bool isIssueButtonVisible;
+
     [ObservableProperty]
     private ObservableCollection<Prescription> prescriptions;
 
@@ -46,18 +55,45 @@ public partial class DashboardViewModel
     // --- CÁC HÀM LOAD DỮ LIỆU ---
     private void LoadPrescriptions()
     {
-        // Tạo dữ liệu mẫu
-        var data = new List<Prescription>
+        var data = new List<Prescription>();
+
+        // Tạo đơn thuốc mẫu số 1 (Đã cấp)
+        data.Add(new Prescription
         {
-            new Prescription { Id = "DT001", PatientName = "Nguyễn Văn An", DoctorName = "BS. Mai Trọng Khang", DatePrescribed = new DateTime(2025, 11, 15), Status = "Đã cấp" },
-            new Prescription { Id = "DT002", PatientName = "Lê Thị C", DoctorName = "BS. Nguyễn Ngọc Quý", DatePrescribed = DateTime.Now, Status = "Chưa cấp" },
-            new Prescription { Id = "DT003", PatientName = "Hoàng Văn E", DoctorName = "BS. Mai Trọng Khang", DatePrescribed = DateTime.Now.AddDays(-1), Status = "Đã cấp" },
-        };
+            Id = "DT001",
+            PatientName = "Nguyễn Văn An",
+            DoctorName = "Dr. Khang",
+            DatePrescribed = DateTime.Now.AddDays(-1),
+            Status = "Đã cấp", // Đã xong
+            Diagnosis = "Viêm phế quản",
+            DoctorNotes = "Tái khám sau 1 tuần",
+            Medications = new List<MedicationItem>
+            {
+                new MedicationItem { MedicationName = "Panadol Extra", Quantity = 10, Price = 2500, Unit = "Viên", Instructions = "Sáng 1, Chiều 1" },
+                new MedicationItem { MedicationName = "Siro Ho", Quantity = 1, Price = 50000, Unit = "Chai", Instructions = "Uống khi ho" }
+            }
+        });
 
-        // Lưu vào list gốc
+        // Tạo đơn thuốc mẫu số 2 (CHƯA CẤP - Để bạn test)
+        data.Add(new Prescription
+        {
+            Id = "DT002",
+            PatientName = "Trần Thị Bích",
+            DoctorName = "Dr. Khang",
+            DatePrescribed = DateTime.Now,
+            Status = "Chưa cấp", // <--- Test cái này
+            Diagnosis = "Rối loạn tiêu hóa",
+            DoctorNotes = "Ăn chín uống sôi",
+            Medications = new List<MedicationItem>
+            {
+                new MedicationItem { MedicationName = "Berberin", Quantity = 20, Price = 500, Unit = "Viên", Instructions = "Sáng 5, Tối 5" }, // 10.000đ
+                new MedicationItem { MedicationName = "Smecta", Quantity = 5, Price = 4000, Unit = "Gói", Instructions = "Pha uống" },       // 20.000đ
+                new MedicationItem { MedicationName = "Oresol", Quantity = 2, Price = 5000, Unit = "Gói", Instructions = "Pha 1 lít nước" }  // 10.000đ
+                // Tổng đơn này = 40.000đ
+            }
+        });
+
         _allPrescriptions = data;
-
-        // Đổ vào list hiển thị
         Prescriptions = new ObservableCollection<Prescription>(_allPrescriptions);
     }
 
@@ -91,10 +127,38 @@ public partial class DashboardViewModel
 
     // 1. Xem chi tiết đơn thuốc
     [RelayCommand]
+    private async Task IssuePrescription()
+    {
+        if (SelectedPrescription == null) return;
+
+        // Hỏi xác nhận
+        bool confirm = await Shell.Current.DisplayAlert("Thu Ngân",
+            $"Xác nhận thu: {SelectedPrescription.TotalAmount:N0} đ\nvà cấp thuốc cho bệnh nhân?",
+            "Thu tiền & Cấp", "Hủy");
+
+        if (!confirm) return;
+
+        // 1. Cập nhật Status (Nhờ ObservableProperty ở Model, UI tự đổi màu/chữ ngay lập tức)
+        SelectedPrescription.Status = "Đã cấp";
+
+        // 2. Ẩn nút cấp phát đi
+        IsIssueButtonVisible = false;
+
+        // 3. Gửi tiền sang RevenueViewModel
+        // Lưu ý: TotalAmount giờ đã tính đúng (Price * Quantity)
+        WeakReferenceMessenger.Default.Send(new RevenueUpdateMessage((SelectedPrescription.TotalAmount, DateTime.Now)));
+
+        await Shell.Current.DisplayAlert("Thành công", "Đã cập nhật trạng thái và doanh thu!", "OK");
+    }
+    [RelayCommand]
     private void ShowPrescriptionDetail(Prescription prescription)
     {
         if (prescription == null) return;
         SelectedPrescription = prescription;
+
+        // Logic ẩn/hiện nút: Chỉ hiện khi chưa cấp
+        IsIssueButtonVisible = SelectedPrescription.Status == "Chưa cấp";
+
         IsPrescriptionDetailVisible = true;
     }
 
