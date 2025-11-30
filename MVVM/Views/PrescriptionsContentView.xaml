@@ -5,7 +5,7 @@
              x:Name="Root">
 
     <Grid>
-        <Grid RowDefinitions="Auto, *">
+        <Grid RowDefinitions="Auto, *, Auto">
 
             <Grid Grid.Row="0" ColumnDefinitions="*, Auto" ColumnSpacing="15" Margin="0, 0, 0, 15">
 
@@ -69,6 +69,31 @@
                     </CollectionView.ItemTemplate>
                 </CollectionView>
             </Frame>
+
+            <Grid Grid.Row="2" ColumnDefinitions="Auto, *, Auto" Padding="10" BackgroundColor="White">
+
+                <Button Text="&lt; Trước" 
+                        Grid.Column="0"
+                        Command="{Binding PreviousPresPageCommand}"
+                        IsEnabled="{Binding CanPresGoBack}"
+                        BackgroundColor="Transparent" 
+                        TextColor="{StaticResource ColorPrimary}" 
+                        BorderColor="{StaticResource ColorPrimary}" 
+                        BorderWidth="1"/>
+
+                <Label Text="{Binding PresPageInfo}" 
+                       Grid.Column="1"
+                       HorizontalOptions="Center" 
+                       VerticalOptions="Center" 
+                       FontAttributes="Bold"/>
+
+                <Button Text="Sau &gt;" 
+                        Grid.Column="2"
+                        Command="{Binding NextPresPageCommand}"
+                        IsEnabled="{Binding CanPresGoNext}"
+                        BackgroundColor="{StaticResource ColorPrimary}" 
+                        TextColor="White"/>
+            </Grid>
         </Grid>
 
         <Grid IsVisible="{Binding IsPrescriptionDetailVisible}"

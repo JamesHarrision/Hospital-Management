@@ -4,7 +4,7 @@
              x:Class="HosipitalManager.MVVM.Views.PatientsContentView"
              xmlns:views="clr-namespace:HospitalManager.MVVM.Views">
    
-    <Grid RowDefinitions="Auto, *">
+    <Grid RowDefinitions="Auto, *, Auto">
         <Grid Grid.Row="0" ColumnDefinitions="Auto, *" Margin="0, 0, 0, 15" ColumnSpacing="10">
             <Button Text="+ Thêm Bệnh nhân"
                         Command="{Binding ShowAddPatientPopupCommand}"
@@ -90,6 +90,33 @@
                 </CollectionView.ItemTemplate>
             </CollectionView>
         </Frame>
+        
+        <!--Pagination Controls-->
+        <Grid Grid.Row="2" ColumnDefinitions="Auto, *, Auto" Padding="10" BackgroundColor="White">
+
+            <Button Text="&lt; Trước" 
+                Grid.Column="0"
+                Command="{Binding PreviousPatientPageCommand}"
+                IsEnabled="{Binding CanPatientGoBack}"
+                BackgroundColor="Transparent" 
+                TextColor="{StaticResource ColorPrimary}" 
+                BorderColor="{StaticResource ColorPrimary}" 
+                BorderWidth="1"/>
+
+            <Label Text="{Binding PatientPageInfo}" 
+               Grid.Column="1"
+               HorizontalOptions="Center" 
+               VerticalOptions="Center" 
+               FontAttributes="Bold"/>
+
+            <Button Text="Sau >" 
+                Grid.Column="2"
+                Command="{Binding NextPatientPageCommand}"
+                IsEnabled="{Binding CanPatientGoNext}"
+                BackgroundColor="{StaticResource ColorPrimary}" 
+                TextColor="White"/>
+        </Grid>
+        <!--End Pagination Controls-->
     </Grid>
 
 </ContentView>

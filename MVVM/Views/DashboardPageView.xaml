@@ -193,21 +193,21 @@
                     </VerticalStackLayout>
                 </ScrollView>
 
-                <VerticalStackLayout x:Name="PatientsContentView" IsVisible="False">
+                <ScrollView x:Name="PatientsContentView" IsVisible="False">
                     <views:PatientsContentView/>
-                </VerticalStackLayout>
+                </ScrollView>
 
-                <VerticalStackLayout x:Name="PrescriptionsContentView" IsVisible="False">
+                <ScrollView x:Name="PrescriptionsContentView" IsVisible="False">
                     <views:PrescriptionsContentView x:Name="PrescriptionsContentInner"/>
-                </VerticalStackLayout>
+                </ScrollView>
 
-                <VerticalStackLayout x:Name="AppointmentsContentView" IsVisible="False">
+                <ScrollView x:Name="AppointmentsContentView" IsVisible="False">
                     <views:AppointmentPageView/>
-                </VerticalStackLayout>
+                </ScrollView>
 
-                <VerticalStackLayout x:Name="RevenueContentView" IsVisible="False">
+                <ScrollView x:Name="RevenueContentView" IsVisible="False">
                     <views:RevenueContentView/>
-                </VerticalStackLayout>
+                </ScrollView>
             </Grid>
         </Grid>
 

@@ -1,4 +1,5 @@
-﻿using HosipitalManager.MVVM.Models;
+﻿using HosipitalManager.Helpers;
+using HosipitalManager.MVVM.Models;
 using HospitalManager.MVVM.Models;
 using SQLite;
 using System;
@@ -23,6 +24,10 @@ namespace HosipitalManager.MVVM.Services
             // Tạo bảng nếu chưa tồn tại
             await _database.CreateTableAsync<Patient>();
             await _database.CreateTableAsync<Prescription>();
+
+
+            // Đảm bảo dữ liệu được thêm vào
+            await SeedData.EnsurePopulated(_database);
         }
 
         /// Lấy danh sách tất cả bệnh nhân
@@ -152,6 +157,46 @@ namespace HosipitalManager.MVVM.Services
         {
             await Init();
             await _database.DeleteAsync(prescription);
+        }
+
+
+        // --PAGINATION--
+        // --- PHẦN BỆNH NHÂN ---
+        public async Task<List<Patient>> GetPatientsPagedAsync(int pageIndex, int pageSize)
+        {
+            await Init();
+            return await _database.Table<Patient>()
+                          .OrderByDescending(p => p.AdmittedDate) // Sắp xếp mới nhất lên đầu
+                          .Skip((pageIndex - 1) * pageSize)       // Bỏ qua các trang trước
+                          .Take(pageSize)                         // Lấy số lượng cần thiết
+                          .ToListAsync();
+        }
+        // Đếm tổng số bệnh nhân
+        public async Task<int> GetPatientCountAsync()
+        {
+            await Init();
+            return await _database.Table<Patient>().CountAsync();
+        }
+
+        // --- PHẦN ĐƠN THUỐC ---
+        public async Task<List<Prescription>> GetPrescriptionsPagedAsync(int pageIndex, int pageSize)
+        {
+            await Init();
+            var list = await _database.Table<Prescription>()
+                                      .OrderByDescending(p => p.DatePrescribed)
+                                      .Skip((pageIndex - 1) * pageSize)
+                                      .Take(pageSize)
+                                      .ToListAsync();
+
+            // Bung JSON thuốc ra
+            foreach (var item in list) item.DeserializeMedicines();
+
+            return list;
+        }
+        public async Task<int> GetPrescriptionCountAsync()
+        {
+            await Init();
+            return await _database.Table<Prescription>().CountAsync();
         }
     }
 }

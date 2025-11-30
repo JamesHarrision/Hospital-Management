@@ -8,6 +8,28 @@ namespace HospitalManager.MVVM.ViewModels;
 
 public partial class DashboardViewModel : ObservableObject
 {
+    //PAGINATION 
+    // Cấu hình số dòng mỗi trang
+    private const int PageSize = 10;
+
+    // --- CÁC BIẾN PHÂN TRANG BỆNH NHÂN ---
+    [ObservableProperty]
+    private int patientCurrentPage = 1;
+
+    [ObservableProperty]
+    private int patientTotalPages = 1;
+
+    [ObservableProperty]
+    private string patientPageInfo; // Hiển thị "Trang 1 / 5"
+
+    [ObservableProperty]
+    private bool canPatientGoBack;
+
+    [ObservableProperty]
+    private bool canPatientGoNext;
+
+    //END PAGINATION
+
 
     // Database chính thức
     //Danh sách bệnh nhân để hiển thị lên màn hình (Binding)
@@ -16,7 +38,14 @@ public partial class DashboardViewModel : ObservableObject
     // Hàm lấy dữ liệu từ SQLite
     public async Task LoadPatients()
     {
-        var patientList = await _databaseService.GetPatientsAsync();
+        int totalCount = await _databaseService.GetPatientCountAsync();
+        PatientTotalPages = (int)Math.Ceiling((double)totalCount / PageSize); // Tính tổng số trang (lấy tổng số bệnh nhân / số dòng mỗi trang)
+
+        // Đảm bảo trang hiện tại hợp lệ
+        if (PatientCurrentPage < 1) PatientCurrentPage = 1;
+        if (PatientCurrentPage > PatientTotalPages && PatientTotalPages > 0) PatientCurrentPage = PatientTotalPages;
+
+        var patientList = await _databaseService.GetPatientsPagedAsync(PatientCurrentPage, PageSize);
 
         MainThread.BeginInvokeOnMainThread(() =>
         {
@@ -34,7 +63,37 @@ public partial class DashboardViewModel : ObservableObject
                 }
             }
             SortPatientQueue();
+
+            UpdatePatientPaginationUI();
         });
+    }
+
+    private void UpdatePatientPaginationUI()
+    {
+        PatientPageInfo = $"Trang {PatientCurrentPage} / {PatientTotalPages}";
+        CanPatientGoBack = PatientCurrentPage > 1;
+        CanPatientGoNext = PatientCurrentPage < PatientTotalPages;
+    }
+
+    // --- CÁC LỆNH CHUYỂN TRANG ---
+    [RelayCommand]
+    private async Task NextPatientPage()
+    {
+        if (PatientCurrentPage < PatientTotalPages)
+        {
+            PatientCurrentPage++;
+            await LoadPatients();
+        }
+    }
+
+    [RelayCommand]
+    private async Task PreviousPatientPage()
+    {
+        if (PatientCurrentPage > 1)
+        {
+            PatientCurrentPage--;
+            await LoadPatients();
+        }
     }
 
     [RelayCommand]
@@ -317,4 +376,7 @@ public partial class DashboardViewModel : ObservableObject
             FilteredPatients.Remove(patientToDelete);
         }
     }
+
+
+
 }
