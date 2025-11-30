@@ -16,6 +16,19 @@ namespace HospitalManager.MVVM.ViewModels;
 
 public partial class DashboardViewModel
 {
+    // PAGINATION // 
+    [ObservableProperty]
+    private int presCurrentPage = 1;
+    [ObservableProperty]
+    private int presTotalPages = 1;
+    [ObservableProperty]
+    private string presPageInfo;
+    [ObservableProperty]
+    private bool canPresGoBack;
+    [ObservableProperty]
+    private bool canPresGoNext;
+    // END PAGINATION //
+
     private List<Prescription> _allPrescriptions = new List<Prescription>();
     // Danh sách đơn thuốc (Chính chủ)
     [ObservableProperty]
@@ -48,18 +61,49 @@ public partial class DashboardViewModel
     // --- CÁC HÀM LOAD DỮ LIỆU ---
     private async Task LoadPrescriptions()
     {
-        var list = await _databaseService.GetPrescriptionsAsync();
+        int totalCount = await _databaseService.GetPrescriptionCountAsync();
+        PresTotalPages = (int)Math.Ceiling((double)totalCount / PageSize);
+
+        if (PresCurrentPage < 1) PresCurrentPage = 1;
+        if (PresCurrentPage > PresTotalPages && PresTotalPages > 0) PresCurrentPage = PresTotalPages;
+
+        var presList = await _databaseService.GetPrescriptionsPagedAsync(PresCurrentPage, PageSize);
+
         MainThread.BeginInvokeOnMainThread(() =>
         {
             Prescriptions.Clear();
-            foreach (var p in list)
+            foreach (var p in presList)
             {
                 Prescriptions.Add(p);
             }
 
             // Lưu danh sách gốc để dùng cho tính năng tìm kiếm (nếu có)
-            _allPrescriptions = list;
+            _allPrescriptions = presList;
+
+            PresPageInfo = $"Trang {PresCurrentPage} / {PresTotalPages}";
+            CanPresGoBack = PresCurrentPage > 1;
+            CanPresGoNext = PresCurrentPage < PresTotalPages;
         });
+    }
+
+    [RelayCommand]
+    private async Task NextPresPage()
+    {
+        if (PresCurrentPage < PresTotalPages)
+        {
+            PresCurrentPage++;
+            await LoadPrescriptions();
+        }
+    }
+
+    [RelayCommand]
+    private async Task PreviousPresPage()
+    {
+        if (PresCurrentPage > 1)
+        {
+            PresCurrentPage--;
+            await LoadPrescriptions();
+        }
     }
 
     [RelayCommand]

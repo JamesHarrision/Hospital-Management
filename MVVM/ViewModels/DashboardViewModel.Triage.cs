@@ -66,20 +66,6 @@ public partial class DashboardViewModel
         };
     }
 
-    // Hàm hiển thị ngược lại (dùng khi mở popup sửa)
-    private string GetSeverityDisplayName(string code)
-    {
-        if (string.IsNullOrEmpty(code)) return "Bình thường";
-        return code.ToLower() switch
-        {
-            "critical" => "Cấp cứu",
-            "emergency" => "Khẩn cấp",
-            "urgent" => "Gấp",
-            "medium" => "Trung bình",
-            _ => "Bình thường"
-        };
-    }
-
     private double CalculatePriority(Patient patient)
     {
         if (patient == null) return 0;
