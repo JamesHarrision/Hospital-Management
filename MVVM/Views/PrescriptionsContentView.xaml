@@ -59,6 +59,10 @@
                                                  WidthRequest="20" HeightRequest="20" Aspect="AspectFit"
                                                  Command="{Binding Source={x:Reference Root}, Path=BindingContext.ShowPrescriptionDetailCommand}"
                                                  CommandParameter="{Binding .}"/>
+                                    <ImageButton Source="delete.png"
+                                                 WidthRequest="20" HeightRequest="20" Aspect="AspectFit"
+                                                 Command="{Binding Source={x:Reference Root}, Path=BindingContext.DeletePrescriptionCommand}"
+                                                 CommandParameter="{Binding .}"/>
                                 </HorizontalStackLayout>
                             </Grid>
                         </DataTemplate>

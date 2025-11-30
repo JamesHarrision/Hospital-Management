@@ -12,6 +12,8 @@ namespace HospitalManager.MVVM.ViewModels;
 
 public partial class DashboardViewModel : ObservableObject
 {
+    private readonly LocalDatabaseService _databaseService;
+
     // Dữ liệu thống kê
     [ObservableProperty]
     private ObservableCollection<SummaryCard> summaryCards;
@@ -71,24 +73,34 @@ public partial class DashboardViewModel : ObservableObject
         }
     }
 
-    public DashboardViewModel()
+    public DashboardViewModel() { }
+    public DashboardViewModel(LocalDatabaseService databaseService)
     {
-        // 1. Khởi tạo các danh sách
+        _databaseService = databaseService; // Gán service
+
+        // Khởi tạo các danh sách
         SummaryCards = new ObservableCollection<SummaryCard>();
         RecentActivities = new ObservableCollection<RecentActivity>();
 
-        Patients = new ObservableCollection<Patient>();      // Database
-        WaitingQueue = new ObservableCollection<Patient>();  // Hàng đợi RỖNG
+        Patients = new ObservableCollection<Patient>();
+        WaitingQueue = new ObservableCollection<Patient>();
         Prescriptions = new ObservableCollection<Prescription>();
 
-        
-
-        // 2. Nạp dữ liệu (Từ các file partial khác)
+        // Nạp dữ liệu UI tĩnh (Mấy cái này giữ nguyên)
         LoadSummaryCards();
-        LoadPrescriptions();
-        LoadSamplePatients(); // Load database mẫu
+        LoadPrescriptions(); // Load lần đầu
         LoadMedicineCatalog();
 
+        WeakReferenceMessenger.Default.Register<DashboardViewModel, string>(this, (r, message) =>
+        {
+            if (message == "ReloadPrescriptions")
+            {
+                Task.Run(async () => await r.LoadPrescriptions());
+                Task.Run(async () => await r.LoadPatients());
+            }
+        });
+
+        Task.Run(async () => await LoadPatients());
         foreach (var p in Patients.Where(p => p.Status == "Chờ khám"))
         {
             WaitingQueue.Add(p);

@@ -1,16 +1,19 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using HosipitalManager.MVVM.Services; // Namespace Service
-using HosipitalManager.MVVM.Models;   // Namespace Model cho MedicineProduct
-using HospitalManager.MVVM.Models;    // Namespace Model cho Patient/Prescription
+using CommunityToolkit.Mvvm.Messaging;
+using HosipitalManager.MVVM.Models;
+using HosipitalManager.MVVM.Services;
+using HospitalManager.MVVM.Models;
 using System.Collections.ObjectModel;
-using System.Threading.Tasks;
 using System.Linq;
 
 namespace HospitalManager.MVVM.ViewModels;
 
 public partial class ExaminationViewModel : ObservableObject
 {
+    // --- 1. SERVICE DATABASE (THAY THẾ SERVICE CŨ) ---
+    private readonly LocalDatabaseService _databaseService;
+
     // --- CÁC PROPERTY CƠ BẢN ---
     [ObservableProperty]
     private Patient patient;
@@ -21,23 +24,24 @@ public partial class ExaminationViewModel : ObservableObject
     [ObservableProperty]
     private string doctorNotes;
 
+    // Danh sách thuốc đã kê trong đơn này
     [ObservableProperty]
     private ObservableCollection<MedicationItem> medications;
 
     // --- KHU VỰC AUTO-SUGGEST (GỢI Ý THUỐC) ---
 
-    // 1. Danh sách gốc (Private, không cần hiện lên UI)
+    // Danh sách gốc (Private, load từ MedicineService)
     private List<MedicineProduct> _allMedicines;
 
-    // 2. Danh sách gợi ý (Hiện lên khi gõ)
+    // Danh sách gợi ý (Hiện lên khi gõ)
     [ObservableProperty]
     private ObservableCollection<MedicineProduct> filteredMedicines;
 
-    // 3. Biến ẩn/hiện Popup gợi ý
+    // Biến ẩn/hiện Popup gợi ý
     [ObservableProperty]
     private bool isSuggestionVisible;
 
-    // 4. Ô Nhập tên thuốc (Binding vào Entry trong XAML)
+    // Ô Nhập tên thuốc (Binding vào Entry trong XAML)
     private string _searchQuery;
     public string SearchQuery
     {
@@ -71,24 +75,23 @@ public partial class ExaminationViewModel : ObservableObject
     // Thuốc đang được chọn (ẩn)
     private MedicineProduct _selectedMedicineProduct;
 
-    // Service
-    private readonly PrescriptionService _prescriptionService;
-
-    // --- CONSTRUCTOR ---
-    public ExaminationViewModel(
-        Patient patientData,
-        PrescriptionService service,
-        ObservableCollection<MedicineProduct> fullMedicineCatalog)
+    // --- CONSTRUCTOR MỚI ---
+    // Chỉ nhận Patient và LocalDatabaseService
+    public ExaminationViewModel(Patient patientData, LocalDatabaseService dbService)
     {
         Patient = patientData;
-        _prescriptionService = service;
+        _databaseService = dbService;
 
-        // Khởi tạo danh sách
+        // Khởi tạo các danh sách
         Medications = new ObservableCollection<MedicationItem>();
         FilteredMedicines = new ObservableCollection<MedicineProduct>();
 
-        // Lưu danh sách gốc để lọc
-        _allMedicines = fullMedicineCatalog.ToList();
+        // 1. Tự load danh mục thuốc (Không cần truyền từ ngoài vào)
+        var medService = new MedicineService();
+        var listThuoc = medService.GetMedicineCatalog();
+        
+        // Lưu vào biến gốc để dùng cho tìm kiếm
+        _allMedicines = listThuoc.ToList();
 
         LoadUnits();
     }
@@ -110,6 +113,7 @@ public partial class ExaminationViewModel : ObservableObject
         }
 
         var lowerQuery = query.ToLower();
+        // Lọc trong danh sách _allMedicines đã load
         var results = _allMedicines
             .Where(m => m.Name.ToLower().Contains(lowerQuery))
             .Take(5)
@@ -133,17 +137,14 @@ public partial class ExaminationViewModel : ObservableObject
         // 2. Lưu object thuốc để dùng cho nút Thêm
         _selectedMedicineProduct = selectedMed;
 
-        // 3. XỬ LÝ ĐƠN VỊ (FIX LỖI KHÔNG HIỆN ĐƠN VỊ)
-        // Kiểm tra xem đơn vị của thuốc có trong danh sách chưa
+        // 3. Xử lý đơn vị
         if (!AvailableUnits.Contains(selectedMed.Unit))
         {
-            // Nếu chưa có, thêm vào danh sách để Picker có thể hiển thị
             AvailableUnits.Add(selectedMed.Unit);
         }
-        // Sau đó mới gán (Lúc này Picker sẽ nhận diện được)
         SelectedUnit = selectedMed.Unit;
 
-        // Reset số lượng
+        // Reset số lượng mặc định
         NewQuantity = 1;
 
         // 4. Ẩn danh sách gợi ý
@@ -159,20 +160,22 @@ public partial class ExaminationViewModel : ObservableObject
         if (_selectedMedicineProduct == null)
         {
             // Nếu người dùng nhập tay đúng tên thuốc trong kho thì vẫn chấp nhận
-            var match = _allMedicines.FirstOrDefault(m => m.Name.Equals(SearchQuery, System.StringComparison.OrdinalIgnoreCase));
+            var match = _allMedicines.FirstOrDefault(m => m.Name.Equals(SearchQuery, StringComparison.OrdinalIgnoreCase));
             if (match != null)
             {
                 _selectedMedicineProduct = match;
             }
             else
             {
-                // Nếu không tìm thấy thuốc, có thể báo lỗi hoặc return
+                // Nếu thuốc lạ chưa có trong kho -> Có thể return hoặc thông báo
+                // Ở đây ta tạm return
                 return;
             }
         }
 
-        // Tính thành tiền
-        decimal totalItemPrice = _selectedMedicineProduct.UnitPrice * NewQuantity;
+        // Tính thành tiền (Nếu Model MedicineProduct có UnitPrice)
+        decimal price = _selectedMedicineProduct.UnitPrice; // Giả sử có trường này
+        decimal totalItemPrice = price * NewQuantity;
 
         Medications.Add(new MedicationItem
         {
@@ -181,8 +184,7 @@ public partial class ExaminationViewModel : ObservableObject
             Quantity = NewQuantity,
             Instructions = NewInstructions,
             Unit = SelectedUnit,
-            //UnitPrice = _selectedMedicineProduct.UnitPrice, // Lưu đơn giá gốc
-            Price = totalItemPrice // (Nếu model MedicationItem có trường này)
+            Price = totalItemPrice
         });
 
         // Reset Form
@@ -200,15 +202,41 @@ public partial class ExaminationViewModel : ObservableObject
         if (itemToRemove != null) Medications.Remove(itemToRemove);
     }
 
+    // --- LOGIC HOÀN TẤT KHÁM (LƯU DATABASE) ---
     [RelayCommand]
     private async Task FinishExamination()
     {
-        if (Patient != null)
+        if (Patient == null) return;
+
+        // 1. Cập nhật trạng thái Bệnh nhân -> Lưu DB
+        Patient.Status = "Hoàn thành điều trị";
+        await _databaseService.SavePatientAsync(Patient);
+
+        // 2. Tạo Đơn thuốc Mới
+        var newPrescription = new Prescription
         {
-            Patient.Status = "Hoàn thành điều trị";
-            _prescriptionService.CreateAndSavePrescription(Patient, Diagnosis, DoctorNotes, Medications);
-        }
-        await Application.Current.MainPage.DisplayAlert("Hoàn tất", "Đã lưu hồ sơ.", "OK");
+            // ID sẽ được tự động tạo bên Service (DT1000...)
+            PatientId = Patient.Id,
+            PatientName = Patient.FullName,
+            DoctorName = Patient.Doctorname,
+            DatePrescribed = DateTime.Now,
+            Status = "Đã cấp",
+            
+            // Thông tin khám
+            Diagnosis = Diagnosis,
+            DoctorNotes = DoctorNotes,
+            
+            // Danh sách thuốc (Copy sang)
+            Medications = new ObservableCollection<MedicationItem>(Medications)
+        };
+
+        // 3. Lưu Đơn thuốc vào DB
+        await _databaseService.SavePrescriptionAsync(newPrescription);
+
+        await Application.Current.MainPage.DisplayAlert("Hoàn tất", "Đã lưu hồ sơ và đơn thuốc thành công!", "OK");
+
+        CommunityToolkit.Mvvm.Messaging.WeakReferenceMessenger.Default.Send("ReloadPrescriptions");
+        // Đóng trang
         await Shell.Current.Navigation.PopModalAsync();
     }
 
@@ -217,4 +245,4 @@ public partial class ExaminationViewModel : ObservableObject
     {
         await Shell.Current.Navigation.PopModalAsync();
     }
-}
+}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           

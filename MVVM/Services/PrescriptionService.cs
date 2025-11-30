@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using HosipitalManager.MVVM.Models;
 using HospitalManager.MVVM.Models;
 using System.Collections.ObjectModel;
@@ -38,7 +38,7 @@ namespace HosipitalManager.MVVM.Services
                 DoctorNotes = doctorNotes,
 
                 // Lưu danh sách thuốc
-                Medications = new List<MedicationItem>(medications)
+                Medications = new ObservableCollection<MedicationItem>(medications)
             };
 
             // 2. QUAN TRỌNG: Thêm vào danh sách TRÊN MAIN THREAD
