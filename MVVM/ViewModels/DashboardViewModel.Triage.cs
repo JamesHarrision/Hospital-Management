@@ -69,7 +69,7 @@ public partial class DashboardViewModel
     private double CalculatePriority(Patient patient)
     {
         if (patient == null) return 0;
-        double score = 0;
+        double score = 10;
         
         // So sánh code (critical, urgent...)
         string severity = patient.Severity?.ToLower() ?? "";
@@ -84,7 +84,7 @@ public partial class DashboardViewModel
 
         // Trừ điểm theo thứ tự hàng đợi để đảm bảo ai đến trước (số nhỏ) ưu tiên hơn
         score -= patient.QueueOrder * 0.1;
-        return patient.PriorityScore + score;
+        return score;
     }
 
     public void SortPatientQueue()

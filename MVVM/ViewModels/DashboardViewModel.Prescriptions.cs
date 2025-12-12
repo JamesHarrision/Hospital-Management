@@ -190,6 +190,7 @@ public partial class DashboardViewModel
         // 1. Cập nhật Status (Nhờ ObservableProperty ở Model, UI tự đổi màu/chữ ngay lập tức)
         SelectedPrescription.Status = "Đã cấp";
 
+
         // 2. Ẩn nút cấp phát đi
         IsIssueButtonVisible = false;
 

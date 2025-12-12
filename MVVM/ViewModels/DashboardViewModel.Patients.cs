@@ -246,7 +246,7 @@ public partial class DashboardViewModel : ObservableObject
     // Hàm này tự động chạy khi SearchText thay đổi (tính năng của MVVM Toolkit)
     partial void OnSearchTextChanged(string value)
     {
-        SearchPatient();
+        Task.Run(async () => await SearchPatient());
     }
     // Hàm nạp dữ liệu mẫu (nếu cần)
     //private void LoadSamplePatients()
@@ -384,33 +384,39 @@ public partial class DashboardViewModel : ObservableObject
     //    }
     //}
 
-    private void SearchPatient()
+    private async Task SearchPatient()
     {
-        FilteredPatients.Clear(); // Xóa danh sách hiển thị cũ
-
-        if (string.IsNullOrWhiteSpace(SearchText))
+        if(string.IsNullOrWhiteSpace(SearchText))
         {
-            // Nếu ô tìm kiếm rỗng, hiển thị lại tất cả từ danh sách gốc
-            foreach (var patient in Patients)
-            {
-                FilteredPatients.Add(patient);
-            }
+            await LoadPatients();
+            return;
         }
-        else
-        {
-            // Chuyển về chữ thường để tìm không phân biệt hoa thường
-            string keyword = SearchText.ToLower();
 
-            foreach (var patient in Patients)
+        var searchResults = await _databaseService.SearchPatientAsync(SearchText);
+
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            // 1. Dọn sạch danh sách hiển thị cũ
+            Patients.Clear();
+            FilteredPatients.Clear();
+
+            // Lưu ý: Tạm thời không clear WaitingQueue khi tìm kiếm để tránh mất danh sách chờ
+            // Hoặc nếu muốn đồng bộ thì xử lý riêng
+
+            // 2. Đổ kết quả tìm được vào danh sách
+            foreach (var p in searchResults)
             {
-                // Tìm theo Tên HOẶC theo Mã (Id)
-                if (patient.FullName.ToLower().Contains(keyword) ||
-                    patient.Id.ToLower().Contains(keyword))
-                {
-                    FilteredPatients.Add(patient);
-                }
+                Patients.Add(p);
+                FilteredPatients.Add(p);
             }
-        }
+
+            // 3. Cập nhật giao diện Phân trang để báo hiệu đang ở chế độ Tìm kiếm
+            PatientPageInfo = $"Tìm thấy: {searchResults.Count} kết quả";
+
+            // Vô hiệu hóa nút Next/Prev vì đang hiện tất cả kết quả rồi
+            CanPatientGoBack = false;
+            CanPatientGoNext = false;
+        });
     }
 
     [RelayCommand]
@@ -487,5 +493,22 @@ public partial class DashboardViewModel : ObservableObject
 
         // 2. Hiện Popup (Binding IsAddPatientPopupVisible = true)
         IsAddPatientPopupVisible = true;
+    }
+
+    public async Task LoadWaitingQueue()
+    {
+        // Gọi xuống Service mới viết ở Bước 1
+        var waitingList = await _databaseService.GetWaitingPatientsAsync();
+
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            WaitingQueue.Clear();
+            foreach (var p in waitingList)
+            {
+                WaitingQueue.Add(p);
+            }
+            // Gọi lại hàm sắp xếp để chắc chắn đúng thứ tự
+            SortPatientQueue();
+        });
     }
 }

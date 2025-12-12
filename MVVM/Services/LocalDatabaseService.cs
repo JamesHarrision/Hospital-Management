@@ -4,6 +4,7 @@ using HospitalManager.MVVM.Models;
 using SQLite;
 using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -136,6 +137,16 @@ namespace HosipitalManager.MVVM.Services
                 }
             }
         }
+        public async Task UpdatePrescriptionAsync(Prescription prescription)
+        {
+            await Init();
+
+            // Cực kỳ quan trọng: Phải chuyển List thuốc thành chuỗi JSON trước khi lưu
+            // Nếu không dòng này, dữ liệu thuốc trong DB có thể bị lỗi hoặc mất
+            prescription.SerializeMedicines();
+
+            await _database.UpdateAsync(prescription);
+        }
         public async Task<List<Prescription>> GetPrescriptionsAsync()
         {
             await Init();
@@ -197,6 +208,30 @@ namespace HosipitalManager.MVVM.Services
         {
             await Init();
             return await _database.Table<Prescription>().CountAsync();
+        }
+
+        public async Task<List<Patient>> SearchPatientAsync(string keyword)
+        {
+            await Init();
+
+            if(string.IsNullOrEmpty(keyword))
+            {
+                return new List<Patient>();
+            }
+            var lowerKeyword = keyword.ToLower();
+
+            return await _database.Table<Patient>().Where(p => p.FullName.ToLower().Contains(lowerKeyword) ||
+                                                          p.Id.ToLower().Contains(lowerKeyword)).ToListAsync();
+        }
+
+        public async Task<List<Patient>> GetWaitingPatientsAsync()
+        {
+            await Init();
+            // Lấy tất cả bệnh nhân có trạng thái "Chờ khám", sắp xếp theo mức độ ưu tiên giảm dần
+            return await _database.Table<Patient>()
+                                  .Where(p => p.Status == "Chờ khám")
+                                  .OrderByDescending(p => p.PriorityScore)
+                                  .ToListAsync();
         }
     }
 }
