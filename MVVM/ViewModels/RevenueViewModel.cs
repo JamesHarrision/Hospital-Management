@@ -27,17 +27,34 @@ namespace HosipitalManager.MVVM.ViewModels
         [ObservableProperty] private string topDoctorName;
         [ObservableProperty] private string topDoctorRevenue;
 
-        // THÊM: Dữ liệu cho biểu đồ cột
-        public ISeries[] RevenueSeries { get; set; }
+        // Backing fields + properties for chart bindings (explicit, avoid source-generator issues)
+        private ISeries[] _revenueSeries;
+        public ISeries[] RevenueSeries
+        {
+            get => _revenueSeries;
+            set => SetProperty(ref _revenueSeries, value);
+        }
 
-        // THÊM: Các nhãn (label) cho trục X (tên các tháng)
-        public string[] XAxisLabels { get; set; }
+        private string[] _xAxisLabels;
+        public string[] XAxisLabels
+        {
+            get => _xAxisLabels;
+            set => SetProperty(ref _xAxisLabels, value);
+        }
 
-        // THÊM: Các thiết lập cho trục X
-        public Axis[] XAxes { get; set; }
+        private Axis[] _xAxes;
+        public Axis[] XAxes
+        {
+            get => _xAxes;
+            set => SetProperty(ref _xAxes, value);
+        }
 
-        // THÊM: Các thiết lập cho trục Y
-        public Axis[] YAxes { get; set; }
+        private Axis[] _yAxes;
+        public Axis[] YAxes
+        {
+            get => _yAxes;
+            set => SetProperty(ref _yAxes, value);
+        }
 
         // Danh sách chi tiết để hiển thị bảng
         public ObservableCollection<MonthlyRevenue> YearlyStats { get; set; } = new();
@@ -162,9 +179,6 @@ namespace HosipitalManager.MVVM.ViewModels
                     DataLabelsPosition = LiveChartsCore.Measure.DataLabelsPosition.Top
                 }
             };
-
-            // Thông báo cho View biết RevenueSeries đã thay đổi để vẽ lại
-            OnPropertyChanged(nameof(RevenueSeries));
         }
 
         private void UpdateStatsCards()
@@ -215,11 +229,11 @@ namespace HosipitalManager.MVVM.ViewModels
                 {
                     Name = "Doanh thu",
                     Values = revenues,
-                    Fill = new SolidColorPaint(SKColors.Purple.WithAlpha(150)), // Màu tím mờ
-                    Stroke = new SolidColorPaint(SKColors.Purple), // Viền tím đậm
-                    DataLabelsPaint = new SolidColorPaint(SKColors.Black), // Màu chữ trên cột
-                    DataLabelsFormatter = p => $"{p.Coordinate.PrimaryValue:N0} đ", // Định dạng hiển thị trên cột
-                    DataLabelsPosition = LiveChartsCore.Measure.DataLabelsPosition.Top // Hiện trên đỉnh cột
+                    Fill = new SolidColorPaint(SKColors.Purple.WithAlpha(150)),
+                    Stroke = new SolidColorPaint(SKColors.Purple),
+                    DataLabelsPaint = new SolidColorPaint(SKColors.Black),
+                    DataLabelsFormatter = p => $"{p.Coordinate.PrimaryValue:N0} đ",
+                    DataLabelsPosition = LiveChartsCore.Measure.DataLabelsPosition.Top
                 }
             };
 
@@ -230,9 +244,9 @@ namespace HosipitalManager.MVVM.ViewModels
                 new Axis
                 {
                     Labels = XAxisLabels,
-                    LabelsRotation = 45, // Xoay nhãn để dễ đọc nếu nhiều tháng
+                    LabelsRotation = 45,
                     TextSize = 12,
-                    SeparatorsPaint = null // Không vẽ đường kẻ dọc
+                    SeparatorsPaint = null
                 }
             };
 
@@ -240,9 +254,9 @@ namespace HosipitalManager.MVVM.ViewModels
             {
                 new Axis
                 {
-                    Labeler = p => $"{p:N0} đ", // Định dạng hiển thị trên trục Y (ví dụ: 120,000,000 đ)
+                    Labeler = p => $"{p:N0} đ",
                     TextSize = 12,
-                    SeparatorsPaint = new SolidColorPaint(SKColors.LightGray, 1) // Vẽ đường kẻ ngang
+                    SeparatorsPaint = new SolidColorPaint(SKColors.LightGray, 1)
                 }
             };
         }

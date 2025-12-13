@@ -136,6 +136,21 @@ namespace HosipitalManager.MVVM.Services
                 }
             }
         }
+
+        /// <summary>
+        /// Cập nhật đơn thuốc có sẵn
+        /// </summary>
+        public async Task UpdatePrescriptionAsync(Prescription prescription)
+        {
+            await Init();
+
+            // Ép list thuốc thành chuỗi JSON trước khi lưu
+            prescription.SerializeMedicines();
+
+            // Cập nhật vào database
+            await _database.UpdateAsync(prescription);
+        }
+
         public async Task<List<Prescription>> GetPrescriptionsAsync()
         {
             await Init();
