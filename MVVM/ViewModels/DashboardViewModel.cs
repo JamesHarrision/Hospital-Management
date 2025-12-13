@@ -193,49 +193,7 @@ public partial class DashboardViewModel : ObservableObject
 
     // Hàm xử lý logic chuyển đổi
 
-    private void AddToWaitingQueue(Appointment appt)
-    {
-        // 1. Tạo hồ sơ bệnh nhân từ thông tin lịch hẹn
-
-        var newPatient = new Patient
-
-        {
-
-            FullName = appt.PatientName,
-
-            Id = "P" + DateTime.Now.Ticks.ToString().Substring(12), // ID giả lập
-
-            //Age = 0, // Chưa có thông tin
-
-            Gender = "Khác",
-
-            PhoneNumber = appt.PhoneNumber,
-
-            Address = "Chưa cập nhật",
-
-            Symptoms = appt.Note ?? "Đặt lịch hẹn trước", // Lý do khám
-
-            //TimeIn = DateTime.Now.ToString("HH:mm"),
-
-            Status = "Chờ khám",
-
-            Severity = "normal", // Mặc định bình thường
-
-            PriorityScore = 10,  // Điểm ưu tiên mặc định
-
-            Doctorname = appt.DoctorObject.Name // Gán luôn bác sĩ đã hẹn
-
-        };
-
-
-        // 2. Thêm vào hàng đợi
-        WaitingQueue.Add(newPatient);
-
-
-        // 3. (Tùy chọn) Sắp xếp lại hàng đợi theo độ ưu tiên
-        SortPatientQueue();
-    }
-
+ 
     private void LoadMedicineCatalog()
     {
 
@@ -251,9 +209,7 @@ public partial class DashboardViewModel : ObservableObject
     }
 
     private void LoadSummaryCards()
-
     {
-
         SummaryCards = new ObservableCollection<SummaryCard>
 
         {
@@ -321,8 +277,6 @@ public partial class DashboardViewModel : ObservableObject
 
 
     public class DashboardRefreshMessage { }
-
-
 
     public class AddPatientToQueueMessage
 

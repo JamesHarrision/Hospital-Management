@@ -111,6 +111,7 @@ namespace HosipitalManager.MVVM.ViewModels
         [RelayCommand]
         public void SwitchTab(string statusStr)
         {
+            Task.Run(LoadData);
             if (Enum.TryParse(statusStr, out AppointmentStatus status))
             {
                 CurrentTab = status;
