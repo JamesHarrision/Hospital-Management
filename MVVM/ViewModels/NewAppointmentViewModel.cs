@@ -5,6 +5,7 @@ using HosipitalManager.MVVM.Models;
 using HosipitalManager.MVVM.Services;
 using System.Collections.ObjectModel;
 using static HospitalManager.MVVM.ViewModels.DashboardViewModel;
+using HosipitalManager.Helpers;
 
 namespace HosipitalManager.MVVM.ViewModels
 {
@@ -39,9 +40,30 @@ namespace HosipitalManager.MVVM.ViewModels
                 await Shell.Current.DisplayAlert("Thiếu thông tin", "Vui lòng chọn bác sĩ", "OK");
                 return;
             }
-            if (string.IsNullOrWhiteSpace(PatientName))
+            if (!ValidationHelper.IsValidName(PatientName))
             {
-                await Shell.Current.DisplayAlert("Thiếu thông tin", "Vui lòng nhập tên bệnh nhân", "OK");
+                await Shell.Current.DisplayAlert("Lỗi", "Tên bệnh nhân không được chứa số hay ký tự lạ.", "OK");
+                return;
+            }
+
+            // Validate SĐT
+            if (!ValidationHelper.IsValidPhoneNumber(PhoneNumber))
+            {
+                await Shell.Current.DisplayAlert("Lỗi", "Số điện thoại không đúng định dạng (10 số, bắt đầu bằng 0).", "OK");
+                return;
+            }
+
+            // Validate Ngày hẹn (Không được chọn quá khứ)
+            if (Date.Date < DateTime.Now.Date)
+            {
+                await Shell.Current.DisplayAlert("Lỗi", "Không thể đặt lịch hẹn trong quá khứ.", "OK");
+                return;
+            }
+
+            // Nếu chọn ngày hôm nay thì giờ hẹn phải lớn hơn giờ hiện tại
+            if (Date.Date == DateTime.Now.Date && Time < DateTime.Now.TimeOfDay)
+            {
+                await Shell.Current.DisplayAlert("Lỗi", "Giờ hẹn đã qua. Vui lòng chọn giờ khác.", "OK");
                 return;
             }
 

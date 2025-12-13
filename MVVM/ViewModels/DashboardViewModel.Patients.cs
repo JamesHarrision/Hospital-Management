@@ -6,6 +6,7 @@ using HosipitalManager.MVVM.Models;
 using HospitalManager.MVVM.Models;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using HosipitalManager.Helpers;
 
 
 namespace HospitalManager.MVVM.ViewModels;
@@ -103,10 +104,29 @@ public partial class DashboardViewModel : ObservableObject
     [RelayCommand]
     public async Task SavePatient()
     {
-        // 1. Validate dữ liệu đầu vào (Cơ bản)
-        if (string.IsNullOrWhiteSpace(NewPatientFullName))
+        // 1. Validate dữ liệu nhập
+        if (!ValidationHelper.IsValidName(newPatientFullName))
         {
-            await Application.Current.MainPage.DisplayAlert("Lỗi", "Vui lòng nhập họ tên", "OK");
+            await Application.Current.MainPage.DisplayAlert("Lỗi nhập liệu",
+            "Họ tên không hợp lệ. Vui lòng không nhập số hoặc ký tự đặc biệt.", "OK");
+            return;
+        }
+        if (!ValidationHelper.IsValidPhoneNumber(newPatientPhoneNumber))
+        {
+            await Application.Current.MainPage.DisplayAlert("Lỗi nhập liệu",
+            "Số điện thoại phải bắt đầu bằng số 0 và đủ 10 chữ số.", "OK");
+            return;
+        }
+        var dobCheck = ValidationHelper.IsValidDateOfBirth(newPatientDateOfBirth);
+        if (!dobCheck.IsValid)
+        {
+            await Application.Current.MainPage.DisplayAlert("Lỗi nhập liệu", dobCheck.Message, "OK");
+            return;
+        }
+        if (!ValidationHelper.IsValidLength(NewPatientAddress, 5))
+        {
+            await Application.Current.MainPage.DisplayAlert("Lỗi nhập liệu",
+                "Vui lòng nhập địa chỉ cụ thể hơn.", "OK");
             return;
         }
 

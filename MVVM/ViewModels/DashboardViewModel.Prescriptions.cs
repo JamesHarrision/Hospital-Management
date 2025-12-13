@@ -10,12 +10,12 @@ using QuestPDF.Infrastructure;
 using System.Collections.ObjectModel;
 using Colors = QuestPDF.Helpers.Colors;
 using IContainer = QuestPDF.Infrastructure.IContainer;
-using CommunityToolkit.Mvvm.Messaging; 
 using HosipitalManager.MVVM.Messages;
 using HosipitalManager.MVVM.ViewModels;
 using HospitalManager.MVVM.Models;
 using System.Threading.Tasks;
 using HosipitalManager.MVVM.Enums;
+using System.Linq;
 
 namespace HospitalManager.MVVM.ViewModels;
 
