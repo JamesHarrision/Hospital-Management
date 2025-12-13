@@ -1,4 +1,5 @@
-﻿using HosipitalManager.MVVM.Models;
+﻿using HosipitalManager.MVVM.Enums;
+using HosipitalManager.MVVM.Models;
 using HospitalManager.MVVM.Models;
 using System;
 using System.Collections.Generic;
@@ -54,7 +55,9 @@ namespace HosipitalManager.Helpers.Seeding
                     DatePrescribed = patient.AdmittedDate.AddHours(2),
 
                     // Trạng thái đơn thuốc: Đã điều trị xong thì chắc chắn đã cấp thuốc
-                    Status = (patient.Status == "Hoàn thành điều trị") ? "Đã cấp" : "Chưa cấp",
+                    Status = (patient.Status == "Hoàn thành điều trị")
+                         ? PrescriptionStatus.Issued   // Thay cho "Đã cấp"
+                         : PrescriptionStatus.Pending, // Thay cho "Chưa cấp"
 
                     Diagnosis = data.Diagnosis,
                     DoctorNotes = $"Điều trị tích cực. Tái khám khi cần.",

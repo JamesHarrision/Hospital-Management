@@ -15,6 +15,7 @@ using HosipitalManager.MVVM.Messages;
 using HosipitalManager.MVVM.ViewModels;
 using HospitalManager.MVVM.Models;
 using System.Threading.Tasks;
+using HosipitalManager.MVVM.Enums;
 
 namespace HospitalManager.MVVM.ViewModels;
 
@@ -190,15 +191,20 @@ public partial class DashboardViewModel
         if (!confirm) return;
 
         // 1. Cập nhật Status (Nhờ ObservableProperty ở Model, UI tự đổi màu/chữ ngay lập tức)
-        SelectedPrescription.Status = "Đã cấp";
+        SelectedPrescription.Status = PrescriptionStatus.Issued;
 
+        // 2. LƯU VÀO DATABASE NGAY LẬP TỨC (QUAN TRỌNG!)
+        await _databaseService.UpdatePrescriptionAsync(SelectedPrescription);
 
-        // 2. Ẩn nút cấp phát đi
+        // 3. Ẩn nút cấp phát đi
         IsIssueButtonVisible = false;
 
-        // 3. Gửi tiền sang RevenueViewModel
+        // 4. Gửi tiền sang RevenueViewModel
         // Lưu ý: TotalAmount giờ đã tính đúng (Price * Quantity)
         WeakReferenceMessenger.Default.Send(new RevenueUpdateMessage((SelectedPrescription.TotalAmount, DateTime.Now)));
+
+        // 5. Reload lại danh sách prescriptions từ DB để đồng bộ
+        await LoadPrescriptions();
 
         await Shell.Current.DisplayAlert("Thành công", "Đã cập nhật trạng thái và doanh thu!", "OK");
     }
@@ -209,7 +215,7 @@ public partial class DashboardViewModel
         SelectedPrescription = prescription;
 
         // Logic ẩn/hiện nút: Chỉ hiện khi chưa cấp
-        IsIssueButtonVisible = SelectedPrescription.Status == "Chưa cấp";
+        IsIssueButtonVisible = SelectedPrescription.Status == PrescriptionStatus.Pending;
 
         IsPrescriptionDetailVisible = true;
     }
@@ -245,7 +251,7 @@ public partial class DashboardViewModel
             PatientName = NewPrescriptionPatientName,
             DoctorName = NewPrescriptionDoctorName,
             DatePrescribed = DateTime.Now,
-            Status = "Chưa cấp"
+            Status = PrescriptionStatus.Pending
         };
         _allPrescriptions.Add(newPrescription);
         Prescriptions.Add(newPrescription);

@@ -311,5 +311,23 @@ namespace HosipitalManager.MVVM.Services
                 await _database.UpdateAsync(appointment);
             }
         }
+
+        /// <summary>
+        /// Cập nhật thông tin một cuộc hẹn đã có (dựa trên Id)
+        /// </summary>
+        public async Task UpdateAppointmentAsync(Appointment appointment)
+        {
+            await Init(); // Đảm bảo DB đã khởi tạo
+
+            // UpdateAsync sẽ tìm record có cùng Primary Key (Id) và ghi đè dữ liệu mới
+            await _database.UpdateAsync(appointment);
+        }
+
+        // (Optional) Nếu bạn muốn xóa hẳn thay vì ẩn:
+        public async Task DeleteAppointmentAsync(Appointment appointment)
+        {
+            await Init();
+            await _database.DeleteAsync(appointment);
+        }
     }
 }

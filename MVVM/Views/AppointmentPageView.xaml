@@ -126,8 +126,8 @@
                         HeightRequest="70" 
                         StrokeShape="RoundRectangle 10"
                         VerticalOptions="Start">
-                                <Image Source="{Binding Doctor.ImageSource}" 
-                           Aspect="AspectFill"
+                        <Image Source="doctor1.png" 
+                            Aspect="AspectFill"
                            WidthRequest="70" 
                            HeightRequest="70"/>
                             </Border>
@@ -138,7 +138,7 @@
                                     <Label.FormattedText>
                                         <FormattedString>
                                             <Span Text="BS. " TextColor="#5B9FFF"/>
-                                            <Span Text="{Binding Doctor.Name}" TextColor="#1D2E4E"/>
+                                            <Span Text="{Binding DoctorName}" TextColor="#1D2E4E"/>
                                         </FormattedString>
                                     </Label.FormattedText>
                                 </Label>

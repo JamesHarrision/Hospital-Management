@@ -1,8 +1,9 @@
 using CommunityToolkit.Mvvm.ComponentModel;
-using SQLite;
-using System.Text.Json; 
-using System.Collections.ObjectModel;
+using HosipitalManager.MVVM.Enums;
 using HosipitalManager.MVVM.Models;
+using SQLite;
+using System.Collections.ObjectModel;
+using System.Text.Json; 
 
 namespace HospitalManager.MVVM.Models
 {
@@ -15,7 +16,6 @@ namespace HospitalManager.MVVM.Models
         // Khóa ngoại để biết đơn này của ai
         public string PatientId { get; set; }
         public string PatientName { get; set; }
-
         public string DoctorId { get; set; }
         public string DoctorName { get; set; }
         public DateTime DatePrescribed { get; set; }
@@ -23,11 +23,26 @@ namespace HospitalManager.MVVM.Models
         // --- SỬA ĐỔI QUAN TRỌNG ---
         // Chuyển Status thành ObservableProperty để UI tự động cập nhật khi đổi giá trị
         private string _status;
-        public string Status
+        public PrescriptionStatus Status { get; set; }
+
+        // Property phụ dùng để hiển thị lên màn hình (Binding)
+        [Ignore] // Không lưu vào Database, chỉ để hiển thị
+        public string StatusDisplay => Status switch
         {
-            get => _status;
-            set => SetProperty(ref _status, value); // Hàm này giúp giao diện tự cập nhật
-        }
+            PrescriptionStatus.Pending => "Chưa cấp",
+            PrescriptionStatus.Issued => "Đã cấp",
+            PrescriptionStatus.Cancelled => "Đã hủy",
+            _ => "Không xác định"
+        };
+
+        // Property phụ để đổi màu chữ trạng thái (Binding)
+        [Ignore]
+        public string StatusColor => Status switch
+        {
+            PrescriptionStatus.Pending => "#E57373", // Đỏ nhạt
+            PrescriptionStatus.Issued => "#81C784",  // Xanh lá
+            _ => "#9E9E9E" // Xám
+        };
 
         // 2. Dùng [ObservableProperty] để tự động sinh ra property public 'Diagnosis'
         // (Viết thường chữ cái đầu)
