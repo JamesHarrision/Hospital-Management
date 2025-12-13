@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Messaging; 
 using HosipitalManager.MVVM.Messages;
 using HospitalManager.MVVM.Models;
+using HosipitalManager.MVVM.Enums;
 
 namespace HosipitalManager.MVVM.ViewModels
 {
@@ -100,7 +101,7 @@ namespace HosipitalManager.MVVM.ViewModels
 
             // Tính toán doanh thu từ các đơn thuốc đã được cấp
             var issuedPrescriptions = prescriptions
-                .Where(p => p.Status == "Đã cấp")
+                .Where(p => p.Status == PrescriptionStatus.Issued)
                 .ToList();
 
             foreach (var prescription in issuedPrescriptions)
@@ -203,7 +204,7 @@ namespace HosipitalManager.MVVM.ViewModels
             if (_prescriptions != null && _prescriptions.Any())
             {
                 var issuedPrescriptions = _prescriptions
-                    .Where(p => p.Status == "Đã cấp")
+                    .Where(p => p.Status == PrescriptionStatus.Issued)
                     .GroupBy(p => p.DoctorName)
                     .OrderByDescending(g => g.Sum(p => p.TotalAmount))
                     .FirstOrDefault();

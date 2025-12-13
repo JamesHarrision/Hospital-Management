@@ -15,6 +15,7 @@ using HosipitalManager.MVVM.Messages;
 using HosipitalManager.MVVM.ViewModels;
 using HospitalManager.MVVM.Models;
 using System.Threading.Tasks;
+using HosipitalManager.MVVM.Enums;
 
 namespace HospitalManager.MVVM.ViewModels;
 
@@ -188,7 +189,7 @@ public partial class DashboardViewModel
         if (!confirm) return;
 
         // 1. Cập nhật Status (Nhờ ObservableProperty ở Model, UI tự đổi màu/chữ ngay lập tức)
-        SelectedPrescription.Status = "Đã cấp";
+        SelectedPrescription.Status = PrescriptionStatus.Issued;
 
         // 2. LƯU VÀO DATABASE NGAY LẬP TỨC (QUAN TRỌNG!)
         await _databaseService.UpdatePrescriptionAsync(SelectedPrescription);
@@ -212,7 +213,7 @@ public partial class DashboardViewModel
         SelectedPrescription = prescription;
 
         // Logic ẩn/hiện nút: Chỉ hiện khi chưa cấp
-        IsIssueButtonVisible = SelectedPrescription.Status == "Chưa cấp";
+        IsIssueButtonVisible = SelectedPrescription.Status == PrescriptionStatus.Pending;
 
         IsPrescriptionDetailVisible = true;
     }
@@ -248,7 +249,7 @@ public partial class DashboardViewModel
             PatientName = NewPrescriptionPatientName,
             DoctorName = NewPrescriptionDoctorName,
             DatePrescribed = DateTime.Now,
-            Status = "Chưa cấp"
+            Status = PrescriptionStatus.Pending
         };
         _allPrescriptions.Add(newPrescription);
         Prescriptions.Add(newPrescription);

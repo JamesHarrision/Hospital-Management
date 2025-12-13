@@ -51,7 +51,7 @@
                                 <Label Grid.Column="3" Text="{Binding DatePrescribed, StringFormat='{0:dd/MM/yyyy}'}" TextColor="#555555" VerticalOptions="Center" />
 
                                 <Frame Grid.Column="4" Padding="8,4" CornerRadius="6" BackgroundColor="#ECFDF5" BorderColor="Transparent" HorizontalOptions="Start" VerticalOptions="Center">
-                                    <Label Text="{Binding Status}" TextColor="#059669" FontSize="11" FontAttributes="Bold"/>
+                                    <Label Text="{Binding StatusDisplay}" TextColor="{Binding StatusColor}" FontSize="11" FontAttributes="Bold"/>
                                 </Frame>
 
                                 <HorizontalStackLayout Grid.Column="5" Spacing="15" HorizontalOptions="Center" VerticalOptions="Center">

@@ -2,7 +2,8 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using HosipitalManager.MVVM.Models;
 using HospitalManager.MVVM.Models;
 using System.Collections.ObjectModel;
-using Microsoft.Maui.ApplicationModel; 
+using Microsoft.Maui.ApplicationModel;
+using HosipitalManager.MVVM.Enums;
 
 namespace HosipitalManager.MVVM.Services
 {
@@ -31,7 +32,7 @@ namespace HosipitalManager.MVVM.Services
                 DoctorId = "BS001",
                 DoctorName =  $"BS. {patient.Doctorname}",
                 DatePrescribed = DateTime.Now,
-                Status = "Đã cấp",
+                Status = PrescriptionStatus.Pending,
 
                 // Lưu kết quả khám
                 Diagnosis = diagnosis,
