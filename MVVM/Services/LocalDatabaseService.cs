@@ -171,6 +171,35 @@ namespace HosipitalManager.MVVM.Services
             await _database.DeleteAsync(prescription);
         }
 
+        public async Task<List<Prescription>> SearchPrescriptionAsync(string keyword)
+        {
+            await Init();
+
+            if (string.IsNullOrEmpty(keyword))
+            {
+                return new List<Prescription>();
+            }
+
+            var lowerKeyword = keyword.ToLower();
+
+            // Tìm trong bảng Prescription
+            // Lọc theo: Tên bệnh nhân OR Tên bác sĩ OR Mã đơn (Id)
+            var list = await _database.Table<Prescription>()
+                                      .Where(p => p.PatientName.ToLower().Contains(lowerKeyword) ||
+                                                  p.DoctorName.ToLower().Contains(lowerKeyword) ||
+                                                  p.Id.ToLower().Contains(lowerKeyword))
+                                      .OrderByDescending(p => p.DatePrescribed) // Vẫn sắp xếp mới nhất lên đầu
+                                      .ToListAsync();
+
+            // QUAN TRỌNG: Bung chuỗi JSON thuốc ra thành List object
+            foreach (var item in list)
+            {
+                item.DeserializeMedicines();
+            }
+
+            return list;
+        }
+
 
         // --PAGINATION--
         // --- PHẦN BỆNH NHÂN ---

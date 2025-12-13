@@ -66,7 +66,7 @@ public partial class DashboardViewModel
 
     partial void OnSearchPrescriptionTextChanged(string value)
     {
-        SearchPrescriptions();
+        Task.Run(async () => await SearchPrescriptions(value));
     }
 
     // --- CÁC HÀM LOAD DỮ LIỆU ---
@@ -147,30 +147,32 @@ public partial class DashboardViewModel
         }
     }
 
-    private void SearchPrescriptions()
+    private async Task SearchPrescriptions(string keyword)
     {
-        if (string.IsNullOrWhiteSpace(SearchPrescriptionText))
+        if (string.IsNullOrWhiteSpace(keyword))
         {
-            // Reset về danh sách gốc
-            if (_allPrescriptions != null && _allPrescriptions.Any())
+            await LoadPrescriptions(); // Gọi lại hàm load phân trang cũ
+            return;
+        }
+
+        // TRƯỜNG HỢP 2: Có từ khóa -> Tìm trong toàn bộ Database
+        var searchResults = await _databaseService.SearchPrescriptionAsync(keyword);
+
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            Prescriptions.Clear();
+            foreach (var p in searchResults)
             {
-                Prescriptions = new ObservableCollection<Prescription>(_allPrescriptions);
+                Prescriptions.Add(p);
             }
-        }
-        else
-        {
-            // Chuyển từ khóa về chữ thường để tìm không phân biệt hoa thường
-            var keyword = SearchPrescriptionText.ToLower();
 
-            // Lọc dữ liệu: Tìm theo Tên BN hoặc Tên Bác Sĩ hoặc Mã đơn
-            var filtered = _allPrescriptions.Where(p =>
-                p.PatientName.ToLower().Contains(keyword) ||
-                p.DoctorName.ToLower().Contains(keyword) ||  // <--- Đã thêm tìm theo Bác sĩ
-                p.Id.ToLower().Contains(keyword)
-            ).ToList();
+            // Cập nhật UI phân trang để báo hiệu đang ở chế độ tìm kiếm
+            PresPageInfo = $"Tìm thấy: {searchResults.Count} kết quả";
 
-            Prescriptions = new ObservableCollection<Prescription>(filtered);
-        }
+            // Vô hiệu hóa nút Next/Prev vì đang hiện tất cả kết quả
+            CanPresGoBack = false;
+            CanPresGoNext = false;
+        });
     }
 
     // --- CÁC COMMAND XỬ LÝ ---

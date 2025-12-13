@@ -166,7 +166,7 @@ public partial class DashboardViewModel : ObservableObject
                 patientToSave.Status = "Chờ khám";
 
                 // Lấy tên bác sĩ từ lịch hẹn (nếu có check-in từ lịch hẹn)
-                patientToSave.Doctorname = _pendingCheckInAppointment.DoctorName ?? "Chưa chỉ định";
+                patientToSave.Doctorname = _pendingCheckInAppointment?.DoctorName ?? "Chưa chỉ định";
 
                 // Xử lý Lịch hẹn (Đổi trạng thái & Gửi tin nhắn cập nhật Dashboard)
                 if (_pendingCheckInAppointment != null)
