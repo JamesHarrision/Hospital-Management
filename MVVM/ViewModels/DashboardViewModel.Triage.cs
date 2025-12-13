@@ -7,6 +7,7 @@ using Microsoft.Maui.ApplicationModel;
 using HosipitalManager.MVVM.Services; 
 using HospitalManager.MVVM.Views;
 using HosipitalManager.MVVM.Views;
+using HosipitalManager.MVVM.Models;
 
 namespace HospitalManager.MVVM.ViewModels;
 
@@ -40,6 +41,13 @@ public partial class DashboardViewModel
     [ObservableProperty]
     private string newPatientSymptoms;
 
+    // THÊM: Property cho Picker chọn bác sĩ
+    [ObservableProperty]
+    private Doctor selectedDoctor;
+
+    [ObservableProperty]
+    private ObservableCollection<Doctor> availableDoctors;
+
     // Biến kiểm soát UI
     [ObservableProperty]
     private bool isStatusEnabled; // Khóa/Mở khóa ô trạng thái
@@ -70,7 +78,7 @@ public partial class DashboardViewModel
     {
         if (patient == null) return 0;
         double score = 10;
-        
+
         // So sánh code (critical, urgent...)
         string severity = patient.Severity?.ToLower() ?? "";
 
@@ -93,7 +101,7 @@ public partial class DashboardViewModel
 
         // Tính điểm và sắp xếp lại
         var sortedList = WaitingQueue
-            .Select(p => 
+            .Select(p =>
             {
                 p.PriorityScore = CalculatePriority(p);
                 return p;
@@ -118,6 +126,9 @@ public partial class DashboardViewModel
         NewPatientStatus = "Chờ khám";
         IsStatusEnabled = false;
 
+        // THÊM: Load danh sách bác sĩ
+        LoadDoctorsList();
+
         IsAddPatientPopupVisible = true;
     }
 
@@ -128,53 +139,12 @@ public partial class DashboardViewModel
         ClearPopupForm();
     }
 
-    //[RelayCommand]
-    //private void SavePatient()
-    //{
-    //    try
-    //    {
-    //        string severityCode = GetSeverityCode(NewPatientSeverity);
-
-    //        if (isEditing && patientToEdit != null)
-    //        {
-    //            // Logic Sửa (Admin dùng)
-    //            patientToEdit.FullName = NewPatientFullName;
-    //            patientToEdit.DateOfBirth = NewPatientDateOfBirth;
-    //            patientToEdit.Gender = NewPatientGender;
-    //            patientToEdit.PhoneNumber = NewPatientPhoneNumber;
-    //            patientToEdit.Address = NewPatientAddress;
-    //            patientToEdit.Status = NewPatientStatus;
-    //            patientToEdit.Severity = severityCode;
-    //            patientToEdit.Symptoms = NewPatientSymptoms;
-    //        }
-    //        else
-    //        {
-    //            // Logic Thêm Mới (Tiếp nhận)
-    //            var newPatient = new Patient
-    //            {
-    //                Id = $"BN{new Random().Next(1000, 9999)}",
-    //                FullName = NewPatientFullName,
-    //                DateOfBirth = NewPatientDateOfBirth,
-    //                Gender = NewPatientGender,
-    //                PhoneNumber = NewPatientPhoneNumber,
-    //                Address = NewPatientAddress,
-    //                AdmittedDate = DateTime.Now,
-    //                Status = "Chờ khám", // Fix cứng
-    //                Severity = severityCode,
-    //                Symptoms = NewPatientSymptoms,
-    //                QueueOrder = WaitingQueue.Count + 1
-    //            };
-    //            WaitingQueue.Add(newPatient);
-    //        }
-
-    //        SortPatientQueue();
-    //        CloseAddPatientPopup();
-    //    }
-    //    catch (Exception ex)
-    //    {
-    //        Debug.WriteLine($"Lỗi: {ex.Message}");
-    //    }
-    //}
+    // THÊM: Hàm load danh sách bác sĩ
+    private void LoadDoctorsList()
+    {
+        AvailableDoctors = HospitalSystem.Instance.Doctors;
+        SelectedDoctor = null; // Reset lựa chọn
+    }
 
     [RelayCommand]
     private async Task CallPatient(Patient patient)
@@ -220,7 +190,8 @@ public partial class DashboardViewModel
         NewPatientStatus = "Chờ khám";
         NewPatientSeverity = "Bình thường";
         NewPatientSymptoms = string.Empty;
+        SelectedDoctor = null; // THÊM: Reset picker
         isEditing = false;
         patientToEdit = null;
     }
-}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       
+}

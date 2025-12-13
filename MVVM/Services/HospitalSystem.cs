@@ -21,8 +21,8 @@ namespace HosipitalManager.MVVM.Services
             // 1. Tạo dữ liệu Bác sĩ giả lập
             Doctors = new ObservableCollection<Doctor>
             {
-                new Doctor { Id = "BS001", Name = "Mai Trọng Khang", Specialization = "Thần Kinh", ImageSource = "doctor1.png" },
-                new Doctor { Id = "BS002", Name = "Nguyễn Ngọc Quý", Specialization = "Nha Khoa", ImageSource = "doctor2.png" },
+                new Doctor { Id = "BS001", Name = "BS. Mai Trọng Khang", Specialization = "Thần Kinh", ImageSource = "doctor1.png" },
+                new Doctor { Id = "BS002", Name = "BS. Nguyễn Ngọc Quý", Specialization = "Nha Khoa", ImageSource = "doctor2.png" },
             };
 
             // 2. Tạo dữ liệu Lịch hẹn giả lập

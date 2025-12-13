@@ -187,7 +187,7 @@
             <Border Padding="20" Margin="0" BackgroundColor="White" StrokeThickness="0" VerticalOptions="Center" HorizontalOptions="Center" WidthRequest="600" StrokeShape="RoundRectangle 12">
                 <VerticalStackLayout Spacing="15">
                     <Label Text="{Binding PopupTitle}" FontSize="24" FontAttributes="Bold" TextColor="#1D2E4E" HorizontalOptions="Center" />
-                    <Grid ColumnDefinitions="Auto, *" RowDefinitions="Auto, Auto, Auto, Auto, Auto, Auto, Auto, Auto" RowSpacing="10" ColumnSpacing="10">
+                    <Grid ColumnDefinitions="Auto, *" RowDefinitions="Auto, Auto, Auto, Auto, Auto, Auto, Auto, Auto, Auto" RowSpacing="10" ColumnSpacing="10">
                         <Label Grid.Row="0" Grid.Column="0" Text="Họ tên:" VerticalOptions="Center" TextColor="#1D2E4E" />
                         <Entry Grid.Row="0" Grid.Column="1" Text="{Binding NewPatientFullName}" Placeholder="Nguyễn Văn An" TextColor="#1D2E4E" />
                         <Label Grid.Row="1" Grid.Column="0" Text="Ngày sinh:" VerticalOptions="Center" TextColor="#1D2E4E" />
@@ -206,6 +206,16 @@
                         <Picker Grid.Row="6" Grid.Column="1" ItemsSource="{Binding SeverityOptions}" SelectedItem="{Binding NewPatientSeverity}" TextColor="#1D2E4E" />
                         <Label Grid.Row="7" Grid.Column="0" Text="Triệu chứng:" VerticalOptions="Start" TextColor="#1D2E4E" Margin="0,10,0,0"/>
                         <Editor Grid.Row="7" Grid.Column="1" Text="{Binding NewPatientSymptoms}" Placeholder="Nhập triệu chứng..." HeightRequest="60" TextColor="#1D2E4E" AutoSize="TextChanges"/>
+                        <Label Grid.Row="8" Text="Bác sĩ chỉ định:" FontSize="14" Margin="0,15,0,5"/>
+                        <Picker Grid.Row="8" Grid.Column="1"
+                                ItemsSource="{Binding AvailableDoctors}"
+                                SelectedItem="{Binding SelectedDoctor}"
+                                ItemDisplayBinding="{Binding Name}"
+                                BackgroundColor="White"
+                                TextColor="#1D2E4E"
+                                FontSize="14"
+                                Margin="0,0,0,15"/>
+
                     </Grid>
                     <HorizontalStackLayout Spacing="10" HorizontalOptions="End" Margin="0, 20, 0, 0">
                         <Button Text="Hủy" Command="{Binding CloseAddPatientPopupCommand}" BackgroundColor="#E0E0E0" TextColor="#333333" />
