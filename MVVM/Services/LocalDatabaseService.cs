@@ -4,6 +4,7 @@ using HospitalManager.MVVM.Models;
 using SQLite;
 using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -24,6 +25,7 @@ namespace HosipitalManager.MVVM.Services
             // Tạo bảng nếu chưa tồn tại
             await _database.CreateTableAsync<Patient>();
             await _database.CreateTableAsync<Prescription>();
+            await _database.CreateTableAsync<Appointment>();
 
 
             // Đảm bảo dữ liệu được thêm vào
@@ -136,21 +138,16 @@ namespace HosipitalManager.MVVM.Services
                 }
             }
         }
-
-        /// <summary>
-        /// Cập nhật đơn thuốc có sẵn
-        /// </summary>
         public async Task UpdatePrescriptionAsync(Prescription prescription)
         {
             await Init();
 
-            // Ép list thuốc thành chuỗi JSON trước khi lưu
+            // Cực kỳ quan trọng: Phải chuyển List thuốc thành chuỗi JSON trước khi lưu
+            // Nếu không dòng này, dữ liệu thuốc trong DB có thể bị lỗi hoặc mất
             prescription.SerializeMedicines();
 
-            // Cập nhật vào database
             await _database.UpdateAsync(prescription);
         }
-
         public async Task<List<Prescription>> GetPrescriptionsAsync()
         {
             await Init();
@@ -212,6 +209,96 @@ namespace HosipitalManager.MVVM.Services
         {
             await Init();
             return await _database.Table<Prescription>().CountAsync();
+        }
+
+        public async Task<List<Patient>> SearchPatientAsync(string keyword)
+        {
+            await Init();
+
+            if(string.IsNullOrEmpty(keyword))
+            {
+                return new List<Patient>();
+            }
+            var lowerKeyword = keyword.ToLower();
+
+            return await _database.Table<Patient>().Where(p => p.FullName.ToLower().Contains(lowerKeyword) ||
+                                                          p.Id.ToLower().Contains(lowerKeyword)).ToListAsync();
+        }
+
+        public async Task<List<Patient>> GetWaitingPatientsAsync()
+        {
+            await Init();
+            // Lấy tất cả bệnh nhân có trạng thái "Chờ khám", sắp xếp theo mức độ ưu tiên giảm dần
+            return await _database.Table<Patient>()
+                                  .Where(p => p.Status == "Chờ khám")
+                                  .OrderByDescending(p => p.PriorityScore)
+                                  .ToListAsync();
+        }
+
+        // PHẦN XỬ LÝ LỊCH HẸN (APPOINTMENT)
+
+        public async Task<List<Appointment>> GetAppointmentsAsync()
+        {
+            await Init();
+            return await _database.Table<Appointment>()
+                                  .OrderByDescending(a => a.AppointmentDate)
+                                  .ThenBy(a => a.StartTime)
+                                  .ToListAsync();
+        }
+
+        public async Task SaveAppointmentAsync(Appointment appointment)
+        {
+            await Init();
+            if (string.IsNullOrEmpty(appointment.Id))
+            {
+                // 1. Tạo mã tự động dạng "LHxxxx"
+                var allApps = await _database.Table<Appointment>().ToListAsync();
+                int nextId = 1000; // Mặc định bắt đầu từ 1000
+
+                if (allApps.Count > 0)
+                {
+                    // Lọc ra các ID bắt đầu bằng "LH" và tìm số lớn nhất
+                    var maxId = allApps
+                        .Select(a => a.Id)
+                        .Where(id => !string.IsNullOrEmpty(id) && id.StartsWith("LH") && id.Length > 2)
+                        .Select(id => int.TryParse(id.Substring(2), out int n) ? n : 0) // Cắt bỏ chữ "LH" lấy số
+                        .Max();
+
+                    nextId = maxId + 1;
+                }
+
+                appointment.Id = $"LH{nextId}"; // Ví dụ: LH1001
+                appointment.CreatedAt = DateTime.Now;
+
+                // Nếu trạng thái chưa set thì mặc định là Pending
+                if (appointment.Status == default)
+                    appointment.Status = AppointmentStatus.Pending;
+
+                await _database.InsertAsync(appointment);
+            }
+            // Trường hợp CẬP NHẬT (Đã có Id)
+            else
+            {
+                await _database.UpdateAsync(appointment);
+            }
+        }
+
+        /// <summary>
+        /// Cập nhật thông tin một cuộc hẹn đã có (dựa trên Id)
+        /// </summary>
+        public async Task UpdateAppointmentAsync(Appointment appointment)
+        {
+            await Init(); // Đảm bảo DB đã khởi tạo
+
+            // UpdateAsync sẽ tìm record có cùng Primary Key (Id) và ghi đè dữ liệu mới
+            await _database.UpdateAsync(appointment);
+        }
+
+        // (Optional) Nếu bạn muốn xóa hẳn thay vì ẩn:
+        public async Task DeleteAppointmentAsync(Appointment appointment)
+        {
+            await Init();
+            await _database.DeleteAsync(appointment);
         }
     }
 }

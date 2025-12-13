@@ -1,9 +1,9 @@
 <ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             
              xmlns:vm="clr-namespace:HospitalManager.MVVM.ViewModels"
-             xmlns:vlxx="clr-namespace:HosipitalManager.MVVM.ViewModels"
+             
              xmlns:views="clr-namespace:HosipitalManager.MVVM.Views"
-             xmlns:micro="clr-namespace:Microcharts.Maui;assembly=Microcharts.Maui"
              x:Class="HosipitalManager.MVVM.Views.DashboardContentView">
 
     <Grid ColumnDefinitions="1.5*, 1*" ColumnSpacing="25">
@@ -13,7 +13,7 @@
                CornerRadius="12" 
                Padding="10" 
                HasShadow="True" 
-               HeightRequest="500" 
+               HeightRequest="700" 
                BorderColor="#E0E0E0" 
                VerticalOptions="Start">
 
@@ -43,22 +43,19 @@
             </Grid>
         </Frame>
 
-        <Frame Grid.Column="1" 
+        <ScrollView Grid.Column="1" 
                BackgroundColor="White" 
-               CornerRadius="12" 
                Padding="20" 
-               HasShadow="True" 
-               HeightRequest="500"
-               BorderColor="#E0E0E0"
+               HeightRequest="700"
                VerticalOptions="Start">
 
             <VerticalStackLayout Spacing="15">
                 <Grid ColumnDefinitions="*, Auto">
                     <Label Text="Hàng đợi chờ khám" FontSize="18" FontAttributes="Bold" TextColor="#1D2E4E" VerticalOptions="Center"/>
                     <Button Grid.Column="1" Text="+ Tiếp nhận" 
-                                Command="{Binding ShowAddPatientPopupCommand}"
-                                BackgroundColor="{StaticResource ColorPrimary}" TextColor="White" 
-                                HeightRequest="35" Padding="15,0" CornerRadius="8" FontSize="12"/>
+                            Command="{Binding ShowAddPatientPopupCommand}"
+                            BackgroundColor="{StaticResource ColorPrimary}" TextColor="White" 
+                            HeightRequest="35" Padding="15,0" CornerRadius="8" FontSize="12"/>
                 </Grid>
 
                 <CollectionView ItemsSource="{Binding WaitingQueue}" EmptyView="Hiện chưa có bệnh nhân nào trong hàng đợi.">
@@ -93,7 +90,7 @@
                                 <Grid ColumnDefinitions="Auto, *, Auto" ColumnSpacing="15">
                                     <Border WidthRequest="40" HeightRequest="40" StrokeShape="RoundRectangle 20" BackgroundColor="Transparent" StrokeThickness="0" VerticalOptions="Center">
                                         <Label Text="{Binding PriorityScore, StringFormat='{0:F0}'}" 
-                                    TextColor="#1D2E4E" FontAttributes="Bold" HorizontalOptions="Center" VerticalOptions="Center"/>
+                                               TextColor="#1D2E4E" FontAttributes="Bold" HorizontalOptions="Center" VerticalOptions="Center"/>
                                     </Border>
 
                                     <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="2">
@@ -102,16 +99,15 @@
                                     </VerticalStackLayout>
 
                                     <Button Grid.Column="2" 
-                                        Text="Gọi" 
-                                        FontSize="12" 
-                                        HeightRequest="30" 
-                                        Padding="10,0" 
-                                        CornerRadius="5" 
-                                        BackgroundColor="#1D2E4E" 
-                                        TextColor="White"
-        
-                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:DashboardViewModel}}, Path=CallPatientCommand}"
-                                        CommandParameter="{Binding .}" />
+                                            Text="Gọi" 
+                                            FontSize="12" 
+                                            HeightRequest="30" 
+                                            Padding="10,0" 
+                                            CornerRadius="5" 
+                                            BackgroundColor="#1D2E4E" 
+                                            TextColor="White"
+                                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:DashboardViewModel}}, Path=CallPatientCommand}"
+                                            CommandParameter="{Binding .}" />
                                 </Grid>
                             </Border>
                         </DataTemplate>
@@ -119,6 +115,6 @@
                 </CollectionView>
 
             </VerticalStackLayout>
-        </Frame>
+        </ScrollView>
     </Grid>
 </ContentView>

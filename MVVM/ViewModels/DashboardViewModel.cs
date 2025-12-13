@@ -100,11 +100,13 @@ public partial class DashboardViewModel : ObservableObject
             }
         });
 
-        Task.Run(async () => await LoadPatients());
-        foreach (var p in Patients.Where(p => p.Status == "Chờ khám"))
-        {
-            WaitingQueue.Add(p);
-        }
+        //Task.Run(async () => await LoadPatients());
+        //foreach (var p in Patients.Where(p => p.Status == "Chờ khám"))
+        //{
+        //    WaitingQueue.Add(p);
+        //}
+
+        Task.Run(async () => await ReloadAllData());
 
         WeakReferenceMessenger.Default.Register<AddPatientToQueueMessage>(this, (r, m) =>
         {
@@ -115,6 +117,14 @@ public partial class DashboardViewModel : ObservableObject
         {
             OpenCheckInPopup(m.Appointment);
         });
+    }
+
+    private async Task ReloadAllData()
+    {
+        var t1 = LoadPatients();      // Load bảng phân trang
+        var t2 = LoadWaitingQueue();  // Load hàng đợi bên trái
+
+        await Task.WhenAll(t1, t2);   // Đợi cả 2 xong
     }
 
     // Hàm xử lý logic chuyển đổi
@@ -134,9 +144,8 @@ public partial class DashboardViewModel : ObservableObject
             Status = "Chờ khám",
             Severity = "normal", // Mặc định bình thường
             PriorityScore = 10,  // Điểm ưu tiên mặc định
-            Doctorname = appt.Doctor.Name // Gán luôn bác sĩ đã hẹn
+            Doctorname = appt.DoctorObject.Name // Gán luôn bác sĩ đã hẹn
         };
-        Console.WriteLine(appt.Doctor.Name);
 
         // 2. Thêm vào hàng đợi
         WaitingQueue.Add(newPatient);

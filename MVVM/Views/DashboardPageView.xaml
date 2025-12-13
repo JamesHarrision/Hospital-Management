@@ -161,25 +161,6 @@
             <Grid Grid.Row="1" Padding="20">
                 <ScrollView x:Name="DashboardContentView" IsVisible="True">
                     <VerticalStackLayout Spacing="25">
-                        <CollectionView ItemsSource="{Binding SummaryCards}">
-                            <CollectionView.ItemsLayout>
-                                <GridItemsLayout Orientation="Vertical" Span="4" HorizontalItemSpacing="20" VerticalItemSpacing="20" />
-                            </CollectionView.ItemsLayout>
-                            <CollectionView.ItemTemplate>
-                                <DataTemplate>
-                                    <Frame BackgroundColor="White" CornerRadius="12" Padding="20" HasShadow="True" HeightRequest="150" BorderColor="#E0E0E0">
-                                        <Grid RowDefinitions="Auto, *, Auto">
-                                            <HorizontalStackLayout Grid.Row="0" Spacing="10">
-                                                <Frame BackgroundColor="{Binding CardColor}" CornerRadius="8" WidthRequest="40" HeightRequest="40" Padding="8"></Frame>
-                                                <Label Text="{Binding Title}" FontSize="16" FontAttributes="Bold" TextColor="#1D2E4E" VerticalOptions="Center" />
-                                            </HorizontalStackLayout>
-                                            <Label Grid.Row="1" Text="{Binding Value}" FontSize="36" FontAttributes="Bold" TextColor="#1D2E4E" VerticalOptions="Center" />
-                                            <Label Grid.Row="2" Text="{Binding ChangePercentage}" FontSize="12" TextColor="#757575" />
-                                        </Grid>
-                                    </Frame>
-                                </DataTemplate>
-                            </CollectionView.ItemTemplate>
-                        </CollectionView>
                         <views:DashboardContentView/>
                     </VerticalStackLayout>
                 </ScrollView>

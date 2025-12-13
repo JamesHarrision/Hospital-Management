@@ -3,7 +3,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:HosipitalManager.MVVM.ViewModels"
              xmlns:models="clr-namespace:HosipitalManager.MVVM.Models"
-             x:Class="HosipitalManager.MVVM.Views.AppointmentPageView">
+             x:Class="HosipitalManager.MVVM.Views.AppointmentPageView"
+             x:Name="ThisPage">
 
     <Grid Padding="20" RowDefinitions="Auto, Auto, Auto, *">
 
@@ -88,9 +89,12 @@
                 </Grid>
             </Border>
 
-            <Button Grid.Column="1" Text="+" FontSize="24" WidthRequest="50" HeightRequest="50" CornerRadius="25"
-                    BackgroundColor="{StaticResource ColorPrimary}"  TextColor="White"
-                    Command="{Binding NavigateToAddCommand}"/>
+            <Button Grid.Column="1"
+                    Text="+" FontSize="30"
+                    WidthRequest="50" HeightRequest="50" CornerRadius="25"
+                    BackgroundColor="{StaticResource ColorPrimary}"
+                    TextColor="White"
+                    Command="{Binding Source={x:Reference ThisPage}, Path=BindingContext.NavigateToAddCommand}" />  
         </Grid>
 
         <Grid Grid.Row="2" ColumnDefinitions="*,*,*,*" ColumnSpacing="10" Margin="0,0,0,20">
@@ -184,7 +188,7 @@
                                     BackgroundColor="{StaticResource ColorPrimary}"
                                     TextColor="White"
                                     CornerRadius="5"
-                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:AppointmentViewModel}}, Path=ConfirmAppointmentCommand}"
+                                    Command="{Binding Source={x:Reference ThisPage}, Path=BindingContext.ConfirmAppointmentCommand}"
                                     CommandParameter="{Binding .}">
                                     <Button.Triggers>
                                         <DataTrigger TargetType="Button" Binding="{Binding Status}" Value="Pending">
@@ -203,14 +207,14 @@
                                 </Button>
 
                                 <Button Text="Hủy"
-                            FontSize="12"
-                            Padding="10,0"
-                            HeightRequest="36"
-                            BackgroundColor="#757575"
-                            TextColor="White"
-                            CornerRadius="6"
-                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:AppointmentViewModel}}, Path=CancelAppointmentCommand}"
-                            CommandParameter="{Binding .}">
+                                    FontSize="12"
+                                    Padding="10,0"
+                                    HeightRequest="36"
+                                    BackgroundColor="#757575"
+                                    TextColor="White"
+                                    CornerRadius="6"
+                                    Command="{Binding Source={x:Reference ThisPage}, Path=BindingContext.CancelAppointmentCommand}"
+                                    CommandParameter="{Binding .}">
                                     <Button.Triggers>
                                         <DataTrigger TargetType="Button" Binding="{Binding Status}" Value="Cancelled">
                                             <Setter Property="IsVisible" Value="False"/>
