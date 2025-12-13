@@ -11,8 +11,9 @@ namespace HosipitalManager.MVVM.ViewModels
 {
     public partial class AppointmentViewModel : ObservableObject
     {
-        // Danh sách gốc (tham chiếu từ Service)
-        private ObservableCollection<Appointment> _sourceAppointments;
+        private readonly LocalDatabaseService _databaseService;
+        // Danh sách gốc (tham chiếu từ Database)
+        private List<Appointment> _sourceAppointments = new();
 
         // Danh sách hiển thị (sau khi lọc)
         [ObservableProperty]
@@ -28,18 +29,44 @@ namespace HosipitalManager.MVVM.ViewModels
         [ObservableProperty] AppointmentStatus _currentTab = AppointmentStatus.Upcoming;
         [ObservableProperty] string _searchText;
 
-        public AppointmentViewModel()
+        public AppointmentViewModel(LocalDatabaseService databaseService)
         {
+            _databaseService = databaseService;
             // Lấy dữ liệu từ Singleton Service
-            _sourceAppointments = HospitalSystem.Instance.Appointments;
+            //_sourceAppointments = HospitalSystem.Instance.Appointments;
 
             // Khởi tạo danh sách hiển thị
             FilteredAppointments = new ObservableCollection<Appointment>();
 
-            // Tính toán và hiển thị lần đầu
-            RefreshData();
+            Task.Run(LoadData);
 
             WeakReferenceMessenger.Default.Register<DashboardRefreshMessage>(this, (r, m) =>
+            {
+                Task.Run(LoadData);
+            });
+        }
+
+        public async Task LoadData()
+        {
+            var appointmentsFromDb = await _databaseService.GetAppointmentsAsync();
+
+            foreach (var appt in appointmentsFromDb)
+            {
+                if (!string.IsNullOrEmpty(appt.DoctorId))
+                {
+                    // Tìm bác sĩ trong danh sách tĩnh bằng ID
+                    var doc = HospitalSystem.Instance.Doctors.FirstOrDefault(d => d.Id == appt.DoctorId);
+                    if (doc != null)
+                    {
+                        appt.DoctorObject = doc; // Gán vào để Binding lên View
+                    }
+                }
+            }
+
+            _sourceAppointments = appointmentsFromDb;
+
+            // 3. Cập nhật giao diện trên MainThread
+            MainThread.BeginInvokeOnMainThread(() =>
             {
                 RefreshData();
             });
@@ -72,7 +99,7 @@ namespace HosipitalManager.MVVM.ViewModels
             {
                 var lowerText = SearchText.ToLower();
                 query = query.Where(a =>
-                    (a.Doctor != null && a.Doctor.Name.ToLower().Contains(lowerText)) ||
+                    (a.DoctorObject != null && a.DoctorName.ToLower().Contains(lowerText)) ||
                     (a.PatientName != null && a.PatientName.ToLower().Contains(lowerText)));
             }
 
@@ -112,10 +139,10 @@ namespace HosipitalManager.MVVM.ViewModels
             // --- BẮT ĐẦU ĐOẠN CHECK TRÙNG ---
 
             // 1. Lấy danh sách các lịch ĐÃ DUYỆT của bác sĩ này trong ngày hôm đó
-            var conflicts = HospitalSystem.Instance.Appointments.Where(a =>
+            var conflicts = _sourceAppointments.Where(a =>
                 a.Id != appt.Id && // Không so sánh với chính nó
                 a.Status == AppointmentStatus.Upcoming && // Chỉ so với lịch đã duyệt
-                a.Doctor.Id == appt.Doctor.Id && // Cùng bác sĩ
+                a.DoctorId == appt.DoctorId && // Cùng bác sĩ
                 a.AppointmentDate.Date == appt.AppointmentDate.Date // Cùng ngày
             ).ToList();
 
@@ -126,7 +153,7 @@ namespace HosipitalManager.MVVM.ViewModels
                 if (appt.StartTime < existing.EndTime && appt.EndTime > existing.StartTime)
                 {
                     await Shell.Current.DisplayAlert("Trùng lịch!",
-                        $"Bác sĩ {appt.Doctor.Name} đã bận từ {existing.StartTime:hh\\:mm} đến {existing.EndTime:hh\\:mm}.\nKhông thể duyệt lịch này.",
+                        $"Bác sĩ {appt.DoctorName} đã bận từ {existing.StartTime:hh\\:mm} đến {existing.EndTime:hh\\:mm}.\nKhông thể duyệt lịch này.",
                         "Đóng");
                     return; // Dừng lại ngay, không cho duyệt
                 }
@@ -140,6 +167,7 @@ namespace HosipitalManager.MVVM.ViewModels
             if (confirm)
             {
                 appt.Status = AppointmentStatus.Upcoming;
+                await _databaseService.SaveAppointmentAsync(appt);
                 RefreshData();
                 WeakReferenceMessenger.Default.Send(new DashboardRefreshMessage());
             }
@@ -158,6 +186,7 @@ namespace HosipitalManager.MVVM.ViewModels
                 // 1. Chuyển trạng thái sang Cancelled
                 appt.Status = AppointmentStatus.Cancelled;
 
+                await _databaseService.SaveAppointmentAsync(appt);
                 // 2. Làm mới danh sách
                 RefreshData();
 
@@ -170,6 +199,10 @@ namespace HosipitalManager.MVVM.ViewModels
         {
             // Gọi hàm lọc dữ liệu ngay lập tức
             FilterData();
+        }
+        public async Task OnAppearingAsync()
+        {
+            await LoadData();
         }
     }
 }

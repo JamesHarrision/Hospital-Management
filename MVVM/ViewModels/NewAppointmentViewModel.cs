@@ -10,6 +10,8 @@ namespace HosipitalManager.MVVM.ViewModels
 {
     public partial class NewAppointmentViewModel : ObservableObject
     {
+        // Khai báo Service Database
+        private readonly LocalDatabaseService _databaseService;
         // Danh sách bác sĩ để chọn
         public ObservableCollection<Doctor> Doctors { get; }
 
@@ -21,8 +23,9 @@ namespace HosipitalManager.MVVM.ViewModels
         [ObservableProperty] DateTime _date = DateTime.Today;
         [ObservableProperty] TimeSpan _time = DateTime.Now.TimeOfDay;
 
-        public NewAppointmentViewModel()
+        public NewAppointmentViewModel(LocalDatabaseService databaseService)
         {
+            _databaseService = databaseService;
             // Lấy danh sách bác sĩ từ Service
             Doctors = HospitalSystem.Instance.Doctors;
         }
@@ -45,7 +48,9 @@ namespace HosipitalManager.MVVM.ViewModels
             // Tạo object Appointment mới
             var newAppt = new Appointment
             {
-                Doctor = SelectedDoctor, // Gán object Doctor đã chọn
+                DoctorId = SelectedDoctor.Id.ToString(),
+                DoctorName = SelectedDoctor.Name,// Gán object Doctor đã chọn
+                DoctorObject = SelectedDoctor,
                 PatientName = PatientName,
                 PhoneNumber = PhoneNumber,
                 Note = Note,
@@ -55,8 +60,8 @@ namespace HosipitalManager.MVVM.ViewModels
                 Status = AppointmentStatus.Pending // Mặc định là Chờ xác nhận
             };
 
-            // Lưu vào Service
-            HospitalSystem.Instance.AddAppointment(newAppt);
+            // Lưu vào Database 
+            await _databaseService.SaveAppointmentAsync(newAppt);
 
             await Shell.Current.DisplayAlert("Thành công", "Đã thêm lịch hẹn mới!", "OK");
 

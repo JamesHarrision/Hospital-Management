@@ -38,7 +38,7 @@ public partial class DashboardViewModel : ObservableObject
     // Database chính thức
     //Danh sách bệnh nhân để hiển thị lên màn hình (Binding)
     public ObservableCollection<Patient> Patients { get; set; } = new();
-    
+
     // Hàm lấy dữ liệu từ SQLite
     public async Task LoadPatients()
     {
@@ -166,7 +166,7 @@ public partial class DashboardViewModel : ObservableObject
                 patientToSave.Status = "Chờ khám";
 
                 // Lấy tên bác sĩ từ lịch hẹn (nếu có check-in từ lịch hẹn)
-                patientToSave.Doctorname = _pendingCheckInAppointment?.Doctor?.Name ?? "Chưa chỉ định";
+                patientToSave.Doctorname = _pendingCheckInAppointment.DoctorName ?? "Chưa chỉ định";
 
                 // Xử lý Lịch hẹn (Đổi trạng thái & Gửi tin nhắn cập nhật Dashboard)
                 if (_pendingCheckInAppointment != null)
@@ -192,7 +192,7 @@ public partial class DashboardViewModel : ObservableObject
             {
                 WaitingQueue.Add(patientToSave);
             }
-
+                
             SortPatientQueue(); // Sắp xếp lại hàng đợi
             await LoadPatients(); // Load lại danh sách tổng từ DB để đồng bộ
 

@@ -1,5 +1,6 @@
 ﻿using HosipitalManager.MVVM.Services;
 using HosipitalManager.MVVM.ViewModels;
+using HosipitalManager.MVVM.Views;
 using HospitalManager.MVVM.ViewModels;
 using HospitalManager.MVVM.Views;
 using LiveChartsCore.SkiaSharpView;
@@ -29,6 +30,9 @@ namespace HosipitalManager
             builder.Services.AddSingleton<RevenueViewModel>();
             builder.Services.AddTransient<DashboardViewModel>();
             builder.Services.AddTransient<DashboardPageView>();
+            builder.Services.AddTransient<NewAppointmentViewModel>();
+            builder.Services.AddTransient<NewAppointmentPageView>();
+            builder.Services.AddTransient<AppointmentViewModel>();
             QuestPDF.Settings.License = LicenseType.Community;
 
 #if DEBUG

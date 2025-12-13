@@ -8,7 +8,7 @@ namespace HosipitalManager.MVVM.Models
 {
     public class Doctor
     {
-        public int Id { get; set; }
+        public string Id { get; set; }
         public string Name { get; set; }
         public string Title { get; set; } = "BS."; // Ví dụ: BS, ThS, TS
         public string Specialization { get; set; } // Chuyên khoa: Tim mạch, Nha khoa...

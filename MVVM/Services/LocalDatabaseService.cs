@@ -25,6 +25,7 @@ namespace HosipitalManager.MVVM.Services
             // Tạo bảng nếu chưa tồn tại
             await _database.CreateTableAsync<Patient>();
             await _database.CreateTableAsync<Prescription>();
+            await _database.CreateTableAsync<Appointment>();
 
 
             // Đảm bảo dữ liệu được thêm vào
@@ -232,6 +233,54 @@ namespace HosipitalManager.MVVM.Services
                                   .Where(p => p.Status == "Chờ khám")
                                   .OrderByDescending(p => p.PriorityScore)
                                   .ToListAsync();
+        }
+
+        // PHẦN XỬ LÝ LỊCH HẸN (APPOINTMENT)
+
+        public async Task<List<Appointment>> GetAppointmentsAsync()
+        {
+            await Init();
+            return await _database.Table<Appointment>()
+                                  .OrderByDescending(a => a.AppointmentDate)
+                                  .ThenBy(a => a.StartTime)
+                                  .ToListAsync();
+        }
+
+        public async Task SaveAppointmentAsync(Appointment appointment)
+        {
+            await Init();
+            if (string.IsNullOrEmpty(appointment.Id))
+            {
+                // 1. Tạo mã tự động dạng "LHxxxx"
+                var allApps = await _database.Table<Appointment>().ToListAsync();
+                int nextId = 1000; // Mặc định bắt đầu từ 1000
+
+                if (allApps.Count > 0)
+                {
+                    // Lọc ra các ID bắt đầu bằng "LH" và tìm số lớn nhất
+                    var maxId = allApps
+                        .Select(a => a.Id)
+                        .Where(id => !string.IsNullOrEmpty(id) && id.StartsWith("LH") && id.Length > 2)
+                        .Select(id => int.TryParse(id.Substring(2), out int n) ? n : 0) // Cắt bỏ chữ "LH" lấy số
+                        .Max();
+
+                    nextId = maxId + 1;
+                }
+
+                appointment.Id = $"LH{nextId}"; // Ví dụ: LH1001
+                appointment.CreatedAt = DateTime.Now;
+
+                // Nếu trạng thái chưa set thì mặc định là Pending
+                if (appointment.Status == default)
+                    appointment.Status = AppointmentStatus.Pending;
+
+                await _database.InsertAsync(appointment);
+            }
+            // Trường hợp CẬP NHẬT (Đã có Id)
+            else
+            {
+                await _database.UpdateAsync(appointment);
+            }
         }
     }
 }

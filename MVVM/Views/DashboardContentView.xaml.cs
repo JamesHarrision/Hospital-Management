@@ -14,17 +14,23 @@ public partial class DashboardContentView : ContentView
     private readonly TimeSpan _endHour = TimeSpan.FromHours(19);  // Kết thúc 19h tối
     private readonly int _slotDurationMinutes = 30; // Mỗi ô là 30 phút
 
+    private LocalDatabaseService _databaseService;
     public DashboardContentView()
     {
         InitializeComponent();
 
+        if (Application.Current != null)
+        {
+            _databaseService = Application.Current.Handler?.MauiContext?.Services.GetService<LocalDatabaseService>()
+                               ?? IPlatformApplication.Current?.Services.GetService<LocalDatabaseService>();
+        }
         // Vẽ lịch khi khởi tạo
-        RenderSchedule();
+        Task.Run(RenderSchedule);
 
         WeakReferenceMessenger.Default.Register<DashboardRefreshMessage>(this, (r, m) =>
         {
             // Khi nhận được tin nhắn, chạy hàm vẽ lại lịch
-            RenderSchedule();
+            Task.Run(RenderSchedule);
         });
 
         // Đăng ký nhận tin nhắn để vẽ lại lịch khi có thay đổi (Thêm/Xóa lịch)
@@ -33,113 +39,131 @@ public partial class DashboardContentView : ContentView
 
     private void RefreshCalendar_Clicked(object sender, EventArgs e)
     {
-        RenderSchedule();
+        Task.Run(RenderSchedule);
     }
 
-    private void RenderSchedule()
+    private async Task RenderSchedule()
     {
-        ScheduleGrid.Children.Clear();
-        ScheduleGrid.RowDefinitions.Clear();
-        ScheduleGrid.ColumnDefinitions.Clear();
-
-        // 1. Định nghĩa Cột (8 cột: 1 cột giờ + 7 cột thứ)
-        ScheduleGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = 50 }); // Cột giờ
-        for (int i = 0; i < 7; i++)
+        await MainThread.InvokeOnMainThreadAsync(() =>
         {
-            ScheduleGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Star });
-        }
+            ScheduleGrid.Children.Clear();
+            ScheduleGrid.RowDefinitions.Clear();
+            ScheduleGrid.ColumnDefinitions.Clear();
 
-        // 2. Vẽ Header (Thứ 2 -> CN)
-        string[] days = { "Giờ", "T2", "T3", "T4", "T5", "T6", "T7", "CN" };
-        ScheduleGrid.RowDefinitions.Add(new RowDefinition { Height = 40 }); // Dòng Header
+            // 1. Định nghĩa Cột (8 cột: 1 cột giờ + 7 cột thứ)
+            ScheduleGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = 50 }); // Cột giờ
+            for (int i = 0; i < 7; i++)
+            {
+                ScheduleGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Star });
+            }
 
-        for (int i = 0; i < days.Length; i++)
+            // 2. Vẽ Header (Thứ 2 -> CN)
+            string[] days = { "Giờ", "T2", "T3", "T4", "T5", "T6", "T7", "CN" };
+            ScheduleGrid.RowDefinitions.Add(new RowDefinition { Height = 40 }); // Dòng Header
+
+            for (int i = 0; i < days.Length; i++)
+            {
+                var label = new Label
+                {
+                    Text = days[i],
+                    FontAttributes = FontAttributes.Bold,
+                    HorizontalOptions = LayoutOptions.Center,
+                    VerticalOptions = LayoutOptions.Center,
+                    TextColor = Color.FromArgb("#1D2E4E")
+                };
+                ScheduleGrid.Add(label, i, 0); // Cột i, Dòng 0
+            }
+
+            // 3. Vẽ Dòng thời gian (Slot)
+            int totalSlots = (int)((_endHour - _startHour).TotalMinutes / _slotDurationMinutes);
+
+            for (int row = 0; row < totalSlots; row++)
+            {
+                ScheduleGrid.RowDefinitions.Add(new RowDefinition { Height = 50 }); // Chiều cao mỗi ô 30p
+
+                // Hiển thị giờ ở cột đầu tiên (Cột 0)
+                TimeSpan time = _startHour.Add(TimeSpan.FromMinutes(row * _slotDurationMinutes));
+
+                // Chỉ hiện giờ chẵn (VD: 8:00, 9:00) hoặc hiện tất cả tùy bạn
+                var timeLabel = new Label
+                {
+                    Text = time.ToString(@"hh\:mm"),
+                    FontSize = 11,
+                    TextColor = Colors.Gray,
+                    HorizontalOptions = LayoutOptions.Center,
+                    VerticalOptions = LayoutOptions.Start,
+                    Margin = new Thickness(0, 5, 0, 0)
+                };
+                ScheduleGrid.Add(timeLabel, 0, row + 1); // +1 vì dòng 0 là Header
+
+                // Vẽ đường kẻ mờ cho các ô còn lại
+                for (int col = 1; col <= 7; col++)
+                {
+                    var border = new BoxView { Color = Colors.White, Margin = 1 }; // Tạo hiệu ứng ô lưới
+                    ScheduleGrid.Add(border, col, row + 1);
+                }
+            }
+        });
+
+
+        // 4. Đặt các Lịch hẹn vào lưới
+        if (_databaseService == null) return;
+
+        var appointments = await _databaseService.GetAppointmentsAsync();
+        foreach (var appt in appointments)
         {
-            var label = new Label
+            if (!string.IsNullOrEmpty(appt.DoctorId))
             {
-                Text = days[i],
-                FontAttributes = FontAttributes.Bold,
-                HorizontalOptions = LayoutOptions.Center,
-                VerticalOptions = LayoutOptions.Center,
-                TextColor = Color.FromArgb("#1D2E4E")
-            };
-            ScheduleGrid.Add(label, i, 0); // Cột i, Dòng 0
-        }
-
-        // 3. Vẽ Dòng thời gian (Slot)
-        int totalSlots = (int)((_endHour - _startHour).TotalMinutes / _slotDurationMinutes);
-
-        for (int row = 0; row < totalSlots; row++)
-        {
-            ScheduleGrid.RowDefinitions.Add(new RowDefinition { Height = 50 }); // Chiều cao mỗi ô 30p
-
-            // Hiển thị giờ ở cột đầu tiên (Cột 0)
-            TimeSpan time = _startHour.Add(TimeSpan.FromMinutes(row * _slotDurationMinutes));
-
-            // Chỉ hiện giờ chẵn (VD: 8:00, 9:00) hoặc hiện tất cả tùy bạn
-            var timeLabel = new Label
-            {
-                Text = time.ToString(@"hh\:mm"),
-                FontSize = 11,
-                TextColor = Colors.Gray,
-                HorizontalOptions = LayoutOptions.Center,
-                VerticalOptions = LayoutOptions.Start,
-                Margin = new Thickness(0, 5, 0, 0)
-            };
-            ScheduleGrid.Add(timeLabel, 0, row + 1); // +1 vì dòng 0 là Header
-
-            // Vẽ đường kẻ mờ cho các ô còn lại
-            for (int col = 1; col <= 7; col++)
-            {
-                var border = new BoxView { Color = Colors.White, Margin = 1 }; // Tạo hiệu ứng ô lưới
-                ScheduleGrid.Add(border, col, row + 1);
+                var doc = HospitalSystem.Instance.Doctors.FirstOrDefault(d => d.Id == appt.DoctorId);
+                if (doc != null) appt.DoctorObject = doc;
             }
         }
 
-        // 4. Đặt các Lịch hẹn vào lưới
-       var appointments = HospitalSystem.Instance.Appointments;
-
-        // Lấy ngày đầu tuần hiện tại (để tính toán đúng cột cho T2, T3...)
-        DateTime today = DateTime.Today;
-        int diff = (7 + (today.DayOfWeek - DayOfWeek.Monday)) % 7;
-        DateTime mondayDate = today.AddDays(-1 * diff).Date;
-        DateTime sundayDate = mondayDate.AddDays(7);
-
-        foreach (var appt in appointments)
+        await MainThread.InvokeOnMainThreadAsync(() =>
         {
-            // Nếu không phải Upcoming, bỏ qua ngay.
-            if (appt.Status != AppointmentStatus.Upcoming)
-                continue;
+            
+            // Lấy ngày đầu tuần hiện tại (để tính toán đúng cột cho T2, T3...)
+            DateTime today = DateTime.Today;
+            int diff = (7 + (today.DayOfWeek - DayOfWeek.Monday)) % 7;
+            DateTime mondayDate = today.AddDays(-1 * diff).Date;
+            DateTime sundayDate = mondayDate.AddDays(7);
 
-            // Kiểm tra ngày trong tuần
-            if (appt.AppointmentDate.Date < mondayDate || appt.AppointmentDate.Date >= sundayDate)
-                continue;
+            foreach (var appt in appointments)
+            {
+                // Nếu không phải Upcoming, bỏ qua ngay.
+                if (appt.Status != AppointmentStatus.Upcoming)
+                    continue;
 
-            // Tính Cột (Thứ)
-            // DayOfWeek: Sunday=0, Monday=1... Saturday=6
-            // Ta muốn: Monday=1 (Cột 1), ..., Sunday=7 (Cột 7)
-            int colIndex = appt.AppointmentDate.DayOfWeek == DayOfWeek.Sunday ? 7 : (int)appt.AppointmentDate.DayOfWeek;
+                // Kiểm tra ngày trong tuần
+                if (appt.AppointmentDate.Date < mondayDate || appt.AppointmentDate.Date >= sundayDate)
+                    continue;
 
-            // Tính Dòng (Giờ)
-            if (appt.StartTime < _startHour || appt.StartTime >= _endHour) continue; // Ngoài giờ làm việc
+                // Tính Cột (Thứ)
+                // DayOfWeek: Sunday=0, Monday=1... Saturday=6
+                // Ta muốn: Monday=1 (Cột 1), ..., Sunday=7 (Cột 7)
+                int colIndex = appt.AppointmentDate.DayOfWeek == DayOfWeek.Sunday ? 7 : (int)appt.AppointmentDate.DayOfWeek;
 
-            double minutesFromStart = (appt.StartTime - _startHour).TotalMinutes;
-            int rowIndex = (int)(minutesFromStart / _slotDurationMinutes) + 1; // +1 do Header
+                // Tính Dòng (Giờ)
+                if (appt.StartTime < _startHour || appt.StartTime >= _endHour) continue; // Ngoài giờ làm việc
 
-            // Tính RowSpan (Thời lượng khám chiếm bao nhiêu ô)
-            double durationMinutes = (appt.EndTime - appt.StartTime).TotalMinutes;
-            int span = (int)Math.Ceiling(durationMinutes / _slotDurationMinutes);
-            if (span < 1) span = 1;
+                double minutesFromStart = (appt.StartTime - _startHour).TotalMinutes;
+                int rowIndex = (int)(minutesFromStart / _slotDurationMinutes) + 1; // +1 do Header
 
-            // Tạo Card Lịch hẹn
-            var card = CreateAppointmentCard(appt);
+                // Tính RowSpan (Thời lượng khám chiếm bao nhiêu ô)
+                double durationMinutes = (appt.EndTime - appt.StartTime).TotalMinutes;
+                int span = (int)Math.Ceiling(durationMinutes / _slotDurationMinutes);
+                if (span < 1) span = 1;
 
-            // Thêm vào Grid
-            ScheduleGrid.Add(card);
-            Grid.SetColumn(card, colIndex);
-            Grid.SetRow(card, rowIndex);
-            Grid.SetRowSpan(card, span);
-        }
+                // Tạo Card Lịch hẹn
+                var card = CreateAppointmentCard(appt);
+
+                // Thêm vào Grid
+                ScheduleGrid.Add(card);
+                Grid.SetColumn(card, colIndex);
+                Grid.SetRow(card, rowIndex);
+                Grid.SetRowSpan(card, span);
+            }
+        });
     }
 
     private View CreateAppointmentCard(Appointment appt)
@@ -184,7 +208,7 @@ public partial class DashboardContentView : ContentView
             // Tên bác sĩ
             new Label
             {
-                Text = $"BS. {appt.Doctor.Name}",
+                Text = $"BS. {appt.DoctorName}",
                 FontSize = 9,
                 TextColor = Colors.Gray,
                 LineBreakMode = LineBreakMode.TailTruncation

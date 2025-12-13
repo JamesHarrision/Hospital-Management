@@ -144,9 +144,8 @@ public partial class DashboardViewModel : ObservableObject
             Status = "Chờ khám",
             Severity = "normal", // Mặc định bình thường
             PriorityScore = 10,  // Điểm ưu tiên mặc định
-            Doctorname = appt.Doctor.Name // Gán luôn bác sĩ đã hẹn
+            Doctorname = appt.DoctorObject.Name // Gán luôn bác sĩ đã hẹn
         };
-        Console.WriteLine(appt.Doctor.Name);
 
         // 2. Thêm vào hàng đợi
         WaitingQueue.Add(newPatient);

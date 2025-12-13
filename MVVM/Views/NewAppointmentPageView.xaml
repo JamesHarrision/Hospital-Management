@@ -6,10 +6,6 @@
              Title="Đặt Lịch Mới"
              BackgroundColor="#F5F7FA">
 
-    <ContentPage.BindingContext>
-        <vm:NewAppointmentViewModel />
-    </ContentPage.BindingContext>
-
     <ScrollView>
         <VerticalStackLayout Spacing="20" Padding="20">
 
@@ -59,7 +55,7 @@
 
             <Grid ColumnDefinitions="*,*" ColumnSpacing="15" Margin="0,10,0,0">
                 <Button Text="Hủy" Command="{Binding CancelCommand}" BackgroundColor="#E0E0E0" TextColor="Black"/>
-                <Button Text="Lưu Lịch Hẹn" Command="{Binding SaveCommand}" BackgroundColor="#5B9FFF" TextColor="White" FontAttributes="Bold"/>
+                <Button Grid.Column="1" Text="Lưu Lịch Hẹn" Command="{Binding SaveCommand}" BackgroundColor="{StaticResource ColorPrimary}"  TextColor="White" FontAttributes="Bold"/>
             </Grid>
         </VerticalStackLayout>
     </ScrollView>
