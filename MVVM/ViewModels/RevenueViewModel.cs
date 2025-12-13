@@ -57,7 +57,7 @@ namespace HosipitalManager.MVVM.ViewModels
             set => SetProperty(ref _yAxes, value);
         }
 
-        // Danh sách chi tiết để hiển thị bảng
+        // Danh sách chi tiết để hiển thị bảng]
         public ObservableCollection<MonthlyRevenue> YearlyStats { get; set; } = new();
 
         // Lưu danh sách đơn thuốc để tính toán doanh thu
