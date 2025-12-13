@@ -219,7 +219,7 @@
                     </Grid>
                     <HorizontalStackLayout Spacing="10" HorizontalOptions="End" Margin="0, 20, 0, 0">
                         <Button Text="Hủy" Command="{Binding CloseAddPatientPopupCommand}" BackgroundColor="#E0E0E0" TextColor="#333333" />
-                        <Button Text="Lưu" Command="{Binding SavePatientCommand}" BackgroundColor="{StaticResource ColorPrimary}" TextColor="White" />
+                        <Button Text="Lưu" Command="{Binding ConfirmAddPatientCommand}" BackgroundColor="{StaticResource ColorPrimary}" TextColor="White" />
                     </HorizontalStackLayout>
                 </VerticalStackLayout>
             </Border>

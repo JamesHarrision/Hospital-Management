@@ -7,6 +7,7 @@ using Microsoft.Maui.Controls.Shapes;
 using HospitalManager.MVVM.ViewModels;
 using System.Linq;
 using static HospitalManager.MVVM.ViewModels.DashboardViewModel;
+using HospitalManager.MVVM.ViewModels;
 
 namespace HosipitalManager.MVVM.Views;
 

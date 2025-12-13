@@ -509,20 +509,21 @@ public partial class DashboardViewModel : ObservableObject
         IsAddPatientPopupVisible = true;
     }
 
-    public async Task LoadWaitingQueue()
+    private async Task LoadWaitingQueue()
     {
-        // Gọi xuống Service mới viết ở Bước 1
-        var waitingList = await _databaseService.GetWaitingPatientsAsync();
+        if (_databaseService == null) return;
+
+        // Lấy danh sách từ DB
+        var patientsFromDb = await _databaseService.GetPatientsAsync();
+
+        // Lọc ra những người đang "Chờ khám"
+        var waitingList = patientsFromDb.Where(p => p.Status == "Chờ khám").ToList();
 
         MainThread.BeginInvokeOnMainThread(() =>
         {
-            WaitingQueue.Clear();
-            foreach (var p in waitingList)
-            {
-                WaitingQueue.Add(p);
-            }
-            // Gọi lại hàm sắp xếp để chắc chắn đúng thứ tự
-            SortPatientQueue();
+            // Cập nhật lại toàn bộ danh sách WaitingQueue từ Database
+            WaitingQueue = new ObservableCollection<Patient>(waitingList);
+            SortPatientQueue(); // Sắp xếp luôn cho đẹp
         });
     }
 }

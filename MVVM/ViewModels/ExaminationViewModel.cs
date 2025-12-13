@@ -221,7 +221,7 @@ public partial class ExaminationViewModel : ObservableObject
             PatientName = Patient.FullName,
             DoctorName = Patient.Doctorname,
             DatePrescribed = DateTime.Now,
-            Status = PrescriptionStatus.Issued,
+            Status = PrescriptionStatus.Pending,
             
             // Thông tin khám
             Diagnosis = Diagnosis,
