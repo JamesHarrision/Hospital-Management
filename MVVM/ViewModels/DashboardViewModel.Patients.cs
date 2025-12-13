@@ -44,9 +44,8 @@ public partial class DashboardViewModel : ObservableObject
     public async Task LoadPatients()
     {
         int totalCount = await _databaseService.GetPatientCountAsync();
-        PatientTotalPages = (int)Math.Ceiling((double)totalCount / PageSize); // Tính tổng số trang (lấy tổng số bệnh nhân / số dòng mỗi trang)
+        PatientTotalPages = (int)Math.Ceiling((double)totalCount / PageSize);
 
-        // Đảm bảo trang hiện tại hợp lệ
         if (PatientCurrentPage < 1) PatientCurrentPage = 1;
         if (PatientCurrentPage > PatientTotalPages && PatientTotalPages > 0) PatientCurrentPage = PatientTotalPages;
 
@@ -56,19 +55,23 @@ public partial class DashboardViewModel : ObservableObject
         {
             Patients.Clear();
             FilteredPatients.Clear();
-            WaitingQueue.Clear();
+
+            // --- XOÁ ĐOẠN NÀY ĐI ---
+            // WaitingQueue.Clear(); <--- XÓA
+            // -----------------------
+
             foreach (var patient in patientList)
             {
                 Patients.Add(patient);
                 FilteredPatients.Add(patient);
 
-                if (patient.Status == "Chờ khám")
-                {
-                    WaitingQueue.Add(patient);
-                }
+                // --- XOÁ ĐOẠN NÀY ĐI ---
+                // Logic Hàng đợi không được nằm trong hàm Phân trang
+                // if (patient.Status == "Chờ khám") { WaitingQueue.Add(patient); } 
+                // -----------------------
             }
-            SortPatientQueue();
 
+            // SortPatientQueue(); <--- XÓA DÒNG NÀY Ở ĐÂY
             UpdatePatientPaginationUI();
         });
     }
@@ -136,37 +139,32 @@ public partial class DashboardViewModel : ObservableObject
             string severityCode = GetSeverityCode(NewPatientSeverity);
             bool isNewRecord = false;
 
-            // --- TRƯỜNG HỢP 1: SỬA THÔNG TIN (Edit) ---
+            // --- LOGIC XỬ LÝ DỮ LIỆU ---
             if (isEditing && patientToEdit != null)
             {
                 patientToSave = patientToEdit;
-                // Cập nhật các trường thông tin
                 UpdatePatientInfo(patientToSave, severityCode);
             }
-            // --- TRƯỜNG HỢP 2: THÊM MỚI / TIẾP NHẬN TỪ LỊCH HẸN ---
             else
             {
-                isNewRecord = true;
-                // Lấy danh sách từ DB để kiểm tra trùng và tạo ID (Logic Code 1)
+                // Logic thêm mới
                 var allPatients = await _databaseService.GetPatientsAsync();
-
-                // A. Kiểm tra bệnh nhân cũ dựa trên SĐT (Logic Code 2 nhưng dùng dữ liệu DB)
                 var existingPatient = allPatients.FirstOrDefault(p => p.PhoneNumber == NewPatientPhoneNumber);
 
                 if (existingPatient != null)
                 {
-                    // Nếu đã có hồ sơ -> Dùng lại ID cũ, tạo object mới để đẩy vào hàng đợi
                     patientToSave = existingPatient;
-                    // Cập nhật thông tin mới nhất vào hồ sơ cũ
                     UpdatePatientInfo(patientToSave, severityCode);
+                    // Nếu bệnh nhân cũ quay lại -> coi như là bản ghi mới trong hàng đợi hôm nay
+                    isNewRecord = true;
                 }
                 else
                 {
-                    // Nếu chưa có -> Tạo mới hoàn toàn
+                    isNewRecord = true;
                     patientToSave = new Patient();
                     UpdatePatientInfo(patientToSave, severityCode);
 
-                    // B. Logic tạo ID tự động tăng (Logic Code 1 - Quan trọng)
+                    // TẠO ID CHUẨN (BNxxxx)
                     int nextNumber = 1000;
                     if (allPatients.Count > 0)
                     {
@@ -180,68 +178,50 @@ public partial class DashboardViewModel : ObservableObject
                     patientToSave.Id = $"BN{nextNumber}";
                 }
 
-                // C. Thiết lập các thông số cho Hàng đợi & Lịch hẹn (Logic Code 2)
+                // Thiết lập thông tin hàng đợi
                 patientToSave.AdmittedDate = DateTime.Now;
-                patientToSave.QueueOrder = WaitingQueue.Count + 1;
                 patientToSave.Status = "Chờ khám";
 
-                // Lấy tên bác sĩ từ lịch hẹn hoặc Picker
+                // Xử lý tên bác sĩ (Logic cũ của bạn rất ổn)
                 if (_pendingCheckInAppointment != null)
-                {
-                    // Nếu tiếp nhận từ lịch hẹn -> Dùng tên bác sĩ từ appointment
                     patientToSave.Doctorname = _pendingCheckInAppointment.DoctorName;
-                }
                 else if (SelectedDoctor != null)
-                {
-                    // Nếu tiếp nhận trực tiếp (chọn từ picker) -> Dùng tên bác sĩ từ picker
                     patientToSave.Doctorname = SelectedDoctor.Name;
-                }
                 else
-                {
-                    // Nếu không chọn gì -> Mặc định
                     patientToSave.Doctorname = "Chưa chỉ định";
-                }
 
-                // Xử lý Lịch hẹn (Đổi trạng thái & Gửi tin nhắn cập nhật Dashboard)
+                // Xử lý Lịch hẹn
                 if (_pendingCheckInAppointment != null)
                 {
                     _pendingCheckInAppointment.Status = AppointmentStatus.Completed;
-
-                    // Cập nhật trạng thái lịch hẹn vào DB (Nếu cần thiết)
-                    // await _databaseService.UpdateAppointmentAsync(_pendingCheckInAppointment); 
-
+                    // Nhớ update lịch hẹn vào DB nếu cần
+                    // await _databaseService.UpdateAppointmentAsync(_pendingCheckInAppointment);
                     WeakReferenceMessenger.Default.Send(new DashboardRefreshMessage());
-                    _pendingCheckInAppointment = null; // Reset biến tạm
+                    _pendingCheckInAppointment = null;
                 }
             }
 
-            // 3. Tính điểm ưu tiên (Logic Code 2)
+            // Tính điểm ưu tiên
             patientToSave.PriorityScore = CalculatePriority(patientToSave);
 
-            // 4. Lưu vào Database (Logic Code 1)
+            // 2. LƯU VÀO DATABASE (QUAN TRỌNG)
             await _databaseService.SavePatientAsync(patientToSave);
 
-            // 5. Cập nhật giao diện
-            if (isNewRecord && !WaitingQueue.Contains(patientToSave))
-            {
-                WaitingQueue.Add(patientToSave);
-            }
-                
-            SortPatientQueue(); // Sắp xếp lại hàng đợi
-            await LoadPatients(); // Load lại danh sách tổng từ DB để đồng bộ
+            // 3. CẬP NHẬT GIAO DIỆN (Đảm bảo dùng MainThread)
+            // Cập nhật tab "Bệnh nhân" (List tổng)
+            await LoadPatients();
 
-            // 6. Dọn dẹp form
+            // Cập nhật tab "Tổng quan" (Hàng đợi) - QUAN TRỌNG
+            await LoadWaitingQueue();
+
+            // 4. Dọn dẹp form
             IsAddPatientPopupVisible = false;
             patientToEdit = null;
-            ClearForm();
-
-            // (Tùy chọn) Thông báo
-            // await Shell.Current.DisplayAlert("Thành công", "Đã lưu thông tin bệnh nhân!", "OK");
+            ClearPopupForm(); // Nhớ đổi tên hàm ClearForm() thành ClearPopupForm() nếu cần cho khớp
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"Lỗi SavePatient: {ex.Message}");
-            await Application.Current.MainPage.DisplayAlert("Lỗi", "Không thể lưu bệnh nhân: " + ex.Message, "OK");
+            await Application.Current.MainPage.DisplayAlert("Lỗi", "Không thể lưu: " + ex.Message, "OK");
         }
     }
 
@@ -533,17 +513,26 @@ public partial class DashboardViewModel : ObservableObject
     {
         if (_databaseService == null) return;
 
-        // Lấy danh sách từ DB
-        var patientsFromDb = await _databaseService.GetPatientsAsync();
+        // Lấy TOÀN BỘ danh sách từ DB (để lọc ra người chờ khám)
+        // Lưu ý: Nếu DB lớn, nên viết hàm GetPatientsByStatusAsync("Chờ khám") trong Service sẽ tối ưu hơn
+        var allPatients = await _databaseService.GetPatientsAsync();
 
-        // Lọc ra những người đang "Chờ khám"
-        var waitingList = patientsFromDb.Where(p => p.Status == "Chờ khám").ToList();
+        // Lọc lấy những người Chờ khám
+        var waitingList = allPatients.Where(p => p.Status == "Chờ khám").ToList();
 
         MainThread.BeginInvokeOnMainThread(() =>
         {
-            // Cập nhật lại toàn bộ danh sách WaitingQueue từ Database
-            WaitingQueue = new ObservableCollection<Patient>(waitingList);
-            SortPatientQueue(); // Sắp xếp luôn cho đẹp
+            // Khởi tạo lại nếu null
+            if (WaitingQueue == null) WaitingQueue = new ObservableCollection<Patient>();
+
+            WaitingQueue.Clear(); // Xóa cũ
+
+            foreach (var p in waitingList)
+            {
+                WaitingQueue.Add(p); // Thêm mới
+            }
+
+            SortPatientQueue(); // Sắp xếp
         });
     }
 }

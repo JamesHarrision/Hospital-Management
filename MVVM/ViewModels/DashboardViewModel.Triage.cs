@@ -1,13 +1,14 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using HosipitalManager.Helpers;
+using HosipitalManager.MVVM.Models;
+using HosipitalManager.MVVM.Services; 
+using HosipitalManager.MVVM.Views;
 using HospitalManager.MVVM.Models;
+using HospitalManager.MVVM.Views;
+using Microsoft.Maui.ApplicationModel;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
-using Microsoft.Maui.ApplicationModel;
-using HosipitalManager.MVVM.Services; 
-using HospitalManager.MVVM.Views;
-using HosipitalManager.MVVM.Views;
-using HosipitalManager.MVVM.Models;
 
 namespace HospitalManager.MVVM.ViewModels;
 
@@ -243,53 +244,6 @@ public partial class DashboardViewModel
     [RelayCommand]
     private async Task ConfirmAddPatient()
     {
-        // 1. Kiểm tra dữ liệu nhập
-        if (string.IsNullOrWhiteSpace(NewPatientFullName))
-        {
-            await Shell.Current.DisplayAlert("Lỗi", "Vui lòng nhập tên bệnh nhân", "OK");
-            return;
-        }
-
-        // 2. Tạo đối tượng Patient từ Form nhập liệu
-        var newPatient = new Patient
-        {
-            FullName = NewPatientFullName,
-            Id = "P" + DateTime.Now.Ticks.ToString().Substring(12),
-            DateOfBirth = NewPatientDateOfBirth,
-            Gender = NewPatientGender ?? "Khác",
-            PhoneNumber = NewPatientPhoneNumber,
-            Address = NewPatientAddress,
-            Status = NewPatientStatus,
-            Severity = GetSeverityCode(NewPatientSeverity), // Chuyển đổi "Cấp cứu" -> "critical"
-            Symptoms = NewPatientSymptoms,
-            Doctorname = SelectedDoctor?.Name ?? "Chưa chỉ định", // Lấy từ Picker
-            PriorityScore = 10 // Tính toán lại sau
-        };
-
-        // 3. Tính điểm ưu tiên chuẩn xác
-        newPatient.PriorityScore = CalculatePriority(newPatient);
-
-        // 4. Lưu vào Database (QUAN TRỌNG: Lưu trước khi thêm vào UI)
-        if (_databaseService != null)
-        {
-            await _databaseService.SavePatientAsync(newPatient);
-        }
-
-        // 5. Thêm vào danh sách hiển thị (FIX LỖI GHI ĐÈ Ở ĐÂY)
-        MainThread.BeginInvokeOnMainThread(() =>
-        {
-            if (WaitingQueue == null)
-                WaitingQueue = new ObservableCollection<Patient>();
-
-            // TUYỆT ĐỐI KHÔNG DÙNG: WaitingQueue = new...
-            // PHẢI DÙNG: .Add()
-            WaitingQueue.Add(newPatient);
-
-            // 6. Sắp xếp lại hàng đợi
-            SortPatientQueue();
-
-            // 7. Đóng Popup và xóa form
-            CloseAddPatientPopup();
-        });
+        await SavePatient();
     }
 }
