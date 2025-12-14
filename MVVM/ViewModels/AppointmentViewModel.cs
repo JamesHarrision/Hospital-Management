@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using HosipitalManager.MVVM.Models;
 using HosipitalManager.MVVM.Services;
 using HosipitalManager.MVVM.Views;
+using HospitalManager.MVVM.Messages;
 using System.Collections.ObjectModel;
 using static HospitalManager.MVVM.ViewModels.DashboardViewModel;
 using Appointment = HosipitalManager.MVVM.Models.Appointment;

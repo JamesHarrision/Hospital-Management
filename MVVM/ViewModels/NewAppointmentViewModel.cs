@@ -1,95 +1,65 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
+using HosipitalManager.Helpers;
 using HosipitalManager.MVVM.Models;
 using HosipitalManager.MVVM.Services;
+using HospitalManager.MVVM.Messages;
 using System.Collections.ObjectModel;
 using static HospitalManager.MVVM.ViewModels.DashboardViewModel;
-using HosipitalManager.Helpers;
 
 namespace HosipitalManager.MVVM.ViewModels
 {
     public partial class NewAppointmentViewModel : ObservableObject
     {
-        // Khai báo Service Database
+        #region 1. Dependencies & Collections
         private readonly LocalDatabaseService _databaseService;
-        // Danh sách bác sĩ để chọn
+
+        // Danh sách bác sĩ để chọn (Binding lên Picker)
         public ObservableCollection<Doctor> Doctors { get; }
+        #endregion
 
-        // Các trường nhập liệu
-        [ObservableProperty] Doctor _selectedDoctor;
-        [ObservableProperty] string _patientName;
-        [ObservableProperty] string _phoneNumber;
-        [ObservableProperty] string _note;
-        [ObservableProperty] DateTime _date = DateTime.Today;
-        [ObservableProperty] TimeSpan _time = DateTime.Now.TimeOfDay;
+        #region 2. Properties: Input Fields
+        [ObservableProperty] private Doctor _selectedDoctor;
+        [ObservableProperty] private string _patientName;
+        [ObservableProperty] private string _phoneNumber;
+        [ObservableProperty] private string _note;
 
+        // Mặc định là ngày hôm nay
+        [ObservableProperty] private DateTime _date = DateTime.Today;
+
+        // Mặc định là giờ hiện tại
+        [ObservableProperty] private TimeSpan _time = DateTime.Now.TimeOfDay;
+        #endregion
+
+        #region 3. Constructor
         public NewAppointmentViewModel(LocalDatabaseService databaseService)
         {
             _databaseService = databaseService;
-            // Lấy danh sách bác sĩ từ Service
+
+            // Lấy danh sách bác sĩ từ Singleton System (Cache sẵn)
             Doctors = HospitalSystem.Instance.Doctors;
         }
+        #endregion
 
+        #region 4. Commands
         [RelayCommand]
         public async Task Save()
         {
-            // Validate cơ bản
-            if (SelectedDoctor == null)
-            {
-                await Shell.Current.DisplayAlert("Thiếu thông tin", "Vui lòng chọn bác sĩ", "OK");
-                return;
-            }
-            if (!ValidationHelper.IsValidName(PatientName))
-            {
-                await Shell.Current.DisplayAlert("Lỗi", "Tên bệnh nhân không được chứa số hay ký tự lạ.", "OK");
-                return;
-            }
+            // 1. Validate dữ liệu đầu vào
+            if (!ValidateInput()) return;
 
-            // Validate SĐT
-            if (!ValidationHelper.IsValidPhoneNumber(PhoneNumber))
-            {
-                await Shell.Current.DisplayAlert("Lỗi", "Số điện thoại phải bắt đầu bằng số 0 và có 10 chữ số.", "OK");
-                return;
-            }
+            // 2. Tạo object Appointment mới
+            var newAppt = CreateAppointmentObject();
 
-            // Validate Ngày hẹn (Không được chọn quá khứ)
-            if (Date.Date < DateTime.Now.Date)
-            {
-                await Shell.Current.DisplayAlert("Lỗi", "Không thể đặt lịch hẹn trong quá khứ.", "OK");
-                return;
-            }
-
-            // Nếu chọn ngày hôm nay thì giờ hẹn phải lớn hơn giờ hiện tại
-            if (Date.Date == DateTime.Now.Date && Time < DateTime.Now.TimeOfDay)
-            {
-                await Shell.Current.DisplayAlert("Lỗi", "Giờ hẹn đã qua. Vui lòng chọn giờ khác.", "OK");
-                return;
-            }
-
-            // Tạo object Appointment mới
-            var newAppt = new Appointment
-            {
-                DoctorId = SelectedDoctor.Id.ToString(),
-                DoctorName = SelectedDoctor.Name,// Gán object Doctor đã chọn
-                DoctorObject = SelectedDoctor,
-                PatientName = PatientName,
-                PhoneNumber = PhoneNumber,
-                Note = Note,
-                AppointmentDate = Date,
-                StartTime = Time,
-                EndTime = Time.Add(TimeSpan.FromMinutes(30)), // Mặc định khám 30p
-                Status = AppointmentStatus.Pending // Mặc định là Chờ xác nhận
-            };
-
-            // Lưu vào Database 
+            // 3. Lưu vào Database 
             await _databaseService.SaveAppointmentAsync(newAppt);
 
+            // 4. Thông báo thành công & Refresh Dashboard
             await Shell.Current.DisplayAlert("Thành công", "Đã thêm lịch hẹn mới!", "OK");
-
             WeakReferenceMessenger.Default.Send(new DashboardRefreshMessage());
 
-            // Quay lại trang trước
+            // 5. Quay lại trang trước
             await Shell.Current.GoToAsync("..");
         }
 
@@ -98,7 +68,79 @@ namespace HosipitalManager.MVVM.ViewModels
         {
             await Shell.Current.GoToAsync("..");
         }
+        #endregion
 
+        #region 5. Helper Methods (Validation & Logic)
+        /// <summary>
+        /// Kiểm tra tính hợp lệ của dữ liệu nhập
+        /// </summary>
+        private bool ValidateInput()
+        {
+            // Kiểm tra bác sĩ
+            if (SelectedDoctor == null)
+            {
+                ShowError("Vui lòng chọn bác sĩ");
+                return false;
+            }
 
+            // Kiểm tra tên
+            if (!ValidationHelper.IsValidName(PatientName))
+            {
+                ShowError("Tên bệnh nhân không được chứa số hay ký tự lạ.");
+                return false;
+            }
+
+            // Kiểm tra SĐT
+            if (!ValidationHelper.IsValidPhoneNumber(PhoneNumber))
+            {
+                ShowError("Số điện thoại phải bắt đầu bằng số 0 và có 10 chữ số.");
+                return false;
+            }
+
+            // Kiểm tra Ngày (Quá khứ)
+            if (Date.Date < DateTime.Now.Date)
+            {
+                ShowError("Không thể đặt lịch hẹn trong quá khứ.");
+                return false;
+            }
+
+            // Kiểm tra Giờ (nếu là hôm nay)
+            if (Date.Date == DateTime.Now.Date && Time < DateTime.Now.TimeOfDay)
+            {
+                ShowError("Giờ hẹn đã qua. Vui lòng chọn giờ khác.");
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Tạo object Appointment từ các Properties hiện tại
+        /// </summary>
+        private Appointment CreateAppointmentObject()
+        {
+            return new Appointment
+            {
+                DoctorId = SelectedDoctor.Id.ToString(),
+                DoctorName = SelectedDoctor.Name,
+                DoctorObject = SelectedDoctor,
+                PatientName = PatientName,
+                PhoneNumber = PhoneNumber,
+                Note = Note,
+                AppointmentDate = Date,
+                StartTime = Time,
+                EndTime = Time.Add(TimeSpan.FromMinutes(30)), // Mặc định khám 30p
+                Status = AppointmentStatus.Pending // Mặc định: Chờ xác nhận
+            };
+        }
+
+        /// <summary>
+        /// Hàm hiển thị lỗi nhanh
+        /// </summary>
+        private void ShowError(string message)
+        {
+            Shell.Current.DisplayAlert("Lỗi", message, "OK");
+        }
+        #endregion
     }
 }

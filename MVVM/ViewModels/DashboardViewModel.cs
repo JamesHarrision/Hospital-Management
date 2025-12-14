@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using HosipitalManager.MVVM.Models;
 using HosipitalManager.MVVM.Services;
 using HospitalManager.MVVM.Models;
+using HospitalManager.MVVM.Messages;
 using Microsoft.Maui.Graphics;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -74,6 +75,7 @@ public partial class DashboardViewModel : ObservableObject
         });
     }
     #endregion
+
     #region Methods - Data Loading
     private void InitializeCollections()
     {
@@ -88,12 +90,20 @@ public partial class DashboardViewModel : ObservableObject
     /// </summary>
     private async Task ReloadAllData()
     {
-        var t1 = LoadPatients();      // Load bảng phân trang
+        if (_databaseService == null) return;
 
-        var t2 = LoadWaitingQueue();  // Load hàng đợi bên trái
+        // 1. Tải danh sách bệnh nhân
+        var t1 = LoadPatients();
 
-        await Task.WhenAll(t1, t2);   // Đợi cả 2 xong
+        // 2. Tải hàng đợi
+        var t2 = LoadWaitingQueue();
 
+        // 3. --- QUAN TRỌNG: THÊM DÒNG NÀY ---
+        // Tải danh sách đơn thuốc ngay khi vào App
+        var t3 = LoadPrescriptions();
+
+        // Chờ tất cả tải xong
+        await Task.WhenAll(t1, t2, t3);
     }
 
     // Hàm xử lý logic chuyển đổi
@@ -129,6 +139,4 @@ public partial class DashboardViewModel : ObservableObject
         }
     }
     #endregion
-
-    public class DashboardRefreshMessage { }
 }

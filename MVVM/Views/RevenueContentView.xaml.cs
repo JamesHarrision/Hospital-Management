@@ -1,4 +1,4 @@
-using HosipitalManager.MVVM.ViewModels;
+﻿using HosipitalManager.MVVM.ViewModels;
 
 namespace HosipitalManager.MVVM.Views;
 

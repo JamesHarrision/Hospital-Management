@@ -1,10 +1,10 @@
 ﻿using HosipitalManager.Helpers.Seeding;
-using HospitalManager.MVVM.Models;
+using HosipitalManager.MVVM.Models;
+using HospitalManager.MVVM.Models; // Chứa Patient, Prescription, Appointment
 using SQLite;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace HosipitalManager.Helpers
@@ -15,34 +15,50 @@ namespace HosipitalManager.Helpers
         {
             try
             {
-
+                // ==========================================================
+                // 1. SEED PATIENTS (BỆNH NHÂN)
+                // ==========================================================
                 var patientCount = await database.Table<Patient>().CountAsync();
+
+                // Biến lưu danh sách để dùng cho các bước sau
+                List<Patient> patients = new List<Patient>();
 
                 if (patientCount == 0)
                 {
-                    // 1. Lấy dữ liệu mẫu
-                    var patients = PatientSeeder.GeneratePatients();
+                    // Tạo dữ liệu giả
+                    patients = PatientSeeder.GeneratePatients();
+
+                    // Insert NHANH bằng InsertAllAsync (Thay vì vòng lặp)
+                    await database.InsertAllAsync(patients);
+
+                    System.Diagnostics.Debug.WriteLine($"--- Đã Seed {patients.Count} Bệnh nhân ---");
+                }
+                else
+                {
+                    // Nếu đã có DB, lấy danh sách ra để dùng tạo đơn thuốc/lịch hẹn
+                    patients = await database.Table<Patient>().ToListAsync();
+                }
+
+                // ==========================================================
+                // 2. SEED PRESCRIPTIONS (ĐƠN THUỐC)
+                // ==========================================================
+                var prescriptionCount = await database.Table<Prescription>().CountAsync();
+
+                if (prescriptionCount == 0 && patients.Any())
+                {
+                    // Tạo đơn thuốc dựa trên danh sách bệnh nhân đã có (để khớp ID)
                     var prescriptions = PrescriptionSeeder.GeneratePrescriptions(patients);
 
-                    // 2. Dùng vòng lặp để Insert từng người một
-                    // (Thay vì InsertOrReplaceAllAsync không có)
+                    await database.InsertAllAsync(prescriptions);
 
-                    foreach (var p in patients)
-                    {
-                        await database.InsertOrReplaceAsync(p);
-                    }
-
-                    foreach (var pre in prescriptions)
-                    {
-                        await database.InsertOrReplaceAsync(pre);
-                    }
-
-                    System.Diagnostics.Debug.WriteLine("--- ĐÃ SEEDING XONG (Dùng vòng lặp)! ---");
+                    System.Diagnostics.Debug.WriteLine($"--- Đã Seed {prescriptions.Count} Đơn thuốc ---");
                 }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Lỗi Seeding: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($" LỖI CRITICAL KHI SEED DATA: {ex.Message}");
+                // In StackTrace để dễ debug
+                System.Diagnostics.Debug.WriteLine(ex.StackTrace);
             }
         }
     }

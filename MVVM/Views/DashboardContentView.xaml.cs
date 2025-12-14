@@ -1,13 +1,11 @@
 ﻿using CommunityToolkit.Mvvm.Messaging;
 using HosipitalManager.MVVM.Models;
 using HosipitalManager.MVVM.Services;
-using HosipitalManager.MVVM.ViewModels;
 using HosipitalManager.MVVM.Messages; // Đảm bảo namespace này đúng với project của bạn
 using Microsoft.Maui.Controls.Shapes;
-using HospitalManager.MVVM.ViewModels;
 using System.Linq;
 using static HospitalManager.MVVM.ViewModels.DashboardViewModel;
-using HospitalManager.MVVM.ViewModels;
+using HospitalManager.MVVM.Messages;
 
 namespace HosipitalManager.MVVM.Views;
 
@@ -279,7 +277,7 @@ public partial class DashboardContentView : ContentView
         }
 
         // 4. Gửi tin nhắn cho ViewModel thêm vào hàng đợi (Waiting Queue)
-        WeakReferenceMessenger.Default.Send(new DashboardViewModel.RequestCheckInMessage(appt));
+        WeakReferenceMessenger.Default.Send(new RequestCheckInMessage(appt));
 
         // 5. Vẽ lại lịch ngay lập tức (Lúc này lịch hẹn đã là Completed nên sẽ biến mất)
         await Task.Run(RenderSchedule);

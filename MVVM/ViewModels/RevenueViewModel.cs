@@ -1,8 +1,10 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
-using HosipitalManager.MVVM.Enums; // Sử dụng Enum từ Code 2
+using HosipitalManager.MVVM.Enums;
 using HosipitalManager.MVVM.Messages;
 using HosipitalManager.MVVM.Models;
+using HosipitalManager.MVVM.Services;
 using HospitalManager.MVVM.Models;
 using LiveChartsCore;
 using LiveChartsCore.SkiaSharpView;
@@ -17,8 +19,9 @@ namespace HosipitalManager.MVVM.ViewModels
 {
     internal partial class RevenueViewModel : ObservableObject
     {
+        #region 1. Properties: KPIs & Statistics
         // ==========================================================
-        // 1. CÁC PROPERTY KPI & THỐNG KÊ (Hợp nhất từ cả 2)
+        // Các thuộc tính hiển thị thẻ thống kê (Card)
         // ==========================================================
         [ObservableProperty] private string bestRevenueMonth;
         [ObservableProperty] private string bestRevenueAmount;
@@ -26,63 +29,60 @@ namespace HosipitalManager.MVVM.ViewModels
         [ObservableProperty] private string busiestMonth;
         [ObservableProperty] private string busiestPatientCount;
 
-        // Logic Top Doctor từ Code 2
         [ObservableProperty] private string topDoctorName;
         [ObservableProperty] private string topDoctorRevenue;
+        #endregion
 
+        #region 2. Properties: Chart Configuration
         // ==========================================================
-        // 2. CÁC PROPERTY CHO BIỂU ĐỒ (Dùng LiveChartsCore)
+        // Các thuộc tính cấu hình biểu đồ LiveChartsCore
         // ==========================================================
         [ObservableProperty] private ISeries[] _revenueSeries;
         [ObservableProperty] private Axis[] _xAxes;
         [ObservableProperty] private Axis[] _yAxes;
 
-        // "Backing store" cho dữ liệu biểu đồ (Logic ưu việt của Code 1)
-        // Khi thay đổi giá trị trong collection này, biểu đồ tự động cập nhật mà không cần vẽ lại toàn bộ
+        // "Backing store" cho dữ liệu biểu đồ. Thay đổi ở đây -> Chart tự update
         private ObservableCollection<double> _chartValues;
+        #endregion
 
+        #region 3. Properties: Data Collections
         // ==========================================================
-        // 3. DỮ LIỆU DANH SÁCH & LOGIC
+        // Dữ liệu danh sách hiển thị và lưu trữ nội bộ
         // ==========================================================
 
-        // Danh sách hiển thị bảng chi tiết bên dưới biểu đồ
+        /// <summary>
+        /// Danh sách hiển thị bảng chi tiết bên dưới biểu đồ
+        /// </summary>
         public ObservableCollection<MonthlyRevenue> YearlyStats { get; set; } = new();
 
-        // Lưu danh sách đơn thuốc (private)
+        /// <summary>
+        /// Lưu danh sách đơn thuốc gốc (private)
+        /// </summary>
         private List<Prescription> _prescriptions = new();
+        #endregion
 
-        public RevenueViewModel()
+        #region 4. Constructor
+
+        public RevenueViewModel() : this(new LocalDatabaseService())
         {
-            // A. Khởi tạo dữ liệu rỗng (Tháng 1 -> 12)
+        }
+        public RevenueViewModel(LocalDatabaseService databaseService)
+        {
+            _databaseService = databaseService;
+
             InitializeData();
-
-            // B. Cấu hình biểu đồ & Trục (Setup 1 lần duy nhất - Logic Code 1)
             SetupChart();
-
-            // C. Đăng ký lắng nghe sự kiện (Messaging)
             RegisterMessages();
-        }
 
-        private void RegisterMessages()
-        {
-            // Lắng nghe khi có 1 đơn thuốc mới được cập nhật lẻ (Code 1 & 2)
-            WeakReferenceMessenger.Default.Register<RevenueUpdateMessage>(this, (r, m) =>
-            {
-                UpdateSingleRevenue(m.Value.Amount, m.Value.Date);
-            });
+            _ = RefreshData(); // fire & forget
+        }   
+        #endregion
 
-            // Lắng nghe khi load lại toàn bộ danh sách đơn thuốc (Code 1 & 2)
-            WeakReferenceMessenger.Default.Register<PrescriptionsLoadedMessage>(this, (r, m) =>
-            {
-                LoadRevenueFromPrescriptions(m.Value);
-            });
-        }
-
+        #region 5. Initialization Methods
         private void InitializeData()
         {
             _chartValues = new ObservableCollection<double>();
 
-            // Dùng vòng lặp (Code 1) để khởi tạo gọn gàng hơn Code 2
             for (int i = 1; i <= 12; i++)
             {
                 // Tạo dữ liệu cho bảng
@@ -128,13 +128,13 @@ namespace HosipitalManager.MVVM.ViewModels
             };
 
             // Cấu hình Series
-            // QUAN TRỌNG: Binding Values vào _chartValues (Logic Code 1)
+            // QUAN TRỌNG: Binding Values vào _chartValues
             RevenueSeries = new ISeries[]
             {
                 new ColumnSeries<double>
                 {
                     Name = "Doanh thu",
-                    Values = _chartValues, // Liên kết trực tiếp, thay đổi _chartValues -> Chart đổi
+                    Values = _chartValues, // Liên kết trực tiếp
                     Fill = new SolidColorPaint(SKColors.Purple.WithAlpha(150)),
                     Stroke = new SolidColorPaint(SKColors.Purple) { StrokeThickness = 2 },
                     DataLabelsPaint = new SolidColorPaint(SKColors.Black),
@@ -143,9 +143,28 @@ namespace HosipitalManager.MVVM.ViewModels
                 }
             };
         }
+        #endregion
 
+        #region 6. Messaging Logic
+        private void RegisterMessages()
+        {
+            // Lắng nghe khi có 1 đơn thuốc mới được cập nhật lẻ
+            WeakReferenceMessenger.Default.Register<RevenueUpdateMessage>(this, (r, m) =>
+            {
+                UpdateSingleRevenue(m.Value.Amount, m.Value.Date);
+            });
+
+            // Lắng nghe khi load lại toàn bộ danh sách đơn thuốc
+            WeakReferenceMessenger.Default.Register<PrescriptionsLoadedMessage>(this, (r, m) =>
+            {
+                LoadRevenueFromPrescriptions(m.Value);
+            });
+        }
+        #endregion
+
+        #region 7. Core Business Logic (Data Processing)
         /// <summary>
-        /// Xử lý load lại toàn bộ danh sách (Hợp nhất logic lọc Enum của Code 2)
+        /// Xử lý load lại toàn bộ danh sách
         /// </summary>
         public void LoadRevenueFromPrescriptions(List<Prescription> prescriptions)
         {
@@ -160,8 +179,7 @@ namespace HosipitalManager.MVVM.ViewModels
                 _chartValues[i] = 0; // Reset biểu đồ
             }
 
-            // 2. Lọc danh sách đã cấp
-            // ƯU TIÊN: Dùng Enum từ Code 2 (PrescriptionStatus.Issued) thay vì string cứng
+            // 2. Lọc danh sách đã cấp (Issued)
             var issuedList = prescriptions
                 .Where(p => p.Status == PrescriptionStatus.Issued) // Sử dụng Enum
                 .ToList();
@@ -194,7 +212,9 @@ namespace HosipitalManager.MVVM.ViewModels
             }
             SyncChartAndStats();
         }
+        #endregion
 
+        #region 8. UI Synchronization & Calculations
         /// <summary>
         /// Hàm đồng bộ dữ liệu tính toán và biểu đồ (Core Logic)
         /// </summary>
@@ -210,9 +230,8 @@ namespace HosipitalManager.MVVM.ViewModels
                 else
                     YearlyStats[i].PercentageBar = 0;
 
-                // 2. CẬP NHẬT BIỂU ĐỒ (Logic Code 1)
+                // 2. CẬP NHẬT BIỂU ĐỒ
                 // Chỉ cần gán giá trị vào Index tương ứng, LiveCharts tự vẽ lại
-                // Không cần new ColumnSeries[] như Code 2
                 _chartValues[i] = (double)YearlyStats[i].Amount;
             }
 
@@ -222,7 +241,7 @@ namespace HosipitalManager.MVVM.ViewModels
 
         private void UpdateStatsCards()
         {
-            // --- Logic Thống kê Tháng (Code 1 & 2 giống nhau) ---
+            // --- Logic Thống kê Tháng ---
             var bestMonth = YearlyStats.OrderByDescending(x => x.Amount).FirstOrDefault();
             if (bestMonth != null)
             {
@@ -237,7 +256,7 @@ namespace HosipitalManager.MVVM.ViewModels
                 BusiestPatientCount = $"{busiestMonth.PatientCount} Bệnh nhân";
             }
 
-            // --- Logic Top Doctor (Lấy từ Code 2 đưa vào) ---
+            // --- Logic Top Doctor ---
             if (_prescriptions != null && _prescriptions.Any())
             {
                 var topDoctorGroup = _prescriptions
@@ -254,11 +273,33 @@ namespace HosipitalManager.MVVM.ViewModels
                 }
                 else
                 {
-                    // Reset nếu không có dữ liệu
                     TopDoctorName = "N/A";
                     TopDoctorRevenue = "0 đ";
                 }
             }
         }
+        #endregion
+
+        #region 9. Refresh Configuration
+        private readonly LocalDatabaseService _databaseService;
+
+        [RelayCommand]
+        public async Task RefreshData()
+        {
+            if (_databaseService == null) return;
+
+            // Lấy danh sách mới nhất từ Database
+            var prescriptions = await _databaseService.GetPrescriptionsAsync();
+
+            // Xử lý deserialization (quan trọng nếu dùng MedicinesJson)
+            foreach (var p in prescriptions)
+            {
+                p.DeserializeMedicines();
+            }
+
+            // Gọi hàm tính toán lại (Logic cũ của bạn)
+            LoadRevenueFromPrescriptions(prescriptions);
+        }
+        #endregion
     }
 }

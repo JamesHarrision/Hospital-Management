@@ -2,26 +2,26 @@
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using HosipitalManager.MVVM.Models;
+using HosipitalManager.MVVM.Messages;
+using HosipitalManager.MVVM.ViewModels;
+using HospitalManager.MVVM.Models;
+using HosipitalManager.MVVM.Enums;
 using Microsoft.Maui.ApplicationModel;
 using Microsoft.Maui.Storage;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using System.Collections.ObjectModel;
+using System.Threading.Tasks;
+using System.Linq;
 using Colors = QuestPDF.Helpers.Colors;
 using IContainer = QuestPDF.Infrastructure.IContainer;
-using HosipitalManager.MVVM.Messages;
-using HosipitalManager.MVVM.ViewModels;
-using HospitalManager.MVVM.Models;
-using System.Threading.Tasks;
-using HosipitalManager.MVVM.Enums;
-using System.Linq;
 
 namespace HospitalManager.MVVM.ViewModels;
 
 public partial class DashboardViewModel
 {
-    // PAGINATION // 
+    #region Pagination Properties
     [ObservableProperty]
     private int presCurrentPage = 1;
     [ObservableProperty]
@@ -32,10 +32,10 @@ public partial class DashboardViewModel
     private bool canPresGoBack;
     [ObservableProperty]
     private bool canPresGoNext;
-    // END PAGINATION //
+    #endregion
 
+    #region Prescription Properties
     private List<Prescription> _allPrescriptions = new List<Prescription>();
-    // Danh sách đơn thuốc (Chính chủ)
 
     [ObservableProperty]
     private bool canIssuePrescription;
@@ -45,9 +45,9 @@ public partial class DashboardViewModel
     [ObservableProperty]
     private ObservableCollection<Prescription> prescriptions;
 
-
     [ObservableProperty]
     private string searchPrescriptionText;
+
     // Đơn thuốc đang chọn xem chi tiết
     [ObservableProperty]
     private Prescription selectedPrescription;
@@ -56,22 +56,31 @@ public partial class DashboardViewModel
     [ObservableProperty]
     private bool isPrescriptionDetailVisible;
 
-    // Biến bật/tắt popup thêm thủ công (giữ lại nếu cần)
+    // Biến bật/tắt popup thêm thủ công
     [ObservableProperty]
     private bool isAddPrescriptionPopupVisible;
     [ObservableProperty]
     private string newPrescriptionPatientName;
     [ObservableProperty]
     private string newPrescriptionDoctorName;
+    #endregion
 
+    #region Property Changed Handlers
     partial void OnSearchPrescriptionTextChanged(string value)
     {
         Task.Run(async () => await SearchPrescriptions(value));
     }
+    #endregion
 
-    // --- CÁC HÀM LOAD DỮ LIỆU ---
+    #region Data Loading Methods
+    /// <summary>
+    /// Load danh sách prescriptions với phân trang
+    /// </summary>
     private async Task LoadPrescriptions()
     {
+        // Đảm bảo Collection đã được khởi tạo
+        if (Prescriptions == null) Prescriptions = new ObservableCollection<Prescription>();
+
         int totalCount = await _databaseService.GetPrescriptionCountAsync();
         PresTotalPages = (int)Math.Ceiling((double)totalCount / PageSize);
 
@@ -85,10 +94,14 @@ public partial class DashboardViewModel
             Prescriptions.Clear();
             foreach (var p in presList)
             {
+                // --- SỬA LỖI QUAN TRỌNG TẠI ĐÂY ---
+                // Phải giải nén chuỗi JSON thành danh sách thuốc để UI hiển thị
+                p.DeserializeMedicines();
+
                 Prescriptions.Add(p);
             }
 
-            // Lưu danh sách gốc để dùng cho tính năng tìm kiếm (nếu có)
+            // Lưu danh sách gốc để dùng cho tính năng tìm kiếm
             _allPrescriptions = presList;
 
             PresPageInfo = $"Trang {PresCurrentPage} / {PresTotalPages}";
@@ -96,12 +109,49 @@ public partial class DashboardViewModel
             CanPresGoNext = PresCurrentPage < PresTotalPages;
         });
 
-        // Gửi tất cả prescriptions tới RevenueViewModel để tính doanh thu (chạy không đồng bộ)
-        // Lấy toàn bộ danh sách từ DB (không chỉ trang hiện tại)
+        // Gửi tất cả prescriptions tới RevenueViewModel để tính doanh thu
         var allPrescriptions = await _databaseService.GetPrescriptionsAsync();
+        // Cũng cần deserialize cho danh sách này nếu bên Revenue cần chi tiết thuốc
+        foreach (var p in allPrescriptions) p.DeserializeMedicines();
+
         WeakReferenceMessenger.Default.Send(new PrescriptionsLoadedMessage(allPrescriptions));
     }
 
+    /// <summary>
+    /// Tìm kiếm prescriptions theo từ khóa
+    /// </summary>
+    private async Task SearchPrescriptions(string keyword)
+    {
+        if (string.IsNullOrWhiteSpace(keyword))
+        {
+            await LoadPrescriptions(); // Gọi lại hàm load phân trang
+            return;
+        }
+
+        // Tìm trong toàn bộ Database
+        var searchResults = await _databaseService.SearchPrescriptionAsync(keyword);
+
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            Prescriptions.Clear();
+            foreach (var p in searchResults)
+            {
+                // --- SỬA LỖI TƯƠNG TỰ CHO TÌM KIẾM ---
+                p.DeserializeMedicines();
+                Prescriptions.Add(p);
+            }
+
+            // Cập nhật UI phân trang để báo hiệu đang ở chế độ tìm kiếm
+            PresPageInfo = $"Tìm thấy: {searchResults.Count} kết quả";
+
+            // Vô hiệu hóa nút Next/Prev vì đang hiện tất cả kết quả
+            CanPresGoBack = false;
+            CanPresGoNext = false;
+        });
+    }
+    #endregion
+
+    #region Pagination Commands
     [RelayCommand]
     private async Task NextPresPage()
     {
@@ -121,13 +171,18 @@ public partial class DashboardViewModel
             await LoadPrescriptions();
         }
     }
+    #endregion
 
+    #region Prescription Management Commands
+    /// <summary>
+    /// Xóa đơn thuốc
+    /// </summary>
     [RelayCommand]
     private async Task DeletePrescription(Prescription prescriptionToDelete)
     {
         if (prescriptionToDelete == null) return;
 
-        // 1. Hỏi xác nhận trước khi xóa
+        // Hỏi xác nhận trước khi xóa
         bool confirmed = await Application.Current.MainPage.DisplayAlert(
             "Xác nhận xóa",
             $"Bạn có chắc chắn muốn xóa đơn thuốc mã '{prescriptionToDelete.Id}' của bệnh nhân {prescriptionToDelete.PatientName}?",
@@ -136,48 +191,17 @@ public partial class DashboardViewModel
 
         if (confirmed)
         {
-            // 2. Xóa trong Database
+            // Xóa trong Database
             await _databaseService.DeletePrescriptionAsync(prescriptionToDelete);
 
-            // 3. Xóa trên Giao diện (để không phải load lại toàn bộ)
+            // Xóa trên Giao diện
             Prescriptions.Remove(prescriptionToDelete);
-
-            // (Tùy chọn) Nếu bạn có list gốc _allPrescriptions thì xóa trong đó nữa
-            // _allPrescriptions.Remove(prescriptionToDelete);
         }
     }
 
-    private async Task SearchPrescriptions(string keyword)
-    {
-        if (string.IsNullOrWhiteSpace(keyword))
-        {
-            await LoadPrescriptions(); // Gọi lại hàm load phân trang cũ
-            return;
-        }
-
-        // TRƯỜNG HỢP 2: Có từ khóa -> Tìm trong toàn bộ Database
-        var searchResults = await _databaseService.SearchPrescriptionAsync(keyword);
-
-        MainThread.BeginInvokeOnMainThread(() =>
-        {
-            Prescriptions.Clear();
-            foreach (var p in searchResults)
-            {
-                Prescriptions.Add(p);
-            }
-
-            // Cập nhật UI phân trang để báo hiệu đang ở chế độ tìm kiếm
-            PresPageInfo = $"Tìm thấy: {searchResults.Count} kết quả";
-
-            // Vô hiệu hóa nút Next/Prev vì đang hiện tất cả kết quả
-            CanPresGoBack = false;
-            CanPresGoNext = false;
-        });
-    }
-
-    // --- CÁC COMMAND XỬ LÝ ---
-
-    // 1. Xem chi tiết đơn thuốc
+    /// <summary>
+    /// Cấp phát đơn thuốc và thu tiền
+    /// </summary>
     [RelayCommand]
     private async Task IssuePrescription()
     {
@@ -190,50 +214,68 @@ public partial class DashboardViewModel
 
         if (!confirm) return;
 
-        // 1. Cập nhật Status (Nhờ ObservableProperty ở Model, UI tự đổi màu/chữ ngay lập tức)
+        // 1. Cập nhật Status
         SelectedPrescription.Status = PrescriptionStatus.Issued;
 
-        // 2. LƯU VÀO DATABASE NGAY LẬP TỨC (QUAN TRỌNG!)
+        // 2. Lưu vào Database (Phải Serialize lại trước khi lưu để đảm bảo JSON mới nhất)
+        SelectedPrescription.SerializeMedicines();
         await _databaseService.UpdatePrescriptionAsync(SelectedPrescription);
 
-        // 3. Ẩn nút cấp phát đi
+        // 3. Ẩn nút cấp phát
         IsIssueButtonVisible = false;
 
-        // 4. Gửi tiền sang RevenueViewModel
-        // Lưu ý: TotalAmount giờ đã tính đúng (Price * Quantity)
-        WeakReferenceMessenger.Default.Send(new RevenueUpdateMessage((SelectedPrescription.TotalAmount, DateTime.Now)));
+        // 4. Gửi tin nhắn cập nhật doanh thu
+        WeakReferenceMessenger.Default.Send(new RevenueUpdateMessage(SelectedPrescription.TotalAmount, DateTime.Now));
 
-        // 5. Reload lại danh sách prescriptions từ DB để đồng bộ
+        // 5. Reload lại danh sách
         await LoadPrescriptions();
 
         await Shell.Current.DisplayAlert("Thành công", "Đã cập nhật trạng thái và doanh thu!", "OK");
     }
+
+    /// <summary>
+    /// Hiển thị chi tiết đơn thuốc
+    /// </summary>
     [RelayCommand]
     private void ShowPrescriptionDetail(Prescription prescription)
     {
         if (prescription == null) return;
+
+        // Đảm bảo dữ liệu thuốc đã được bung ra (dù đã gọi ở Load, gọi lại cho chắc chắn)
+        prescription.DeserializeMedicines();
+
         SelectedPrescription = prescription;
 
-        // Logic ẩn/hiện nút: Chỉ hiện khi chưa cấp
+        // Chỉ hiện nút cấp phát khi chưa cấp
         IsIssueButtonVisible = SelectedPrescription.Status == PrescriptionStatus.Pending;
 
         IsPrescriptionDetailVisible = true;
     }
 
+    /// <summary>
+    /// Đóng popup chi tiết
+    /// </summary>
     [RelayCommand]
     private void ClosePrescriptionDetail()
     {
         IsPrescriptionDetailVisible = false;
         SelectedPrescription = null;
     }
+    #endregion
 
-    // 2. Thêm đơn thuốc thủ công (Popup cũ)
+    #region Manual Add Prescription (Legacy)
+    /// <summary>
+    /// Hiển thị popup thêm đơn thuốc thủ công
+    /// </summary>
     [RelayCommand]
     private void ShowAddPrescriptionPopup()
     {
         IsAddPrescriptionPopupVisible = true;
     }
 
+    /// <summary>
+    /// Đóng popup thêm đơn thuốc
+    /// </summary>
     [RelayCommand]
     private void CloseAddPrescriptionPopup()
     {
@@ -242,6 +284,9 @@ public partial class DashboardViewModel
         NewPrescriptionDoctorName = string.Empty;
     }
 
+    /// <summary>
+    /// Lưu đơn thuốc mới (thêm thủ công)
+    /// </summary>
     [RelayCommand]
     private void SavePrescription()
     {
@@ -253,16 +298,25 @@ public partial class DashboardViewModel
             DatePrescribed = DateTime.Now,
             Status = PrescriptionStatus.Pending
         };
+        // Cần lưu xuống DB luôn nếu muốn đồng bộ
+        // await _databaseService.SavePrescriptionAsync(newPrescription);
+
         _allPrescriptions.Add(newPrescription);
         Prescriptions.Add(newPrescription);
         CloseAddPrescriptionPopup();
     }
+    #endregion
 
+    #region Print Prescription
+    /// <summary>
+    /// In đơn thuốc ra PDF
+    /// </summary>
     [RelayCommand]
     private async Task PrintPrescription()
     {
         if (SelectedPrescription == null)
             return;
+
         try
         {
             var document = Document.Create(container =>
@@ -274,7 +328,7 @@ public partial class DashboardViewModel
                     page.PageColor(Colors.White);
                     page.DefaultTextStyle(x => x.FontSize(13).FontFamily("Times New Roman").LineHeight(1.5f));
 
-                    // HEADER //
+                    // HEADER
                     page.Header().Row(row =>
                     {
                         row.RelativeItem().Column(col =>
@@ -284,7 +338,7 @@ public partial class DashboardViewModel
                         });
                     });
 
-                    // CONTENT //
+                    // CONTENT
                     page.Content().PaddingVertical(20).Column(col =>
                     {
                         col.Item().AlignCenter().Text("ĐƠN THUỐC").FontSize(24).Bold();
@@ -297,7 +351,7 @@ public partial class DashboardViewModel
                         col.Item().Text($"Ngày kê: {SelectedPrescription.DatePrescribed:dd/MM/yyyy}");
                         col.Item().Height(20);
 
-                        //Kẻ bảng thuốc
+                        // Bảng thuốc
                         col.Item().Table(table =>
                         {
                             table.ColumnsDefinition(columns =>
@@ -324,7 +378,6 @@ public partial class DashboardViewModel
 
                             // Nội dung bảng
                             int stt = 1;
-                            // Giả sử SelectedPrescription có list Medications (nếu chưa có thì bạn cần thêm vào Model)
                             if (SelectedPrescription.Medications != null)
                             {
                                 foreach (var med in SelectedPrescription.Medications)
@@ -336,28 +389,26 @@ public partial class DashboardViewModel
                                     table.Cell().Element(CellStyle).AlignRight().Text($"{med.Price:N0} đ");
 
                                     static IContainer CellStyle(IContainer container) =>
-                        container.BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2).PaddingVertical(5);
+                                        container.BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2).PaddingVertical(5);
                                 }
                             }
 
+                            // Footer bảng
                             table.Footer(footer =>
                             {
-                                footer.Cell().ColumnSpan(4).Element(CellStyle).AlignRight().Text("TỔNG CỘNG:").Bold();
-                                footer.Cell().Element(CellStyle).AlignRight().Text($"{SelectedPrescription.TotalAmount:N0} VNĐ").Bold().FontColor(Colors.Red.Medium);
+                                footer.Cell().ColumnSpan(4).Element(FooterCellStyle).AlignRight().Text("TỔNG CỘNG:").Bold();
+                                footer.Cell().Element(FooterCellStyle).AlignRight().Text($"{SelectedPrescription.TotalAmount:N0} VNĐ").Bold().FontColor(Colors.Red.Medium);
 
-                                static IContainer CellStyle(IContainer container) =>
+                                static IContainer FooterCellStyle(IContainer container) =>
                                     container.PaddingVertical(5).BorderTop(1).BorderColor(Colors.Black);
                             });
-
-                            static IContainer FooterStyle(IContainer container) =>
-                    container.PaddingVertical(5).BorderTop(1).BorderColor(Colors.Black);
                         });
 
                         col.Item().Height(20);
                         col.Item().Text($"Ghi chú: {SelectedPrescription.DoctorNotes}").Italic();
                     });
 
-                    // FOOTER // 
+                    // FOOTER
                     page.Footer().AlignRight().Column(col =>
                     {
                         col.Item().Text($"Ngày {DateTime.Now.Day} tháng {DateTime.Now.Month} năm {DateTime.Now.Year}");
@@ -365,7 +416,7 @@ public partial class DashboardViewModel
                         col.Item().Height(60);
                         col.Item().Text(SelectedPrescription.DoctorName).Bold();
                     });
-                });        
+                });
             });
 
             // Lưu và mở file
@@ -376,10 +427,10 @@ public partial class DashboardViewModel
 
             await Launcher.Default.OpenAsync(new OpenFileRequest("In Đơn Thuốc", new ReadOnlyFile(filePath)));
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             await Shell.Current.DisplayAlert("Lỗi", "Không thể in đơn thuốc: " + ex.Message, "OK");
         }
-
     }
+    #endregion
 }

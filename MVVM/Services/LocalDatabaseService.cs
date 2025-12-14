@@ -13,9 +13,9 @@ namespace HosipitalManager.MVVM.Services
 {
     public class LocalDatabaseService
     {
-        private SQLiteAsyncConnection _database;
+        private static SQLiteAsyncConnection _database;
 
-        async Task Init()
+        public static async Task Init()
         {
             if (_database != null)
                 return;

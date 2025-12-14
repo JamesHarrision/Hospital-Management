@@ -3,6 +3,7 @@ using HosipitalManager.MVVM.ViewModels;
 using HosipitalManager.MVVM.Views;
 using HospitalManager.MVVM.ViewModels;
 using HospitalManager.MVVM.Views;
+using LiveChartsCore;
 using LiveChartsCore.SkiaSharpView;
 using LiveChartsCore.SkiaSharpView.Maui;
 using Microsoft.Extensions.Logging;

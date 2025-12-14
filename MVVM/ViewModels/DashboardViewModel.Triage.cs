@@ -2,67 +2,62 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using HosipitalManager.Helpers;
 using HosipitalManager.MVVM.Models;
-using HosipitalManager.MVVM.Services; 
+using HosipitalManager.MVVM.Services;
 using HosipitalManager.MVVM.Views;
 using HospitalManager.MVVM.Models;
 using HospitalManager.MVVM.Views;
 using Microsoft.Maui.ApplicationModel;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using Microsoft.Maui.Media;
 
 namespace HospitalManager.MVVM.ViewModels;
 
-// File này chỉ lo việc Xếp hàng và Tiếp nhận (Triage)
 public partial class DashboardViewModel
 {
+    // Lưu ý: _databaseService được khai báo ở phần Partial khác của DashboardViewModel
+    // Nếu chưa có, hãy đảm bảo class chính có field: private readonly LocalDatabaseService _databaseService;
+
+    #region 1. Properties: Queue & UI State
     [ObservableProperty]
-    private ObservableCollection<Patient> waitingQueue; // Hàng đợi
+    private ObservableCollection<Patient> _waitingQueue;
 
     [ObservableProperty]
-    private bool isAddPatientPopupVisible = false;
+    private bool _isAddPatientPopupVisible = false;
 
     [ObservableProperty]
-    private string popupTitle = "Tiếp nhận bệnh nhân mới";
-
-    // Các trường nhập liệu
-    [ObservableProperty]
-    private string newPatientFullName;
-    [ObservableProperty]
-    private DateTime newPatientDateOfBirth = DateTime.Today;
-    [ObservableProperty]
-    private string newPatientGender;
-    [ObservableProperty]
-    private string newPatientPhoneNumber;
-    [ObservableProperty]
-    private string newPatientAddress;
-    [ObservableProperty]
-    private string newPatientStatus = "Chờ khám";
-    [ObservableProperty]
-    private string newPatientSeverity = "Bình thường";
-    [ObservableProperty]
-    private string newPatientSymptoms;
-
-    // THÊM: Property cho Picker chọn bác sĩ
-    [ObservableProperty]
-    private Doctor selectedDoctor;
+    private string _popupTitle = "Tiếp nhận bệnh nhân mới";
 
     [ObservableProperty]
-    private ObservableCollection<Doctor> availableDoctors;
+    private bool _isStatusEnabled; // Khóa/Mở khóa ô trạng thái (khi Edit)
+    #endregion
 
-    // Biến kiểm soát UI
-    [ObservableProperty]
-    private bool isStatusEnabled; // Khóa/Mở khóa ô trạng thái
+    #region 2. Properties: New Patient Form (Input Fields)
+    [ObservableProperty] private string _newPatientFullName;
+    [ObservableProperty] private DateTime _newPatientDateOfBirth = DateTime.Today;
+    [ObservableProperty] private string _newPatientGender;
+    [ObservableProperty] private string _newPatientPhoneNumber;
+    [ObservableProperty] private string _newPatientAddress;
+    [ObservableProperty] private string _newPatientStatus = "Chờ khám";
+    [ObservableProperty] private string _newPatientSeverity = "Bình thường";
+    [ObservableProperty] private string _newPatientSymptoms;
 
-    // Danh sách lựa chọn
-    public List<string> Genders { get; } = new List<string> { "Nam", "Nữ" };
+    // Doctor Selection
+    [ObservableProperty] private Doctor _selectedDoctor;
+    [ObservableProperty] private ObservableCollection<Doctor> _availableDoctors;
+
+    // Editing State
+    private bool _isEditing = false;
+    private Patient _patientToEdit;
+    #endregion
+
+    #region 3. Collections for Picker (Read-only)
+    public List<string> Genders { get; } = new List<string> { "Nam", "Nữ", "Khác" };
     public List<string> StatusOptions { get; } = new List<string> { "Chờ khám", "Đang điều trị", "Hoàn thành điều trị" };
     public List<string> SeverityOptions { get; } = new List<string> { "Bình thường", "Gấp", "Khẩn cấp", "Cấp cứu" };
+    #endregion
 
-    private bool isEditing = false;
-    private Patient patientToEdit;
-
-    // --- CÁC HÀM LOGIC ---
-
+    #region 4. Logic: Priority & Sorting
     private string GetSeverityCode(string displayName)
     {
         return displayName switch
@@ -80,18 +75,18 @@ public partial class DashboardViewModel
         if (patient == null) return 0;
         double score = 10;
 
-        // So sánh code (critical, urgent...)
+        // Điểm theo mức độ nghiêm trọng
         string severity = patient.Severity?.ToLower() ?? "";
-
         if (severity == "critical" || severity == "cấp cứu") score += 1000;
         else if (severity == "emergency" || severity == "khẩn cấp") score += 500;
         else if (severity == "urgent" || severity == "gấp") score += 200;
         else if (severity == "medium") score += 50;
 
+        // Điểm ưu tiên theo tuổi (Trẻ em < 12 hoặc Người già > 65)
         if (patient.Age < 12) score += 20;
         if (patient.Age > 65) score += 20;
 
-        // Trừ điểm theo thứ tự hàng đợi để đảm bảo ai đến trước (số nhỏ) ưu tiên hơn
+        // Trừ điểm theo thứ tự hàng đợi (đến trước được ưu tiên hơn nếu cùng mức độ)
         score -= patient.QueueOrder * 0.1;
         return score;
     }
@@ -100,7 +95,7 @@ public partial class DashboardViewModel
     {
         if (WaitingQueue == null || WaitingQueue.Count == 0) return;
 
-        // Tính điểm và sắp xếp lại
+        // Sắp xếp lại dựa trên PriorityScore
         var sortedList = WaitingQueue
             .Select(p =>
             {
@@ -113,22 +108,22 @@ public partial class DashboardViewModel
         WaitingQueue.Clear();
         foreach (var p in sortedList) WaitingQueue.Add(p);
     }
+    #endregion
 
-    // --- COMMANDS ---
-
+    #region 5. Commands: Popup Management
     [RelayCommand]
     private void ShowAddPatientPopup()
     {
-        isEditing = false;
+        _isEditing = false;
+        _patientToEdit = null;
         PopupTitle = "Tiếp nhận bệnh nhân mới";
-        ClearPopupForm();
 
-        // Logic khóa form khi tiếp nhận mới
+        ClearPopupForm();
+        LoadDoctorsList();
+
+        // Khóa Status khi tạo mới (mặc định là Chờ khám)
         NewPatientStatus = "Chờ khám";
         IsStatusEnabled = false;
-
-        // THÊM: Load danh sách bác sĩ
-        LoadDoctorsList();
 
         IsAddPatientPopupVisible = true;
     }
@@ -139,13 +134,81 @@ public partial class DashboardViewModel
         IsAddPatientPopupVisible = false;
         ClearPopupForm();
     }
+    #endregion
 
-    // THÊM: Hàm load danh sách bác sĩ
-    private void LoadDoctorsList()
+    #region 6. Commands: Save & Update Logic
+    [RelayCommand]
+    private async Task ConfirmAddPatient()
     {
-        AvailableDoctors = HospitalSystem.Instance.Doctors;
-        SelectedDoctor = null; // Reset lựa chọn
+        // 1. Validation
+        if (!ValidateForm()) return;
+
+        // 2. Xử lý Save
+        if (_isEditing && _patientToEdit != null)
+        {
+            // Logic Update (Nếu cần thiết sau này)
+            UpdateExistingPatientObject(_patientToEdit);
+            await _databaseService.SavePatientAsync(_patientToEdit);
+        }
+        else
+        {
+            // Logic Create New
+            var newPatient = CreatePatientFromForm();
+            await _databaseService.SavePatientAsync(newPatient);
+
+            // Thêm vào UI Queue
+            if (WaitingQueue == null) WaitingQueue = new ObservableCollection<Patient>();
+            WaitingQueue.Add(newPatient);
+        }
+
+        // 3. Sắp xếp & Đóng Popup
+        SortPatientQueue();
+        CloseAddPatientPopup();
+
+        await Application.Current.MainPage.DisplayAlert("Thành công", "Đã lưu hồ sơ bệnh nhân.", "OK");
     }
+
+    /// <summary>
+    /// Tạo object Patient từ dữ liệu trên Form
+    /// </summary>
+    private Patient CreatePatientFromForm()
+    {
+        return new Patient
+        {
+            // Tạo ID ngẫu nhiên hoặc dùng Guid
+            Id = "P" + DateTime.Now.Ticks.ToString().Substring(12),
+            FullName = NewPatientFullName,
+            DateOfBirth = NewPatientDateOfBirth,
+            Gender = NewPatientGender,
+            PhoneNumber = NewPatientPhoneNumber,
+            Address = NewPatientAddress,
+            Status = NewPatientStatus,
+            Symptoms = NewPatientSymptoms,
+
+            // Map Severity Display -> Code
+            Severity = GetSeverityCode(NewPatientSeverity),
+
+            // Map Doctor
+            Doctorname = SelectedDoctor?.Name ?? "Chưa chỉ định",
+
+            QueueOrder = WaitingQueue?.Count ?? 0 // Gán thứ tự tạm thời
+        };
+    }
+
+    private void UpdateExistingPatientObject(Patient p)
+    {
+        p.FullName = NewPatientFullName;
+        p.DateOfBirth = NewPatientDateOfBirth;
+        p.Gender = NewPatientGender;
+        p.PhoneNumber = NewPatientPhoneNumber;
+        p.Address = NewPatientAddress;
+        p.Symptoms = NewPatientSymptoms;
+        p.Severity = GetSeverityCode(NewPatientSeverity);
+        p.Doctorname = SelectedDoctor?.Name ?? p.Doctorname;
+    }
+    #endregion
+
+    #region 7. Commands: Triage Actions (Call & Check-in)
 
     [RelayCommand]
     private async Task CallPatient(Patient patient)
@@ -155,75 +218,68 @@ public partial class DashboardViewModel
         bool isConfirmed = await Application.Current.MainPage.DisplayAlert(
             "Xác nhận khám",
             $"Mời bệnh nhân {patient.FullName} vào khám ngay?",
-            "Gọi ngay",
-            "Hủy");
+            "Gọi ngay", "Hủy");
 
         if (isConfirmed)
         {
-            // 1. Cập nhật trạng thái và Lưu vào Database
+            // Update Status -> DB
             patient.Status = "Đang điều trị";
             await _databaseService.SavePatientAsync(patient);
 
-            // 2. Xóa khỏi hàng đợi trên giao diện
+            // Remove from Queue UI
             WaitingQueue.Remove(patient);
 
-            // 3. Khởi tạo VM Khám bệnh
-            // Truyền _databaseService (đã có ở file chính) vào ExaminationViewModel
+            // Navigate to Exam Page
             var examVM = new ExaminationViewModel(patient, _databaseService);
-
-            // 4. Chuyển trang
             var examPage = new ExaminationPageView(examVM);
 
-            MainThread.BeginInvokeOnMainThread(async () =>
-            {
-                await Shell.Current.Navigation.PushModalAsync(examPage);
-            });
+            await Shell.Current.Navigation.PushModalAsync(examPage);
         }
     }
 
     /// <summary>
-    /// XỬ LÝ TIẾP NHẬN BỆNH NHÂN TỪ LỊCH HẹN
-    /// Được gọi khi nhấn nút "Tiếp nhận" trên thẻ lịch hẹn
+    /// XỬ LÝ TIẾP NHẬN TỪ LỊCH HẸN (Được gọi từ Tab Lịch hẹn)
     /// </summary>
     public async void HandleCheckInFromAppointment(Appointment appt)
     {
         if (appt == null) return;
 
-        // 1. Tạo hồ sơ bệnh nhân mới
         var newPatient = new Patient
         {
+            Id = "P" + DateTime.Now.Ticks.ToString().Substring(12),
             FullName = appt.PatientName,
-            Id = "P" + DateTime.Now.Ticks.ToString().Substring(12), // Tạo ID ngẫu nhiên
-            Gender = "Khác",
+            Gender = "Khác", // Default vì Appointment chưa chắc có Gender
             PhoneNumber = appt.PhoneNumber,
             Address = "Chưa cập nhật",
             Symptoms = appt.Note ?? "Đặt lịch hẹn trước",
             Status = "Chờ khám",
             Severity = "normal",
-            PriorityScore = 10,
-            Doctorname = appt.DoctorObject?.Name ?? appt.DoctorName ?? "Chưa chỉ định"
+            Doctorname = appt.DoctorObject?.Name ?? appt.DoctorName ?? "Chưa chỉ định",
+            PriorityScore = 10
         };
 
-        // 2. QUAN TRỌNG: Lưu vào Database trước để không bị mất dữ liệu
-        // (Giả sử bạn có hàm SavePatientAsync trong Service, nếu chưa có thì xem phần dưới)
+        // Lưu DB
         if (_databaseService != null)
         {
             await _databaseService.SavePatientAsync(newPatient);
         }
 
-        // 3. Cập nhật UI (Thêm vào danh sách hiện tại thay vì tạo mới)
+        // Cập nhật UI Queue
         MainThread.BeginInvokeOnMainThread(() =>
         {
-            // Kiểm tra nếu WaitingQueue chưa được khởi tạo thì khởi tạo nó
-            if (WaitingQueue == null)
-                WaitingQueue = new ObservableCollection<Patient>();
-
-            // Chỉ dùng lệnh Add, TUYỆT ĐỐI KHÔNG dùng "WaitingQueue = new..."
+            if (WaitingQueue == null) WaitingQueue = new ObservableCollection<Patient>();
             WaitingQueue.Add(newPatient);
-
-            // 4. Sắp xếp lại hàng đợi
             SortPatientQueue();
         });
+    }
+    #endregion
+
+    #region 8. Helper Methods
+    private void LoadDoctorsList()
+    {
+        // Lấy từ Singleton System
+        AvailableDoctors = HospitalSystem.Instance.Doctors;
+        SelectedDoctor = null;
     }
 
     private void ClearPopupForm()
@@ -236,14 +292,25 @@ public partial class DashboardViewModel
         NewPatientStatus = "Chờ khám";
         NewPatientSeverity = "Bình thường";
         NewPatientSymptoms = string.Empty;
-        SelectedDoctor = null; // THÊM: Reset picker
-        isEditing = false;
-        patientToEdit = null;
+        SelectedDoctor = null;
+
+        _isEditing = false;
+        _patientToEdit = null;
     }
 
-    [RelayCommand]
-    private async Task ConfirmAddPatient()
+    private bool ValidateForm()
     {
-        await SavePatient();
+        if (string.IsNullOrWhiteSpace(NewPatientFullName))
+        {
+            Shell.Current.DisplayAlert("Lỗi", "Vui lòng nhập tên bệnh nhân", "OK");
+            return false;
+        }
+        if (string.IsNullOrWhiteSpace(NewPatientPhoneNumber))
+        {
+            Shell.Current.DisplayAlert("Lỗi", "Vui lòng nhập số điện thoại", "OK");
+            return false;
+        }
+        return true;
     }
+    #endregion
 }
