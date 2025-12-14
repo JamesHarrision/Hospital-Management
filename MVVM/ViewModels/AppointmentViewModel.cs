@@ -6,18 +6,25 @@ using HosipitalManager.MVVM.Services;
 using HosipitalManager.MVVM.Views;
 using System.Collections.ObjectModel;
 using static HospitalManager.MVVM.ViewModels.DashboardViewModel;
+using Appointment = HosipitalManager.MVVM.Models.Appointment;
 
 namespace HosipitalManager.MVVM.ViewModels
 {
     public partial class AppointmentViewModel : ObservableObject
     {
+        #region Services & Fields
         private readonly LocalDatabaseService _databaseService;
         // Danh sách gốc (tham chiếu từ Database)
         private List<Appointment> _sourceAppointments = new();
+        #endregion
 
+        #region Properties
         // Danh sách hiển thị (sau khi lọc)
         [ObservableProperty]
         private ObservableCollection<Appointment> _filteredAppointments;
+
+        [ObservableProperty]
+        private bool _isBusy;
 
         // Các biến thống kê
         [ObservableProperty] int _totalCount;
@@ -28,7 +35,9 @@ namespace HosipitalManager.MVVM.ViewModels
         // Tab hiện tại và từ khóa tìm kiếm
         [ObservableProperty] AppointmentStatus _currentTab = AppointmentStatus.Upcoming;
         [ObservableProperty] string _searchText;
+        #endregion
 
+        #region Constructor
         public AppointmentViewModel(LocalDatabaseService databaseService)
         {
             _databaseService = databaseService;
@@ -38,30 +47,27 @@ namespace HosipitalManager.MVVM.ViewModels
             // Khởi tạo danh sách hiển thị
             FilteredAppointments = new ObservableCollection<Appointment>();
 
+            IsBusy = true;
             Task.Run(LoadData);
 
             WeakReferenceMessenger.Default.Register<DashboardRefreshMessage>(this, (r, m) =>
             {
+                IsBusy = true;
                 Task.Run(LoadData);
             });
         }
+        #endregion
 
+        #region Methods (Logic)
+        /// <summary>
+        /// Hàm tải dữ liệu chính, xử lý Async và Exception an toàn
+        /// </summary>
         public async Task LoadData()
         {
+            if (_databaseService == null) return;
             var appointmentsFromDb = await _databaseService.GetAppointmentsAsync();
 
-            foreach (var appt in appointmentsFromDb)
-            {
-                if (!string.IsNullOrEmpty(appt.DoctorId))
-                {
-                    // Tìm bác sĩ trong danh sách tĩnh bằng ID
-                    var doc = HospitalSystem.Instance.Doctors.FirstOrDefault(d => d.Id == appt.DoctorId);
-                    if (doc != null)
-                    {
-                        appt.DoctorObject = doc; // Gán vào để Binding lên View
-                    }
-                }
-            }
+            MapDoctorInfo(appointmentsFromDb);
 
             _sourceAppointments = appointmentsFromDb;
 
@@ -69,10 +75,29 @@ namespace HosipitalManager.MVVM.ViewModels
             MainThread.BeginInvokeOnMainThread(() =>
             {
                 RefreshData();
+                IsBusy = false;
             });
         }
 
-        // Hàm làm mới dữ liệu (gọi khi vào trang hoặc khi có thay đổi)
+        /// <summary>
+        /// Gán object Doctor vào Appointment dựa trên DoctorId
+        /// </summary>
+        private void MapDoctorInfo(List<Appointment> appointments)
+        {
+            var doctors = HospitalSystem.Instance.Doctors; // Lấy danh sách bác sĩ tĩnh
+            foreach (var appt in appointments)
+            {
+                if (!string.IsNullOrEmpty(appt.DoctorId))
+                {
+                    var doc = doctors.FirstOrDefault(d => d.Id == appt.DoctorId);
+                    if (doc != null) appt.DoctorObject = doc;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Tính toán lại thống kê và lọc danh sách
+        /// </summary>
         public void RefreshData()
         {
             UpdateStats();
@@ -89,6 +114,7 @@ namespace HosipitalManager.MVVM.ViewModels
 
         private void FilterData()
         {
+            if (_sourceAppointments == null) return;
             var query = _sourceAppointments.AsEnumerable();
 
             // 1. Lọc theo Tab
@@ -103,11 +129,17 @@ namespace HosipitalManager.MVVM.ViewModels
                     (a.PatientName != null && a.PatientName.ToLower().Contains(lowerText)));
             }
 
-            FilteredAppointments = new ObservableCollection<Appointment>(query);
+            FilteredAppointments.Clear();
+            foreach (var item in query)
+            {
+                FilteredAppointments.Add(item);
+            }
         }
 
-        // --- COMMANDS ---
+        partial void OnSearchTextChanged(string value) => FilterData();
+        #endregion
 
+        #region Commands (Sự kiện người dùng)
         [RelayCommand]
         public void SwitchTab(string statusStr)
         {
@@ -120,12 +152,6 @@ namespace HosipitalManager.MVVM.ViewModels
         }
 
         [RelayCommand]
-        public void PerformSearch()
-        {
-            FilterData();
-        }
-
-        [RelayCommand]
         public async Task NavigateToAdd()
         {
             // Điều hướng sang trang thêm mới
@@ -133,44 +159,48 @@ namespace HosipitalManager.MVVM.ViewModels
         }
 
         [RelayCommand]
+        public void PerformSearch()
+        {
+            FilterData();
+        }
+
+        [RelayCommand]
         public async Task ConfirmAppointment(Appointment appt)
         {
             if (appt == null) return;
 
-            // --- BẮT ĐẦU ĐOẠN CHECK TRÙNG ---
-
-            // 1. Lấy danh sách các lịch ĐÃ DUYỆT của bác sĩ này trong ngày hôm đó
-            var conflicts = _sourceAppointments.Where(a =>
-                a.Id != appt.Id && // Không so sánh với chính nó
-                a.Status == AppointmentStatus.Upcoming && // Chỉ so với lịch đã duyệt
-                a.DoctorId == appt.DoctorId && // Cùng bác sĩ
-                a.AppointmentDate.Date == appt.AppointmentDate.Date // Cùng ngày
-            ).ToList();
-
-            // 2. Kiểm tra va chạm thời gian
-            foreach (var existing in conflicts)
+            try
             {
-                // Công thức trùng: (StartA < EndB) và (EndA > StartB)
-                if (appt.StartTime < existing.EndTime && appt.EndTime > existing.StartTime)
+                // 1. Kiểm tra trùng lịch (Gọi Service đã nâng cấp)
+                bool isConflict = await _databaseService.IsAppointmentConflictingAsync(appt);
+
+                if (isConflict)
                 {
-                    await Shell.Current.DisplayAlert("Trùng lịch!",
-                        $"Bác sĩ {appt.DoctorName} đã bận từ {existing.StartTime:hh\\:mm} đến {existing.EndTime:hh\\:mm}.\nKhông thể duyệt lịch này.",
-                        "Đóng");
-                    return; // Dừng lại ngay, không cho duyệt
+                    await Shell.Current.DisplayAlert("Trùng lịch",
+                        $"Bác sĩ {appt.DoctorName ?? "này"} đã có lịch hẹn khác trong khung giờ này.", "Đóng");
+                    return;
+                }
+
+                // 2. Hỏi xác nhận
+                bool confirm = await Shell.Current.DisplayAlert("Xác nhận",
+                    $"Duyệt lịch hẹn của {appt.PatientName} lúc {appt.StartTime:hh\\:mm}?", "Duyệt", "Hủy");
+
+                if (confirm)
+                {
+                    appt.Status = AppointmentStatus.Upcoming;
+                    await _databaseService.SaveAppointmentAsync(appt);
+
+                    // Refresh UI
+                    RefreshData();
+                    WeakReferenceMessenger.Default.Send(new DashboardRefreshMessage());
+
+                    // (Optional) Thông báo nhỏ
+                    // await Toast.Make("Đã duyệt lịch hẹn").Show(); 
                 }
             }
-            // --- KẾT THÚC ĐOẠN CHECK TRÙNG ---
-
-            // Nếu không trùng thì hỏi xác nhận
-            bool confirm = await Shell.Current.DisplayAlert("Xác nhận",
-                $"Duyệt lịch hẹn của {appt.PatientName} lúc {appt.StartTime:hh\\:mm}?", "Duyệt", "Hủy");
-
-            if (confirm)
+            catch (Exception ex)
             {
-                appt.Status = AppointmentStatus.Upcoming;
-                await _databaseService.SaveAppointmentAsync(appt);
-                RefreshData();
-                WeakReferenceMessenger.Default.Send(new DashboardRefreshMessage());
+                await Shell.Current.DisplayAlert("Lỗi", $"Không thể duyệt: {ex.Message}", "OK");
             }
         }
 
@@ -195,15 +225,11 @@ namespace HosipitalManager.MVVM.ViewModels
                 WeakReferenceMessenger.Default.Send(new DashboardRefreshMessage());
             }
         }
-
-        partial void OnSearchTextChanged(string value)
-        {
-            // Gọi hàm lọc dữ liệu ngay lập tức
-            FilterData();
-        }
         public async Task OnAppearingAsync()
         {
+            IsBusy = true;
             await LoadData();
         }
+        #endregion
     }
 }

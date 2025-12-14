@@ -329,5 +329,35 @@ namespace HosipitalManager.MVVM.Services
             await Init();
             await _database.DeleteAsync(appointment);
         }
+
+        /// <summary>
+        /// Kiểm tra xem có lịch hẹn nào bị trùng thời gian với lịch mới không
+        /// </summary>
+        public async Task<bool> IsAppointmentConflictingAsync(Appointment newAppt)
+        {
+            await Init();
+
+            var doctorAppointments = await _database.Table<Appointment>()
+                .Where(a => a.DoctorId == newAppt.DoctorId &&
+                    a.Status == AppointmentStatus.Upcoming &&
+                    a.Id != newAppt.Id) // Không so sánh với chính nó
+                    .ToListAsync();
+
+            // Lọc tiếp phần ngày (do SQLite lưu DateTime hơi đặc biệt nên lọc RAM cho chắc phần ngày)
+            var sameDayApps = doctorAppointments
+                .Where(a => a.AppointmentDate.Date == newAppt.AppointmentDate.Date)
+                .ToList();
+
+            // Kiểm tra va chạm thời gian: (StartA < EndB) && (EndA > StartB)
+            foreach (var existing in sameDayApps)
+            {
+                if (newAppt.StartTime < existing.EndTime && newAppt.EndTime > existing.StartTime)
+                {
+                    return true; // Có trùng
+                }
+            }
+
+            return false; // Không trùng
+        }
     }
 }

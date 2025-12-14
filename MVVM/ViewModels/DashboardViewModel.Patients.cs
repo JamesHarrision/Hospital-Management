@@ -13,11 +13,9 @@ namespace HospitalManager.MVVM.ViewModels;
 
 public partial class DashboardViewModel : ObservableObject
 {
-    //PAGINATION 
-    // Cấu hình số dòng mỗi trang
+    #region Properties - Pagination & Lists
     private const int PageSize = 10;
 
-    // --- CÁC BIẾN PHÂN TRANG BỆNH NHÂN ---
     [ObservableProperty]
     private int patientCurrentPage = 1;
 
@@ -32,13 +30,20 @@ public partial class DashboardViewModel : ObservableObject
 
     [ObservableProperty]
     private bool canPatientGoNext;
-
-    //END PAGINATION
-
-
-    // Database chính thức
-    //Danh sách bệnh nhân để hiển thị lên màn hình (Binding)
     public ObservableCollection<Patient> Patients { get; set; } = new();
+    public ObservableCollection<Patient> FilteredPatients { get; set; } = new();
+    #endregion
+    private Appointment _pendingCheckInAppointment;
+
+    #region Properties - Search
+    [ObservableProperty]
+    private string searchText;
+    // Hàm này tự động chạy khi SearchText thay đổi (tính năng của MVVM Toolkit)
+    partial void OnSearchTextChanged(string value)
+    {
+        Task.Run(async () => await SearchPatient());
+    }
+    #endregion
 
     // Hàm lấy dữ liệu từ SQLite
     public async Task LoadPatients()
@@ -57,22 +62,11 @@ public partial class DashboardViewModel : ObservableObject
             Patients.Clear();
             FilteredPatients.Clear();
 
-            // --- XOÁ DÒNG NÀY: WaitingQueue.Clear(); --- (Tuyệt đối không clear hàng đợi ở đây)
-
             foreach (var patient in patientList)
             {
                 Patients.Add(patient);
                 FilteredPatients.Add(patient);
-
-                // --- XOÁ ĐOẠN IF NÀY ---
-                // if (patient.Status == "Chờ khám")
-                // {
-                //     WaitingQueue.Add(patient); 
-                // }
-                // -----------------------
             }
-
-            // --- XOÁ DÒNG NÀY: SortPatientQueue(); ---
 
             UpdatePatientPaginationUI();
         });
@@ -109,7 +103,7 @@ public partial class DashboardViewModel : ObservableObject
     [RelayCommand]
     public async Task SavePatient()
     {
-        // 1. Validate dữ liệu nhập
+        // --- VALIDATION ---
         if (!ValidationHelper.IsValidName(newPatientFullName))
         {
             await Application.Current.MainPage.DisplayAlert("Lỗi nhập liệu",
@@ -125,16 +119,16 @@ public partial class DashboardViewModel : ObservableObject
         var dobCheck = ValidationHelper.IsValidDateOfBirth(newPatientDateOfBirth);
         if (!dobCheck.IsValid)
         {
-            await Application.Current.MainPage.DisplayAlert("Lỗi nhập liệu", dobCheck.Message, "OK");
+            await Application.Current.MainPage.DisplayAlert("Lỗi ngày sinh", dobCheck.Message, "OK");
             return;
         }
         if (!ValidationHelper.IsValidLength(NewPatientAddress, 5))
         {
             await Application.Current.MainPage.DisplayAlert("Lỗi nhập liệu",
-                "Vui lòng nhập địa chỉ cụ thể hơn.", "OK");
+                "Địa chỉ quá ngắn, vui lòng nhập cụ thể hơn.", "OK");
             return;
         }
-
+        // --- HẾT VALIDATION, BẮT ĐẦU XỬ LÝ DATABASE ---
         try
         {
             Patient patientToSave;
@@ -259,161 +253,6 @@ public partial class DashboardViewModel : ObservableObject
         }
     }
 
-    private void ClearForm()
-    {
-        NewPatientFullName = string.Empty;
-        NewPatientPhoneNumber = string.Empty;
-        NewPatientAddress = string.Empty;
-        NewPatientSymptoms = string.Empty;
-        NewPatientDateOfBirth = DateTime.Today;
-    }
-
-    public ObservableCollection<Patient> FilteredPatients { get; set; } = new();
-
-    [ObservableProperty]
-    private string searchText;
-
-    // Hàm này tự động chạy khi SearchText thay đổi (tính năng của MVVM Toolkit)
-    partial void OnSearchTextChanged(string value)
-    {
-        Task.Run(async () => await SearchPatient());
-    }
-    // Hàm nạp dữ liệu mẫu (nếu cần)
-    //private void LoadSamplePatients()
-    //{
-    //    // Tạo danh sách dữ liệu mẫu
-    //    var samples = new List<Patient>
-    //{
-    //    new Patient
-    //    {
-    //        Id = "BN001",
-    //        FullName = "Nguyễn Văn An",
-    //        DateOfBirth = new DateTime(1990, 5, 15),
-    //        Gender = "Nam",
-    //        PhoneNumber = "0901234567",
-    //        Address = "123 Đường ABC, Q.1, TP.HCM",
-    //        AdmittedDate = DateTime.Today.AddDays(-5),
-    //        Status = "Đang điều trị",
-    //        Severity = "normal"
-    //    },
-    //    new Patient
-    //    {
-    //        Id = "BN002",
-    //        FullName = "Trần Thị Bích",
-    //        DateOfBirth = new DateTime(1995, 8, 20),
-    //        Gender = "Nữ",
-    //        PhoneNumber = "0909876543",
-    //        Address = "456 Đường Lê Lợi, Q.1, TP.HCM",
-    //        AdmittedDate = DateTime.Today.AddDays(-2),
-    //        Status = "Đang điều trị",
-    //        Severity = "critical"
-    //    },
-    //    new Patient
-    //    {
-    //        Id = "BN003",
-    //        FullName = "Lê Văn Cường",
-    //        DateOfBirth = new DateTime(1985, 12, 10),
-    //        Gender = "Nam",
-    //        PhoneNumber = "0912345678",
-    //        Address = "789 Đường Nguyễn Trãi, Q.5, TP.HCM",
-    //        AdmittedDate = DateTime.Today.AddDays(-10),
-    //        Status = "Đang điều trị",
-    //        Severity = "medium"
-    //    },
-    //    new Patient
-    //    {
-    //        Id = "BN004",
-    //        FullName = "Phạm Minh Duy",
-    //        DateOfBirth = new DateTime(2001, 3, 5),
-    //        Gender = "Nam",
-    //        PhoneNumber = "0987654321",
-    //        Address = "321 Đường Trần Hưng Đạo, Q.1, TP.HCM",
-    //        AdmittedDate = DateTime.Today.AddDays(-1),
-    //        Status = "Chờ khám",
-    //        Severity = "normal"
-    //    },
-    //    new Patient
-    //    {
-    //        Id = "BN005",
-    //        FullName = "Hoàng Thị Em",
-    //        DateOfBirth = new DateTime(1978, 7, 25),
-    //        Gender = "Nữ",
-    //        PhoneNumber = "0933445566",
-    //        Address = "654 Đường 3/2, Q.10, TP.HCM",
-    //        AdmittedDate = DateTime.Today.AddDays(-15),
-    //        Status = "Đã xuất viện",
-    //        Severity = "normal"
-    //    },
-    //    new Patient
-    //    {
-    //        Id = "BN006",
-    //        FullName = "Ngô Văn Fương",
-    //        DateOfBirth = new DateTime(1999, 11, 11),
-    //        Gender = "Nam",
-    //        PhoneNumber = "0977889900",
-    //        Address = "12 Đường Phan Đăng Lưu, Q.Phú Nhuận",
-    //        AdmittedDate = DateTime.Today.AddDays(-3),
-    //        Status = "Đang điều trị",
-    //        Severity = "critical"
-    //    },
-    //    new Patient
-    //    {
-    //        Id = "BN007",
-    //        FullName = "Vũ Thị Giang",
-    //        DateOfBirth = new DateTime(1982, 9, 9),
-    //        Gender = "Nữ",
-    //        PhoneNumber = "0966554433",
-    //        Address = "99 Đường Võ Văn Ngân, TP.Thủ Đức",
-    //        AdmittedDate = DateTime.Today.AddDays(-7),
-    //        Status = "Đang điều trị",
-    //        Severity = "medium"
-    //    },
-    //    new Patient
-    //    {
-    //        Id = "BN008",
-    //        FullName = "Đặng Văn Hùng",
-    //        DateOfBirth = new DateTime(1993, 4, 30),
-    //        Gender = "Nam",
-    //        PhoneNumber = "0944332211",
-    //        Address = "55 Đường Phạm Văn Đồng, Q.Gò Vấp",
-    //        AdmittedDate = DateTime.Today.AddDays(-4),
-    //        Status = "Chờ phẫu thuật",
-    //        Severity = "critical"
-    //    },
-    //    new Patient
-    //    {
-    //        Id = "BN009",
-    //        FullName = "Bùi Thị Yến",
-    //        DateOfBirth = new DateTime(1960, 1, 1),
-    //        Gender = "Nữ",
-    //        PhoneNumber = "0911223344",
-    //        Address = "88 Đường Hậu Giang, Q.6, TP.HCM",
-    //        AdmittedDate = DateTime.Today.AddDays(-20),
-    //        Status = "Đang điều trị",
-    //        Severity = "normal"
-    //    },
-    //    new Patient
-    //    {
-    //        Id = "BN010",
-    //        FullName = "Đoàn Văn Khanh",
-    //        DateOfBirth = new DateTime(2005, 6, 15),
-    //        Gender = "Nam",
-    //        PhoneNumber = "0999888777",
-    //        Address = "22 Đường Lý Thường Kiệt, Q.Tân Bình",
-    //        AdmittedDate = DateTime.Today.AddDays(0),
-    //        Status = "Mới nhập viện",
-    //        Severity = "medium"
-    //    }
-    //};
-
-    //    // Thêm tất cả vào danh sách chính
-    //    foreach (var p in samples)
-    //    {
-    //        Patients.Add(p);
-    //        FilteredPatients.Add(p);
-    //    }
-    //}
-
     private async Task SearchPatient()
     {
         if(string.IsNullOrWhiteSpace(SearchText))
@@ -495,34 +334,10 @@ public partial class DashboardViewModel : ObservableObject
         }
     }
 
-
-    private Appointment _pendingCheckInAppointment;
-
-    // Message để nhận yêu cầu Check-in từ DashboardContentView
     public class RequestCheckInMessage
     {
         public Appointment Appointment { get; set; }
         public RequestCheckInMessage(Appointment appt) { Appointment = appt; }
-    }
-
-    private void OpenCheckInPopup(Appointment appt)
-    {
-        _pendingCheckInAppointment = appt;
-
-        // 1. Điền thông tin từ Lịch hẹn vào các biến Binding của Popup
-        PopupTitle = "Tiếp nhận Bệnh nhân"; // Đổi tiêu đề
-        NewPatientFullName = appt.PatientName;
-        NewPatientPhoneNumber = appt.PhoneNumber;
-        NewPatientSymptoms = appt.Note;
-
-        // Các trường mặc định khác
-        NewPatientDateOfBirth = DateTime.Today; // Hoặc tính từ appt nếu có
-        NewPatientAddress = "";
-        NewPatientStatus = "Chờ khám";
-        NewPatientSeverity = "Bình thường";
-
-        // 2. Hiện Popup (Binding IsAddPatientPopupVisible = true)
-        IsAddPatientPopupVisible = true;
     }
 
     private async Task LoadWaitingQueue()

@@ -49,7 +49,7 @@ namespace HosipitalManager.MVVM.ViewModels
             // Validate SĐT
             if (!ValidationHelper.IsValidPhoneNumber(PhoneNumber))
             {
-                await Shell.Current.DisplayAlert("Lỗi", "Số điện thoại không đúng định dạng (10 số, bắt đầu bằng 0).", "OK");
+                await Shell.Current.DisplayAlert("Lỗi", "Số điện thoại phải bắt đầu bằng số 0 và có 10 chữ số.", "OK");
                 return;
             }
 
