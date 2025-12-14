@@ -13,7 +13,7 @@ namespace HosipitalManager.MVVM.Models
         public string Usage { get; set; }
         public decimal Price { get; set; }       // Đơn giá
         public int Quantity { get; set; }        // Số lượng
-        public string Note { get; set; }
+        public decimal Total => Price * Quantity;
         public string Unit { get; set; }
         public string Instructions { get; set; }
     }

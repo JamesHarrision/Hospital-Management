@@ -137,7 +137,6 @@
                                 <Label FontSize="15" FontAttributes="Bold" LineBreakMode="TailTruncation">
                                     <Label.FormattedText>
                                         <FormattedString>
-                                            <Span Text="BS. " TextColor="#5B9FFF"/>
                                             <Span Text="{Binding DoctorName}" TextColor="#1D2E4E"/>
                                         </FormattedString>
                                     </Label.FormattedText>

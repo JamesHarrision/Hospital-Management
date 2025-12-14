@@ -87,7 +87,7 @@
                                 <Label Grid.Column="1" Text="{Binding Dosage}" TextColor="#4B5563" />
                                 <Label Grid.Column="2" Text="{Binding Quantity}" TextColor="#4B5563" />
                                 <Label Grid.Column="3" Text="{Binding Instructions}" TextColor="#4B5563" />
-                                <Label Grid.Column="4" Text="{Binding Price, StringFormat='{0:N0} đ'}" TextColor="#4B5563" HorizontalOptions="End"/>
+                                <Label Grid.Column="4" Text="{Binding Total, StringFormat='{0:N0} đ'}" TextColor="#4B5563" HorizontalOptions="End"/>
                             </Grid>
                         </DataTemplate>
                     </CollectionView.ItemTemplate>

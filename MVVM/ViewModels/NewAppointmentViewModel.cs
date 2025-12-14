@@ -86,7 +86,7 @@ namespace HosipitalManager.MVVM.ViewModels
             // Kiểm tra tên
             if (!ValidationHelper.IsValidName(PatientName))
             {
-                ShowError("Tên bệnh nhân không được chứa số hay ký tự lạ.");
+                ShowError("Tên bệnh nhân không được chứa số và không chứa ký tự đặc biệt.");
                 return false;
             }
 

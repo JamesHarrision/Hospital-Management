@@ -9,12 +9,9 @@
     <Grid RowDefinitions="Auto, *" Padding="20" RowSpacing="20">
 
         <Frame Grid.Row="0" BackgroundColor="White" CornerRadius="15" HasShadow="True" BorderColor="#E5E7EB" Padding="15">
-            <Grid ColumnDefinitions="Auto, *" ColumnSpacing="20">
-                <Border StrokeShape="RoundRectangle 30" WidthRequest="60" HeightRequest="60" StrokeThickness="0" BackgroundColor="#E0E7FF">
-                    <Image Source="person.png" Aspect="AspectFill" HorizontalOptions="Center" VerticalOptions="Center"/>
-                </Border>
+            <Grid ColumnSpacing="20">
 
-                <VerticalStackLayout Grid.Column="1" Spacing="5" VerticalOptions="Center">
+                <VerticalStackLayout Spacing="5" VerticalOptions="Center">
                     <Label Text="{Binding Patient.FullName}" FontSize="20" FontAttributes="Bold" TextColor="#1D2E4E"/>
 
                     <HorizontalStackLayout Spacing="15">

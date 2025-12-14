@@ -30,7 +30,7 @@ namespace HosipitalManager.MVVM.Services
                 PatientId = patient.Id,
                 PatientName = patient.FullName,
                 DoctorId = "BS001",
-                DoctorName =  $"BS. {patient.Doctorname}",
+                DoctorName =  $"{patient.Doctorname}",
                 DatePrescribed = DateTime.Now,
                 Status = PrescriptionStatus.Pending,
 
