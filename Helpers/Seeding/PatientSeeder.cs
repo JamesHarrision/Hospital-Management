@@ -32,9 +32,13 @@ namespace HosipitalManager.Helpers.Seeding
             "Đau nhức xương khớp, tê bì chân tay, khó ngủ." // 5. Cơ xương khớp
         };
 
-        private static readonly string[] Cities = { "Hà Nội", "TP.HCM", "Đà Nẵng", "Cần Thơ", "Hải Phòng", "Nha Trang", "Huế", "Vũng Tàu" };
+        private static readonly string[] Cities = { "Hà Nội", "TP.HCM", "Đà Nẵng", "Cần Thơ", "Hải Phòng", "Nha Trang", "Huế", "Vũng Tàu", "Đồng Tháp", "Vĩnh Long" };
         private static readonly string[] Severities = { "normal", "medium", "urgent", "critical" };
-
+        private static readonly string[] Doctors = new[]
+        {
+            "BS. Mai Trọng Khang",
+            "BS. Nguyễn Ngọc Quý"
+        };
         public static List<Patient> GeneratePatients()
         {
             var list = new List<Patient>();
@@ -70,7 +74,8 @@ namespace HosipitalManager.Helpers.Seeding
                     DateOfBirth = DateTime.Today.AddYears(-(20 + (index % 40))),
                     PhoneNumber = $"090{index:D7}",
                     QueueOrder = (status == "Chờ khám") ? (index - (total - 5) + 1) : 0, // Chỉ đánh số hàng đợi cho người chờ
-                    Symptoms = SymptomsList[index % SymptomsList.Length]
+                    Symptoms = SymptomsList[index % SymptomsList.Length],
+                    Doctorname = Doctors[index % Doctors.Length]
                 };
 
                 list.Add(patient);
