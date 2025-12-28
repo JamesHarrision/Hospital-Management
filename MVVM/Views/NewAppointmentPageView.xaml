@@ -34,16 +34,12 @@
                         <Entry Placeholder="09xx..." Text="{Binding PhoneNumber}" Keyboard="Telephone" TextColor="#1D2E4E"/>
                     </Border>
 
-                    <Grid ColumnDefinitions="*,*,*" ColumnSpacing="10">
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
                         <VerticalStackLayout Grid.Column="0">
-                            <Label Text="Ngày sinh" FontSize="14" TextColor="Gray"/>
-                            <DatePicker Date="{Binding Date}" Format="dd/MM/yyyy" TextColor="#1D2E4E"/>
-                        </VerticalStackLayout>
-                        <VerticalStackLayout Grid.Column="1">
                             <Label Text="Ngày khám" FontSize="14" TextColor="Gray"/>
                             <DatePicker Date="{Binding Date}" Format="dd/MM/yyyy" TextColor="#1D2E4E"/>
                         </VerticalStackLayout>
-                        <VerticalStackLayout Grid.Column="2">
+                        <VerticalStackLayout Grid.Column="1">
                             <Label Text="Giờ khám" FontSize="14" TextColor="Gray"/>
                             <TimePicker Time="{Binding Time}" Format="HH:mm" TextColor="#1D2E4E"/>
                         </VerticalStackLayout>

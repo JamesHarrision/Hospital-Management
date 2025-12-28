@@ -198,7 +198,7 @@ public partial class DashboardContentView : ContentView
                 },
                 new Label
                 {
-                    Text = $"BS. {appt.DoctorName}",
+                    Text = $"{appt.DoctorName}",
                     FontSize = 9,
                     TextColor = Colors.Gray,
                     LineBreakMode = LineBreakMode.TailTruncation
