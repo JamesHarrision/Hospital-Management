@@ -154,7 +154,23 @@ public partial class DashboardViewModel
         else
         {
             // Logic Create New
-            var newPatient = CreatePatientFromForm();
+            var newPatient = await CreatePatientFromForm();
+            if (_pendingCheckInAppointment != null)
+            {
+                // Liên kết tên Bác sĩ nếu chưa có
+                if (string.IsNullOrEmpty(newPatient.Doctorname))
+                {
+                    newPatient.Doctorname = _pendingCheckInAppointment.DoctorName;
+                }
+
+                // Cập nhật trạng thái Lịch hẹn -> Đã xong (Completed)
+                _pendingCheckInAppointment.Status = AppointmentStatus.Completed;
+                await _databaseService.UpdateAppointmentAsync(_pendingCheckInAppointment);
+                //WeakReferenceMessenger.Default.Send(new ReloadAppointmentsMessage());
+
+                // Xóa biến tạm
+                _pendingCheckInAppointment = null;
+            }
             await _databaseService.SavePatientAsync(newPatient);
 
             // Thêm vào UI Queue
@@ -224,11 +240,11 @@ public partial class DashboardViewModel
         if (isConfirmed)
         {
             // Update Status -> DB
-            patient.Status = "Đang điều trị";
-            await _databaseService.SavePatientAsync(patient);
+            //patient.Status = "Đang điều trị";
+            //await _databaseService.SavePatientAsync(patient);
 
-            // Remove from Queue UI
-            WaitingQueue.Remove(patient);
+            //// Remove from Queue UI
+            //WaitingQueue.Remove(patient);
 
             // Navigate to Exam Page
             var examVM = new ExaminationViewModel(patient, _databaseService);
@@ -241,37 +257,46 @@ public partial class DashboardViewModel
     /// <summary>
     /// XỬ LÝ TIẾP NHẬN TỪ LỊCH HẸN (Được gọi từ Tab Lịch hẹn)
     /// </summary>
-    public async void HandleCheckInFromAppointment(Appointment appt)
+    public void HandleCheckInFromAppointment(Appointment appt)
     {
         if (appt == null) return;
 
-        var newPatient = new Patient
-        {
-            Id = "P" + DateTime.Now.Ticks.ToString().Substring(12),
-            FullName = appt.PatientName,
-            Gender = "Khác", // Default vì Appointment chưa chắc có Gender
-            PhoneNumber = appt.PhoneNumber,
-            Address = "Chưa cập nhật",
-            Symptoms = appt.Note ?? "Đặt lịch hẹn trước",
-            Status = "Chờ khám",
-            Severity = "normal",
-            Doctorname = appt.DoctorObject?.Name ?? appt.DoctorName ?? "Chưa chỉ định",
-            PriorityScore = 10
-        };
+        // 1. Lưu lại lịch hẹn này để xử lý sau khi bấm nút Lưu
+        _pendingCheckInAppointment = appt;
 
-        // Lưu DB
-        if (_databaseService != null)
+        // 2. Reset Form trước khi đổ dữ liệu
+        ClearPopupForm();
+        PopupTitle = "Tiếp nhận từ Lịch hẹn";
+
+        // 3. Đổ dữ liệu từ Appointment vào các biến Binding của Form
+        NewPatientFullName = appt.PatientName;
+        NewPatientPhoneNumber = appt.PhoneNumber;
+
+        // Nếu trong Appointment có lưu ngày sinh thì gán, không thì để mặc định
+        // NewPatientDateOfBirth = appt.DateOfBirth; 
+
+        // Gán triệu chứng từ ghi chú lịch hẹn
+        NewPatientSymptoms = appt.Note;
+
+        // Gán trạng thái mặc định
+        NewPatientStatus = "Chờ khám";
+        NewPatientSeverity = "Bình thường";
+        NewPatientAddress = ""; // Để trống cho bác sĩ nhập bổ sung
+        NewPatientGender = "Khác"; // Hoặc để null để bác sĩ chọn
+
+        // 4. Tự động chọn Bác sĩ tương ứng trong Dropdown
+        if (AvailableDoctors != null && (appt.DoctorId != null || appt.DoctorName != null))
         {
-            await _databaseService.SavePatientAsync(newPatient);
+            SelectedDoctor = AvailableDoctors.FirstOrDefault(d => d.Id == appt.DoctorId)
+                             ?? AvailableDoctors.FirstOrDefault(d => d.Name == appt.DoctorName);
         }
 
-        // Cập nhật UI Queue
-        MainThread.BeginInvokeOnMainThread(() =>
-        {
-            if (WaitingQueue == null) WaitingQueue = new ObservableCollection<Patient>();
-            WaitingQueue.Add(newPatient);
-            SortPatientQueue();
-        });
+        // 5. Thiết lập trạng thái UI
+        _isEditing = false; // Đây vẫn là tạo mới (Patient), không phải Edit Patient cũ
+        IsStatusEnabled = false; // Vẫn khóa trạng thái là "Chờ khám"
+
+        // 6. Mở Popup lên
+        IsAddPatientPopupVisible = true;
     }
     #endregion
 

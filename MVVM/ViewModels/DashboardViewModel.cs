@@ -1,10 +1,11 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
+using HosipitalManager.MVVM.Messages;
 using HosipitalManager.MVVM.Models;
 using HosipitalManager.MVVM.Services;
-using HospitalManager.MVVM.Models;
 using HospitalManager.MVVM.Messages;
+using HospitalManager.MVVM.Models;
 using Microsoft.Maui.Graphics;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -60,12 +61,20 @@ public partial class DashboardViewModel : ObservableObject
         Task.Run(async () => await ReloadAllData());
 
         // Đăng ký nhận lệnh Reload
-        WeakReferenceMessenger.Default.Register<DashboardViewModel, string>(this, (r, message) =>
+        WeakReferenceMessenger.Default.Register<DashboardViewModel, ReloadPrescriptionsMessage>(this, (r, message) =>
         {
-            if (message == "ReloadPrescriptions")
+            // Khi nhận được tin nhắn này, chạy reload toàn bộ dữ liệu cần thiết
+            Task.Run(async () =>
             {
-                Task.Run(async () => await r.LoadPatients());
-            }
+                // 1. Tải lại danh sách tổng (để cập nhật trạng thái mới nhất)
+                await r.LoadPatients();
+
+                // 2. QUAN TRỌNG: Tải lại hàng đợi (Bước này giúp bệnh nhân đã khám tự biến mất khỏi list chờ)
+                await r.LoadWaitingQueue();
+
+                // 3. Tải lại đơn thuốc (để hiện đơn vừa kê)
+                await r.LoadPrescriptions();
+            });
         });
 
         // Đăng ký nhận lệnh Check-in 

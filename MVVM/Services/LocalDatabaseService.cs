@@ -51,7 +51,7 @@ namespace HosipitalManager.MVVM.Services
         {
             var patients = await GetPatientsAsync();
             var nextId = patients.Count + 1;
-            return $"BN{nextId:D3}";
+            return $"BN{nextId:D4}";
         }
 
         public async Task SavePatientAsync(Patient patient)
