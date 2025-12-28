@@ -10,6 +10,7 @@ using Microsoft.Maui.ApplicationModel;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using Microsoft.Maui.Media;
+using System.Threading.Tasks;
 
 namespace HospitalManager.MVVM.ViewModels;
 
@@ -171,12 +172,12 @@ public partial class DashboardViewModel
     /// <summary>
     /// Tạo object Patient từ dữ liệu trên Form
     /// </summary>
-    private Patient CreatePatientFromForm()
+    private async Task<Patient> CreatePatientFromForm()
     {
         return new Patient
         {
             // Tạo ID ngẫu nhiên hoặc dùng Guid
-            Id = "P" + DateTime.Now.Ticks.ToString().Substring(12),
+            Id = await _databaseService.GenerateNewPatientId(),
             FullName = NewPatientFullName,
             DateOfBirth = NewPatientDateOfBirth,
             Gender = NewPatientGender,

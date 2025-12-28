@@ -1,4 +1,5 @@
 ﻿using HosipitalManager.Helpers;
+using HosipitalManager.Helpers.Seeding;
 using HosipitalManager.MVVM.Models;
 using HospitalManager.MVVM.Models;
 using SQLite;
@@ -46,6 +47,13 @@ namespace HosipitalManager.MVVM.Services
             return await _database.Table<Patient>().Where(p => p.Id == id).FirstOrDefaultAsync();
         }
 
+        public async Task<string> GenerateNewPatientId()
+        {
+            var patients = await GetPatientsAsync();
+            var nextId = patients.Count + 1;
+            return $"BN{nextId:D3}";
+        }
+
         public async Task SavePatientAsync(Patient patient)
         {
             await Init();
@@ -73,6 +81,11 @@ namespace HosipitalManager.MVVM.Services
         public async Task DeletePatientAsync(Patient patient)
         {
             await Init();
+            var prescriptions = await GetPrescriptionsByPatientIdAsync(patient.Id);
+            foreach(var p in prescriptions)
+            {
+                await _database.DeleteAsync(p);
+            }
             await _database.DeleteAsync(patient);
         }
 
